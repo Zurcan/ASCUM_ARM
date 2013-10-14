@@ -9,7 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
 //        wd.exec();
     // initiateVideoScreens();
      ui->setupUi(this);
-
+     pf = new PrintForm(this);
+    ui->qwtPlot->enableAxis(QwtPlot::yLeft,false);
      ui->pushButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         ui->pushButton_2->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
             ui->pushButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
@@ -579,7 +580,7 @@ void MainWindow::initiateCurves()
                 curve1[i]->attach(ui->qwtPlot);
                 curve1[i]->setAxes(QwtPlot::xBottom,i);
                 ui->qwtPlot->enableAxis(i,false);
-                ui->qwtPlot->setContentsMargins(-10,0,-1,0);
+                ui->qwtPlot->setContentsMargins(-50,0,0,0);
                 ui->qwtPlot->replot();
             }
             if(!flagArray[i])
@@ -680,6 +681,7 @@ void MainWindow::moveMapMarker(long int position)
 {
     if(position>sizeOfArray)position=sizeOfArray;
     if(position < 0)position = 0;
+    ui->actionPrint->setEnabled(true);
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
 
@@ -713,6 +715,13 @@ void MainWindow::moveMapMarker(long int position)
         }
 
     }
+//    if(pf->isVisible())
+//    {
+//        pf->close();
+//        pf->show();
+//    }
+
+    pf->SetMapMarkerPosition(timeArray[position]);
     //qDebug() << tmpCounter;
     //qDebug() << verticalMapMarker->xValue();
     ui->qwtPlot->replot();
@@ -1060,4 +1069,13 @@ double MainWindow::getOffsetValue(int flagIndex)
         if(flagArray[i])tmpOffset+=flagMarkerIncStep;
     }
     return tmpOffset;
+}
+
+void MainWindow::on_actionPrint_triggered()
+{
+
+   pf->show();
+   pf->SetMapMarkerPosition(timeArray[(int)verticalMapMarker->value().x()]);
+   //connect(verticalMapMarker,SIGNAL(moveMapMarker),this,)
+   // connect(, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
 }

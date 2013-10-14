@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     logprocessor.cpp \
     TMIinterpretator.cpp \
     welcomedialog.cpp \
-    qtrpt.cpp
+    qtrpt.cpp \
+    printform.cpp
 
 HEADERS  += mainwindow.h \
     NcFramelessHelper.h \
@@ -34,10 +35,12 @@ HEADERS  += mainwindow.h \
     logprocessor.h \
     TMIinterpretator.h \
     welcomedialog.h \
-    qtrpt.h
+    qtrpt.h \
+    printform.h
 
 FORMS    += mainwindow.ui \
-    welcomedialog.ui
+    welcomedialog.ui \
+    printform.ui
 
 OTHER_FILES += \
     qwt.pri

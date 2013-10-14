@@ -36,8 +36,9 @@
 #include <qwt_interval.h>
 #include <welcomedialog.h>
 #include <qtimer.h>
-#include <QRadioButton>
+//#include <QRadioButton>
 #include <QCheckBox>
+#include <printform.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -96,7 +97,7 @@ public:
        if(v==0)
        {
            //label.setColor(Qt::yellow);
-           return upTime.toString("   dd.MM.yyyy hh:mm:ss");
+           return upTime.toString("             dd.MM.yyyy hh:mm:ss");
        }
        else return upTime.toString(format);
     }
@@ -182,6 +183,7 @@ private:
    int axisCount = 2;
    int varCounter;
    QString tmpStr;
+   PrintForm *pf;
     QwtPlotMarker *verticalMapMarker;
     QwtPlotMarker *currentTimeMarker;
     int sizeOfArray=1000;
@@ -264,6 +266,8 @@ private slots:
     void on_pushButton_4_clicked();
 
     void on_pushButton_3_clicked();
+
+    void on_actionPrint_triggered();
 
 private:
     int buttonIndex;
