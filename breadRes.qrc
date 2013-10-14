@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/new/p">
+        <file alias="openDB">res/Fasticon-Database-Data-folder.ico</file>
+        <file alias="openLog">res/Nandostudio-Rubber-Documents-folder.ico</file>
+        <file alias="Video">res/movies.png</file>
+        <file alias="print">res/Print.ico</file>
+    </qresource>
+</RCC>

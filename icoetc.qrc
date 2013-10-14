@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/icon.ico</file>
+        <file>res/3' Disc.ico</file>
+        <file>res/Default Icon.ico</file>
+        <file>res/Print.ico</file>
+        <file>res/Search Folder.ico</file>
+        <file>res/Chm.ico</file>
+        <file>res/Pdf.ico</file>
+        <file>res/RecycleBinEmpty.ico</file>
+        <file>res/detect_rename.ico</file>
+        <file>res/Save.ico</file>
+        <file>res/Recent Document.ico</file>
+        <file>res/Computer.png</file>
+        <file>res/Floppy.png</file>
+        <file>res/Folder_Open.png</file>
+        <file>res/Help.png</file>
+        <file>res/Paste.png</file>
+        <file>res/RB-Empty.png</file>
+        <file>res/RB-Full.png</file>
+        <file>res/Search.png</file>
+        <file>res/Write.png</file>
+    </qresource>
+</RCC>
