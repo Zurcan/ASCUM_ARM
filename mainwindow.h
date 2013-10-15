@@ -36,7 +36,6 @@
 #include <qwt_interval.h>
 #include <welcomedialog.h>
 #include <qtimer.h>
-//#include <QRadioButton>
 #include <QCheckBox>
 #include <printform.h>
 //#include "secondslinearscale.h"

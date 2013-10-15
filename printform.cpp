@@ -12,6 +12,7 @@ PrintForm::PrintForm(QWidget *parent) :
 void PrintForm::SetMapMarkerPosition(time_t DateTimePosition)
 {
     ui->dateTimeEdit->setDateTime(QDateTime::fromTime_t(DateTimePosition));
+    ui->dateTimeEdit_2->setDateTime(QDateTime::fromTime_t(DateTimePosition+120));
 }
 
 PrintForm::~PrintForm()

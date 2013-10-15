@@ -361,8 +361,10 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         QString tmpField = " ";
                         int tmpRecI = 0;
                         QVariant recFloat;
+                        int backIndex=tmpRecordCount-1;
                         for (int index = 0; index < tmpRecordCount; index++)
                         {
+                            backIndex = tmpRecordCount-1-index;//but there is a little shaming moment, we have to reverse data arrays because first time indeed is last one
                             X[index]= index;
                             flagOffset=0;
                             newLogProc->readRecord(tmpRecordCount,newLogProc->segmentHeader.recordSize, recPositionCompareVal);
@@ -418,19 +420,19 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     }
                                                 }
                                                 tmpFloat = (float)(tmpIntFloat/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
-                                                Y[i-2][index] =(double)tmpFloat;
+                                                Y[i-2][backIndex] =(double)tmpFloat;
 
                                                 }
                                                 else
                                                 {
-                                                    Y[i-2][index] =0;
+                                                    Y[i-2][backIndex] =0;
                                                     tmpFloat=0;
                                                 }
 
                                                 if(!index)
                                                     thermoPlotMaxs[i-2]=(double)tmpFloat;
                                                 else
-                                                    if((double)tmpFloat>Y[i-2][index-1])thermoPlotMaxs[i-2]=(double)tmpFloat;
+                                                    if((double)tmpFloat>Y[i-2][backIndex+1])thermoPlotMaxs[i-2]=(double)tmpFloat;
                                                 break;
                                             }
                                             case 10 :
@@ -438,7 +440,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                 if(index==0)
                                                          firstDateTime = QDateTime::fromTime_t(recTime);
-                                                timeArray[index] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
+                                                timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
 
                                               //  qDebug() << QDateTime::fromTime_t(recTime);
                                                 break;
@@ -449,11 +451,11 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                                                 if(newTmiInterp->fieldFlag(&newLogProc->record[tmpRecI], &newTmiInterp->TInterpItemArray[i].mask_))
                                                 {
-                                                    Y[i-2][index]= 1+flagOffset;
+                                                    Y[i-2][backIndex]= 1+flagOffset;
                                                 }
                                                 else
                                                 {
-                                                    Y[i-2][index]= 0+flagOffset;
+                                                    Y[i-2][backIndex]= 0+flagOffset;
                                                 }
                                                 thermoPlotMaxs[i-2]=1;
                                                 flagOffset+=2;
