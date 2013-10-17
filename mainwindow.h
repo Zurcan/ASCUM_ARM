@@ -38,6 +38,7 @@
 #include <qtimer.h>
 #include <QCheckBox>
 #include <printform.h>
+#include <qtrpt.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -196,6 +197,7 @@ private:
     #define smallTableID 0x80000012
     #define bigTableID 0x80000011
 
+    QtRPT *report;
     double *X;
     double *Y[24];
     QwtText markerLbl;
@@ -207,6 +209,7 @@ private:
     QString parLabel[24];// = {"Скорость, км/ч", "Скорость двиг. 1, км/ч", "Скорость двиг. 2, км/ч", "Давление торм. маг. бар", "Давление торм. цил. бар", "highWayPres","Потребление топлива, л", "Флаг вперед", "Флаг назад", "ErrorHide", "ErrorRaise","parampampam","parampampampam"};
     //QString parLabelNew[];
     QMovie *movie;
+    QPrinter *printer;
     logProcessor *newLogProc;
  //   QVideoWidget *myVideo;
 //    QRadioButton *radio[24];
@@ -223,6 +226,7 @@ private:
     NcFramelessHelper *fh1,*fh2;
    QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed, Qt::darkMagenta, Qt::darkYellow, Qt::darkGray, Qt::blue, Qt::black,Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed};
     QDateTime firstDateTime;
+    int printLeftTimeIndex=0, printRightTimeIndex=0;
 
     QwtPlotCurve *curve1[24];
     QwtPlotCurve *curve2[24];
@@ -233,6 +237,7 @@ private:
 
     explicit MainWindow(QWidget *parent = 0);
     void moveMapMarker(long int position);
+    void convertTimeToPosition(QDateTime firstTime, QDateTime secondTime);
     void preparePlotData();
     void initiateThermos();
     void initiateVideoScreens();
@@ -267,7 +272,7 @@ private slots:
     void on_pushButton_3_clicked();
 
     void on_actionPrint_triggered();
-
+    void setValue(int &recNo, QString &paramName, QVariant &paramValue, int reportPage);
 private:
     int buttonIndex;
     Ui::MainWindow *ui;

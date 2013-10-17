@@ -438,7 +438,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             case 10 :
                                             {
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
-                                                if(index==0)
+                                                if(index==tmpRecordCount-1)
                                                          firstDateTime = QDateTime::fromTime_t(recTime);
                                                 timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
 
@@ -556,7 +556,10 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //     ui->qwtPlot->setAxisScaleEngine(  QwtPlot::xBottom, mapTimeScale );
 
      ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
-
+     QVariant tmpTimeIndex;
+     //tmpTimeIndex = firstDateTime.toTime_t();
+    printLeftTimeIndex = 0;
+    printRightTimeIndex = printLeftTimeIndex+120;
      //ui->qwtPlot->setAxisScale(
 //     myScaleDraw = new QwtScaleDraw;
 //     abstractScale = new QwtAbstractScale;
@@ -979,6 +982,8 @@ void MainWindow::setGlobalArrays()
         if(newTmiInterp->TInterpItemArray[i+2].typ==8)flagArray[i]=1;
         else flagArray[i] = 0;
         parLabel[i] = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i+2].name);// = QString::fromLocal8Bit();
+        parLabel[i].replace("[","(");
+        parLabel[i].replace("]",")");
       //  qDebug()<< parLabel[i];
     }
 //    qDebug() << "flag count:";
@@ -1073,11 +1078,117 @@ double MainWindow::getOffsetValue(int flagIndex)
     return tmpOffset;
 }
 
+void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, int reportPage)
+{
+    QString tmpParamValue;
+    QVariant tmpval;
+    //if(recNo<printLeftTimeIndex)recNo=printLeftTimeIndex;
+   // if((recNo>=printLeftTimeIndex)&&(recNo<=printRightTimeIndex))
+   //     {
+        if (paramName == "Машина")
+        {
+            paramValue = ui->tableWidget->item(0,0)->text();
+            qDebug() << paramValue.toString();
+        }
+        if (paramName == "TodayDate")
+            paramValue = QDate::currentDate().toString();
+        if (paramName == "Наработка системы")
+            paramValue = ui->tableWidget->item(0,0)->text();
+        if (paramName == "Наработка двигателя 1") {
+            paramValue = ui->tableWidget->item(1,0)->text();
+        }
+        if (paramName == "Наработка двигателя 2") {
+            paramValue = ui->tableWidget->item(2,0)->text();
+        }
+        if (paramName == "Пробег") {
+            paramValue = ui->tableWidget->item(3,0)->text();
+        }
+        if (paramName == "Суточный пробег") {
+            paramValue = ui->tableWidget->item(4,0)->text();
+        }
+    //    if (paramName == "FirstDate")
+    //    {
+    //        if(recNo==0)tmpParamValue = model->item(0,0)->text();
+    //        else tmpParamValue = model->item(recNo,0)->text();
+    //        tmpParamValue.chop(9);
+    //        paramValue = tmpParamValue;
+    //    }
+        if (paramName == "Время")
+        {
+            tmpval= QDateTime::fromTime_t(timeArray[recNo+printLeftTimeIndex]);
+            tmpParamValue = tmpval.toString();
+            tmpParamValue.remove(0,10);
+            paramValue = tmpParamValue;
+
+        }
+        for (int i = 0; i < varCounter; i++)
+        {
+
+            if(flagArray[i])
+            {
+                tmpval = (int)(Y[i][recNo+printLeftTimeIndex])%2;
+                if(paramName == parLabel[i])paramValue = tmpval.toString();
+            }
+            else
+            {
+                tmpval = Y[i][recNo+printLeftTimeIndex];
+                if(paramName == parLabel[i])paramValue = tmpval.toString();
+            }
+         }
+   // }
+
+}
 void MainWindow::on_actionPrint_triggered()
 {
-
-   pf->show();
+   int result = pf->exec();
    pf->SetMapMarkerPosition(timeArray[(int)verticalMapMarker->value().x()]);
+   if(QDialog::Accepted == result)
+   {
+       qDebug() << pf->returnFromTime();
+       qDebug() << pf->retutnToTime();
+       convertTimeToPosition(pf->returnFromTime(),pf->retutnToTime());
+       qDebug() << ui->tableWidget->verticalHeaderItem(0)->text();
+       report = new QtRPT(this);
+       QFileDialog dialog(this);
+       //QString fileName = dialog.getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл (*.*)");;
+       QString fileName = "ascumarm_05_09_13.xml";
+       report->recordCount << printRightTimeIndex - printLeftTimeIndex;
+       if (report->loadReport(fileName) == false) {
+           qDebug()<<"Report's file not found";
+       }
+       else
+       {
+           qDebug()<<"File found processing";
+           qDebug()<<fileName;
+           QObject::connect(report, SIGNAL(setValue(int&, QString&, QVariant&, int)),
+                            this, SLOT(setValue(int&, QString&, QVariant&, int)));
+       }
+       report->printExec();
+   }
    //connect(verticalMapMarker,SIGNAL(moveMapMarker),this,)
    // connect(, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
+}
+
+void MainWindow::convertTimeToPosition(QDateTime firstTime, QDateTime secondTime)
+{
+    for(int i = 0; i < sizeOfArray; i++)
+    {
+        if(firstTime.toTime_t()<=timeArray[i])
+        {
+            printLeftTimeIndex = i;
+            i=sizeOfArray;
+        }
+
+    }
+    qDebug() << printLeftTimeIndex;
+    for(int i = printLeftTimeIndex; i < sizeOfArray; i++)
+    {
+        if(secondTime.toTime_t()<=timeArray[i])
+        {
+            printRightTimeIndex = i;
+             i=sizeOfArray;
+        }
+
+    }
+    qDebug()<<printRightTimeIndex;
 }
