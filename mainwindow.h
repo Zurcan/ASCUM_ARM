@@ -8,6 +8,7 @@
 #include <qwt_scale_widget.h>
 #include <QLayout>
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <time.h>
 #include <QPalette>

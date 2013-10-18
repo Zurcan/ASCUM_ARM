@@ -398,29 +398,30 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     }
                                                 }
                                                 tmpFloat = tmpFloat*pow(10,newTmiInterp->TInterpItemArray[i].mask_);
-                                                tmpIntFloat =(int)tmpFloat;
-                                                if(tmpFloat>0)
-                                                {
-                                                    if(tmpIntFloat!=0)
-                                                    {
-                                                        if((tmpFloat-tmpIntFloat)!=0)
-                                                        {
-                                                        if((tmpFloat-tmpIntFloat)>0.5)tmpIntFloat++;
-                                                        }
-                                                    }
-                                                }
-                                                if(tmpFloat<0)
-                                                {
-                                                    if(tmpIntFloat!=0)
-                                                    {
-                                                        if((tmpFloat-tmpIntFloat)!=0)
-                                                        {
-                                                        if(abs(tmpFloat-tmpIntFloat)>0.5)tmpIntFloat--;
-                                                        }
-                                                    }
-                                                }
+                                                tmpIntFloat =lround((double)tmpFloat);
+//                                                if(tmpFloat>0)
+//                                                {
+//                                                    if(tmpIntFloat!=0)
+//                                                    {
+//                                                        if((tmpFloat-tmpIntFloat)!=0)
+//                                                        {
+//                                                        if((tmpFloat-tmpIntFloat)>0.5)tmpIntFloat++;
+//                                                        }
+//                                                    }
+//                                                }
+//                                                if(tmpFloat<0)
+//                                                {
+//                                                    if(tmpIntFloat!=0)
+//                                                    {
+//                                                        if((tmpFloat-tmpIntFloat)!=0)
+//                                                        {
+//                                                        if(abs(tmpFloat-tmpIntFloat)>0.5)tmpIntFloat--;
+//                                                        }
+//                                                    }
+//                                                }
                                                 tmpFloat = (float)(tmpIntFloat/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
-                                                Y[i-2][backIndex] =(double)tmpFloat;
+
+                                                Y[i-2][backIndex] =  tmpFloat; //round((double)tmpFloat);
 
                                                 }
                                                 else
@@ -1088,7 +1089,7 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
         if (paramName == "Машина")
         {
             paramValue = ui->tableWidget->item(0,0)->text();
-            qDebug() << paramValue.toString();
+            //qDebug() << paramValue.toString();
         }
         if (paramName == "TodayDate")
             paramValue = QDate::currentDate().toString();
@@ -1117,7 +1118,7 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
         {
             tmpval= QDateTime::fromTime_t(timeArray[recNo+printLeftTimeIndex]);
             tmpParamValue = tmpval.toString();
-            tmpParamValue.remove(0,10);
+            tmpParamValue.remove(0,11);
             paramValue = tmpParamValue;
 
         }
@@ -1132,7 +1133,8 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
             else
             {
                 tmpval = Y[i][recNo+printLeftTimeIndex];
-                if(paramName == parLabel[i])paramValue = tmpval.toString();
+                tmpval = tmpval.toFloat();
+                if(paramName == parLabel[i])paramValue =  tmpval.toString();
             }
          }
    // }
