@@ -40,8 +40,6 @@
 #include <QCheckBox>
 #include <printform.h>
 #include <qtrpt.h>
-//#include "secondslinearscale.h"
-//#include <qwt_a
 namespace Ui {
 class MainWindow;
 }
@@ -172,7 +170,7 @@ private:
 private:
     const double setOffset;
 };
-    TimeScaleDraw *timeScale;
+    MapTimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
     VerticalFlagScaleDraw *verticalFlagScale;
     QTimer *mapTimer;
