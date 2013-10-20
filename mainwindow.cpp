@@ -80,6 +80,12 @@ void MainWindow::initiatePlotMarkers()
     currentTimeMarker->attach(ui->qwtPlot_2);
     verticalMapMarker->attach(ui->qwtPlot);
 
+//    currentTimeMarker->setLabel(firstDateTime.toString());
+//    currentTimeMarker->label().setColor(Qt::black);
+//    currentTimeMarker->setLabelAlignment(Qt::AlignTop);
+//    currentTimeMarker->setSpacing(360);
+
+
 
 }
 
@@ -533,11 +539,12 @@ bool MainWindow::checkSegmentCRC(long segmentID)
 void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
 {
     timeScale = new TimeScaleDraw(startPoint);
+    timeScale->maxVal=sizeOfArray;
     mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
   //  SecondsLinearScaleEngine *mapTimeScale = new SecondsLinearScaleEngine;
     qDebug() << length;
     timeScale->timeArr= (time_t*)malloc(length*sizeof(time_t));
-
+//    timeScale->move(QwtScaleDraw::LeftScale);
 //     for(int i = 0; i < length; i++)
 //         tmp->timeArr[i] = times[i];
     timeScale->timeArr = times;
@@ -556,6 +563,9 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //     ui->qwtPlot->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
 //     ui->qwtPlot->setAxisScaleEngine(  QwtPlot::xBottom, mapTimeScale );
 
+
+     QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
+     sd->enableComponent(QwtScaleDraw::Ticks,false);
      ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
      QVariant tmpTimeIndex;
      //tmpTimeIndex = firstDateTime.toTime_t();
@@ -687,6 +697,7 @@ void MainWindow::moveMapMarker(long int position)
 {
     if(position>sizeOfArray)position=sizeOfArray;
     if(position < 0)position = 0;
+    timeScale->currentIndex = position;
     ui->actionPrint->setEnabled(true);
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
@@ -694,8 +705,7 @@ void MainWindow::moveMapMarker(long int position)
    // markerLbl.setText("123");
     //currentTimeMarker->setLabel(markerLbl);
  //   timeScale->updateBaseTime(QDateTime::fromTime_t(timeScale->timeArr[]));
-    ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100+position,100+position,100);// -100 and 100 are some constants indeed
-    //ui->qwtPlot->setAxisAutoScale(0,true);
+    ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100+position,100+position,1);// -100 and 100 are some constants indeed
     int tmpCounter=0;
     //qDebug() << "new cycle";
     for(int i =0; i <varCounter; i++ )

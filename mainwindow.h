@@ -40,6 +40,7 @@
 #include <QCheckBox>
 #include <printform.h>
 #include <qtrpt.h>
+#include <qwt_scale_div.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -58,19 +59,22 @@ public:
         {
         }
         time_t *timeArr;
+        int maxVal;
+        int currentIndex;
         virtual QwtText label( double v ) const
         {
             QDateTime upTime;
-            if(!(int)v)
+            QString tmp="";
+            if((int)v < 0)return tmp;// аналогично переделать для всех значений V, кроме текущего индекса
+            if((int)v>maxVal) return tmp;
+            if((int)v==0)
                 upTime = baseTime;
-            else
+
+            if((int)v==currentIndex)
             {
                 upTime = QDateTime::fromTime_t(timeArr[(int)v]);
-                //updateBaseTime(upTime);
-                //baseTime.secsTo(upTime);
-             //   invalidateCache();
             }
-
+            else return tmp;
             return upTime.toString();
         }
 //        void updateBaseTime(const QDateTime &updatedInitialTime)
