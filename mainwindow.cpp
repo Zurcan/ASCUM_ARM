@@ -621,6 +621,9 @@ void MainWindow::initiateCurves()
 //                QwtLegend curveLegend;
                 // qDebug()<< curve2[i]->offset;
                 curve2[i]->setSamples(X,Y[i],sizeOfArray);
+                if((int)Y[i][0]%2)curve2[i]->setBaseline(Y[i][0]-1);
+                else curve2[i]->setBaseline(Y[i][0]);
+                curve2[i]->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
 //                curve2[i]->setTitle(parLabel[i]);
 
 //                QwtSeriesData<QPointF> *myData;// = curve2[i]->data();
@@ -677,7 +680,37 @@ void MainWindow::initiateVideoScreens()
 
 }
 
+//MainWindow::mouseMoveEvent(QMouseEvent * event)
+//{
 
+
+//}
+//void MainWindow::mouseGrabber(QMouseEvent  *event)
+//{
+//    QWidget *widget = qApp->widgetAt(QCursor::pos());
+//    QString widget_name = widget->objectName();
+//    QString parent_name = widget->parent()->objectName();
+//    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+//    moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->cursor().pos().x()));
+//}
+void MainWindow::mouseMoveEvent(QMouseEvent * event)
+{
+   // if(QCursor::pos())
+//    qDebug() << QCursor::pos().x();
+//    qDebug() << ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x()+ui->qwtPlot->width();
+    int windowpos=ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
+    if((QCursor::pos().x()<(windowpos+ui->qwtPlot->width()))&(QCursor::pos().x()>(windowpos)))
+    {
+        QWidget *widget = qApp->widgetAt(QCursor::pos());
+        QString widget_name = widget->objectName();
+        QString parent_name = widget->parent()->objectName();
+
+        //qDebug() << event->buttons();
+        //if(!cursor.pos().isNull())
+        if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+            if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+    }
+}
 
 void MainWindow::mousePressEvent(QMouseEvent  *event)
 {
@@ -685,12 +718,18 @@ void MainWindow::mousePressEvent(QMouseEvent  *event)
     //qDebug() << cursor().pos().y();
    // qDebug() << ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->cursor().pos().x());
 //    qDebug() << ui->qwtPlot->size();
+
     QWidget *widget = qApp->widgetAt(QCursor::pos());
+    qDebug() << widget->objectName().isNull();
+    if(!widget->objectName().isEmpty())
+    {
     QString widget_name = widget->objectName();
     QString parent_name = widget->parent()->objectName();
-   // qDebug() << widget->parent()->objectName();
-    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot"))
-    moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->cursor().pos().x()));
+
+    qDebug() << event->buttons();
+    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+    }
 }
 
 void MainWindow::moveMapMarker(long int position)

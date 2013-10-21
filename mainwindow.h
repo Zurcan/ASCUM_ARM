@@ -41,6 +41,7 @@
 #include <printform.h>
 #include <qtrpt.h>
 #include <qwt_scale_div.h>
+#include <QMouseEvent>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -267,6 +268,8 @@ private slots:
 
     void hideAxis();
     void mousePressEvent(QMouseEvent *);
+   // void mouseGrabber(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
     void indexChanged();
