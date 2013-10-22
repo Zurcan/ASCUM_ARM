@@ -435,11 +435,11 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     Y[i-2][backIndex] =0;
                                                     tmpFloat=0;
                                                 }
-
-                                                if(!index)
-                                                    thermoPlotMaxs[i-2]=(double)tmpFloat;
-                                                else
-                                                    if((double)tmpFloat>Y[i-2][backIndex+1])thermoPlotMaxs[i-2]=(double)tmpFloat;
+                                                thermoPlotMaxs[i-2]=tmpMaxFloat;
+//                                                if(!index)
+//                                                    thermoPlotMaxs[i-2]=(double)tmpFloat;
+//                                                else
+//                                                    if((double)tmpFloat>Y[i-2][backIndex+1])thermoPlotMaxs[i-2]=(double)tmpFloat;
                                                 break;
                                             }
                                             case 10 :
@@ -699,7 +699,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
 //    qDebug() << QCursor::pos().x();
 //    qDebug() << ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x()+ui->qwtPlot->width();
     int windowpos=ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
-    if((QCursor::pos().x()<(windowpos+ui->qwtPlot->width()))&(QCursor::pos().x()>(windowpos)))
+    int cursorXPos =QCursor::pos().x();
+    if((cursorXPos<(windowpos+ui->qwtPlot->width()))&(cursorXPos>(windowpos)))
     {
         QWidget *widget = qApp->widgetAt(QCursor::pos());
         QString widget_name = widget->objectName();
@@ -707,34 +708,41 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
 
         //qDebug() << event->buttons();
         //if(!cursor.pos().isNull())
+        if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+        {
+            if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,cursorXPos));
+            if(event->buttons()==Qt::RightButton)
+            {
+                //if()
+                if(globalMagnifierPreviosPos>cursorXPos)
+                    globalMagnifyFactor--;
+                if(globalMagnifierPreviosPos<cursorXPos)
+                    globalMagnifyFactor++;
+                upPlotMagnifier(globalMagnifyFactor);
+            }
+        }
         if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-            if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+            if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,cursorXPos));
     }
 }
 
 void MainWindow::mousePressEvent(QMouseEvent  *event)
 {
-   // qDebug() << ui->qwtPlot->invTransform(QwtPlot::xBottom,event->pos().x());
-    //qDebug() << cursor().pos().y();
-   // qDebug() << ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->cursor().pos().x());
-//    qDebug() << ui->qwtPlot->size();
-
     QWidget *widget = qApp->widgetAt(QCursor::pos());
-    qDebug() << widget->objectName().isNull();
-    if(!widget->objectName().isEmpty())
-    {
     QString widget_name = widget->objectName();
     QString parent_name = widget->parent()->objectName();
-
-    qDebug() << event->buttons();
+    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+    {
+        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+        if(event->buttons()==Qt::RightButton)globalMagnifierPreviosPos=QCursor::pos().x();
+    }
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
         if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
-    }
 }
 
 void MainWindow::moveMapMarker(long int position)
 {
-    if(position>sizeOfArray)position=sizeOfArray;
+    if(position>=sizeOfArray)position=sizeOfArray-1;
     if(position < 0)position = 0;
     timeScale->currentIndex = position;
     ui->actionPrint->setEnabled(true);
@@ -744,13 +752,18 @@ void MainWindow::moveMapMarker(long int position)
    // markerLbl.setText("123");
     //currentTimeMarker->setLabel(markerLbl);
  //   timeScale->updateBaseTime(QDateTime::fromTime_t(timeScale->timeArr[]));
-    ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100+position,100+position,1);// -100 and 100 are some constants indeed
+    upPlotMagnifier(globalMagnifyFactor);
+  //  ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100+position,100+position,1);// -100 and 100 are some constants indeed
     int tmpCounter=0;
     //qDebug() << "new cycle";
     for(int i =0; i <varCounter; i++ )
     {
         if(!flagArray[i])
+        {
             thermo[i]->setValue(Y[i][position]);
+//            qDebug() << Y[i][position];
+//            qDebug() << thermo[i]->maxValue();
+        }
         else
         {
 //            radio[i]->setChecked((int)Y[i][position]%2);
@@ -1242,4 +1255,15 @@ void MainWindow::convertTimeToPosition(QDateTime firstTime, QDateTime secondTime
 
     }
     qDebug()<<printRightTimeIndex;
+}
+
+void MainWindow::upPlotMagnifier(int factor)
+{
+    if(factor>350) factor=350;
+    if(factor<0)factor=0;
+    double magVal = exp((double)factor/50);
+    magVal=round(magVal);
+    ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
+    ui->qwtPlot_2->replot();
+   // return round(retVal);
 }
