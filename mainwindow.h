@@ -211,8 +211,8 @@ private:
     QwtText markerLbl;
     time_t *timeArray;
     int flagArray[24];
-    int thermoPlotMins[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0,0};
-    int thermoPlotMaxs[24];// = {10, 100, 80, 90, 200, 210, 1500, 130, 1, 1, 1, 1,1}; //
+    double thermoPlotMins[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0,0};
+    double thermoPlotMaxs[24];// = {10, 100, 80, 90, 200, 210, 1500, 130, 1, 1, 1, 1,1}; //
     bool isAxisHidden[24];// ={false, false, false, false, false, false, false, false, false, false, false, false, false};
     QString parLabel[24];// = {"Скорость, км/ч", "Скорость двиг. 1, км/ч", "Скорость двиг. 2, км/ч", "Давление торм. маг. бар", "Давление торм. цил. бар", "highWayPres","Потребление топлива, л", "Флаг вперед", "Флаг назад", "ErrorHide", "ErrorRaise","parampampam","parampampampam"};
     //QString parLabelNew[];

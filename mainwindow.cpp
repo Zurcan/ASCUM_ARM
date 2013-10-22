@@ -435,11 +435,11 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     Y[i-2][backIndex] =0;
                                                     tmpFloat=0;
                                                 }
-                                                thermoPlotMaxs[i-2]=tmpMaxFloat;
-//                                                if(!index)
-//                                                    thermoPlotMaxs[i-2]=(double)tmpFloat;
-//                                                else
-//                                                    if((double)tmpFloat>Y[i-2][backIndex+1])thermoPlotMaxs[i-2]=(double)tmpFloat;
+                                              //  thermoPlotMaxs[i-2]=tmpMaxFloat;
+                                                if(!index)
+                                                    thermoPlotMaxs[i-2]=(double)tmpFloat;
+                                                else
+                                                if((double)tmpFloat>thermoPlotMaxs[i-2])thermoPlotMaxs[i-2]=(double)tmpFloat;
                                                 break;
                                             }
                                             case 10 :
@@ -636,7 +636,7 @@ void MainWindow::initiateCurves()
 //                curve2[i]->setSamples(new ShiftData (myPoints));
                 curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
                 curve2[i]->setAxes(QwtPlot::xBottom,11);//this one
-                ui->qwtPlot_2->enableAxis(11,true);//and enable it
+                ui->qwtPlot_2->enableAxis(11,false);//and enable it
                 QPalette myPalette;
                 myPalette.setColor(QPalette::Foreground,Qt::black);
                 myPalette.setColor(QPalette::Text,Qt::black);
@@ -816,8 +816,8 @@ void MainWindow::initiateThermos()
                 thermoPalette.setColor(QPalette::ButtonText, colors[i] );
                 qDebug() << thermoPlotMaxs[i];
                 qDebug() << thermoPlotMins[i];
-                thermo[i]->setMaxValue((double)thermoPlotMaxs[i]);
-                thermo[i]->setMinValue((double)thermoPlotMins[i]);
+                thermo[i]->setMaxValue(thermoPlotMaxs[i]);
+                thermo[i]->setMinValue(thermoPlotMins[i]);
                 thermo[i]->setValue(Y[i][0]);
                 thermo[i]->setMaximumHeight(100);
                 thermo[i]->setScalePosition(QwtThermo::RightScale);
