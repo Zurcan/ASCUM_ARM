@@ -23,15 +23,30 @@ MainWindow::MainWindow(QWidget *parent) :
      tmpIcon = new QIcon(":new/p/openLog");
     ui->actionOpen->setIcon(*tmpIcon);
 
-     newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
-     newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
-
-
+   newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
+   newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
+   if(reOpenWindow)
+       openLog();
+    reOpenWindow = false;
 }
 
 
 
 
+
+//mainWindow::mainWindow() : QMainWindow()
+//{
+//  setupUi(this);
+//  connect(buttonObjectName, SIGNAL(clicked()), this, SLOT(openNewMainWindow()));
+//}
+void MainWindow::openNewMainWindow()
+{
+
+  newWin = new MainWindow();
+  newWin->show();
+  //openLog();
+
+}
 void MainWindow::globalInits(int arrayIndexSize)
 {
 
@@ -1078,27 +1093,30 @@ void MainWindow::on_actionOpen_triggered()
     else
    {
         isOpened=false;
-        closeLog();
-       // openLog();
+
+        openNewMainWindow();
+        this->close();
+
    }
 }
 void MainWindow::closeLog()
 {
     ui->qwtPlot->setEnabled(false);
     ui->qwtPlot_2->setEnabled(false);
+
+  // delete timeScale;
    ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotItem,true);
+   ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotUserItem,true);
+   //ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotScale,true);
    ui->qwtPlot->replot();
    ui->qwtPlot_2->detachItems(QwtPlotItem::Rtti_PlotItem,true);
    ui->qwtPlot_2->replot();
-//    delete axisButton;
-//    for(int i = 0; i < varCounter;i++)
-//    {
-//        delete axisButton[i];
-//       // if(flagArray[i]);
-//        delete thermoLayout[i];
-//            //delete checkBox
-//    }
-
+   ui->tableWidget->clear();
+   ui->tableWidget->setEnabled(false);
+   ui->pushButton->setEnabled(false);
+   ui->pushButton_2->setEnabled(false);
+   ui->pushButton_3->setEnabled(false);
+   ui->pushButton_4->setEnabled(false);
     QObjectList tmpList= ui->groupBox->children();
     qDebug() << tmpList;
     qDeleteAll(tmpList.begin(), tmpList.end());
@@ -1114,22 +1132,27 @@ void MainWindow::closeLog()
     //    delete parLabel;
   //  delete checkBox;
 
-    delete X;
-    delete Y;
-    delete curve2;
-    delete curve1;
-    delete timeArray;
-    delete thermoPlotMaxs;
+//    free(X);// X;
+//    free(Y);
+//    newLogProc->tmpFile.close();
+//    //delete newLogProc;
 
-    delete newTmiInterp;
-    delete flagMarker;
-    for (int i =0; i < 24; i++)
-        flagArray[i]=0;
+//    delete curve2;
+//    delete curve1;
+//    delete timeArray;
+//    delete thermoPlotMaxs;
+//    //delete newLogProc;
+//    //delete newTmiInterp;
+//    delete flagMarker;
+//    for (int i =0; i < 24; i++)
+//        flagArray[i]=0;
 
 }
 
 void MainWindow::openLog()
 {
+//    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
+//    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
     filename = QFileDialog::getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл лога регистратора(*.alg)");
     //qDebug()<< filename;
     if(filename!="")

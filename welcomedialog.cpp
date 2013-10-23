@@ -6,7 +6,6 @@ WelcomeDialog::WelcomeDialog(QWidget *parent) :
     ui(new Ui::WelcomeDialog)
 {
     ui->setupUi(this);
-
     tmpIcon = new QIcon(":new/p/flashSilverP");
     ui->pushButton->setIcon(*tmpIcon);
     tmpIcon = new QIcon(":new/p/hardDriveI");
