@@ -68,15 +68,18 @@ public:
             QString tmp="";
             if((int)v < 0)return tmp;// аналогично переделать для всех значений V, кроме текущего индекса
             if((int)v>maxVal) return tmp;
-            if((int)v==0)
-                upTime = baseTime;
-
-            if((int)v==currentIndex)
-            {
-                upTime = QDateTime::fromTime_t(timeArr[(int)v]);
-            }
-            else return tmp;
-            return upTime.toString();
+//            if((int)v==0)
+//                upTime = baseTime;
+           // else
+                if((int)v==currentIndex)
+                {
+                    if(!(int)v)
+                        upTime = baseTime;
+                    else
+                        upTime = QDateTime::fromTime_t(timeArr[(int)v]);
+                }
+                else return tmp;
+            return upTime.time().toString();
         }
 //        void updateBaseTime(const QDateTime &updatedInitialTime)
 //        {
@@ -177,17 +180,20 @@ private:
 private:
     const double setOffset;
 };
+    bool isOpened=false;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
     VerticalFlagScaleDraw *verticalFlagScale;
     QTimer *mapTimer;
     int mapTimerDelay = 1000;
-    int globalMagnifyFactor=300;
+    int globalMagnifyFactor=150;
     int globalMagnifierPreviosPos;
+    int globalCursorPos;
     QIcon *tmpIcon;
     QwtAbstractScale *abstractScale;
     QwtAbstractScaleDraw *abstractScDraw;
     QwtScaleDraw *myScaleDraw;
+    QDateTime AxisLabelDate;
    int axisCount = 2;
    int varCounter;
    QString tmpStr;
@@ -228,6 +234,7 @@ private:
     QMediaPlayer *videoPlayer1,*videoPlayer2;
     QHBoxLayout *videoLayout1, *videoLayout2;
     QMediaPlaylist *playlist;
+    QVBoxLayout *thermoLayout[24] ;
     QWidget  *videoScreen1;
     QWidget *videoScreen2;
     QMessageBox newMessage;
@@ -264,6 +271,9 @@ private:
     void initiateRadios();
     double getOffsetValue(int flagIndex);
     void upPlotMagnifier(int);
+    void upPlotMoveCursor(int);
+    void openLog();
+    void closeLog();
     ~MainWindow();
 public slots:
 

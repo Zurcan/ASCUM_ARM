@@ -490,7 +490,8 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                          //   qDebug() << recPosition;
                         }
-                       // qDebug() << "we're here";
+                       qDebug() << "firstValue of TimeArray is:";
+                       qDebug() << QDateTime::fromTime_t(timeArray[0]);
   //                      sizeOfArray = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                        // sizeOfArray = tmpRecordCount;
 
@@ -583,7 +584,7 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 void MainWindow::initiateCurves()
 {
     verticalFlagScale = new VerticalFlagScaleDraw(24);
-
+    AxisLabelDate = firstDateTime;
      //srand(double(NULL));
     for (int i =0; i<varCounter; i++)
            {
@@ -642,6 +643,8 @@ void MainWindow::initiateCurves()
                 myPalette.setColor(QPalette::Text,Qt::black);
                 ui->qwtPlot_2->setAxisScaleDraw(11,verticalFlagScale);
                 ui->qwtPlot_2->setAxisScale(11, 0, 23, 1);
+                //ui->qwtPlot_2->setAxisLabelAlignment(QwtPlot::xBottom,Qt::AlignLeft);
+                ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, firstDateTime.date().toString());
                 ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                 ui->qwtPlot_2->replot();
                // offset+=2;
@@ -710,7 +713,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
         //if(!cursor.pos().isNull())
         if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
         {
-            if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,cursorXPos));
+            if(event->buttons()==Qt::LeftButton)
+            {
+
+                    moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,cursorXPos));
+                    globalCursorPos=cursorXPos;
+//                }
+            }
             if(event->buttons()==Qt::RightButton)
             {
                 //if()
@@ -733,7 +742,11 @@ void MainWindow::mousePressEvent(QMouseEvent  *event)
     QString parent_name = widget->parent()->objectName();
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
     {
-        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+        if(event->buttons()==Qt::LeftButton)
+        {
+            moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+            globalCursorPos = QCursor::pos().x();
+        }
         if(event->buttons()==Qt::RightButton)globalMagnifierPreviosPos=QCursor::pos().x();
     }
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
@@ -748,7 +761,9 @@ void MainWindow::moveMapMarker(long int position)
     ui->actionPrint->setEnabled(true);
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
-
+    QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
+    if(tmpDate.date()!=AxisLabelDate.date())ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpDate.date().toString());
+//    ui->qwtPlot_2->axisTitle(QwtPlot::xBottom).setRenderFlags(Qt::AlignRight);
    // markerLbl.setText("123");
     //currentTimeMarker->setLabel(markerLbl);
  //   timeScale->updateBaseTime(QDateTime::fromTime_t(timeScale->timeArr[]));
@@ -805,7 +820,7 @@ void MainWindow::initiateThermos()
     {
         if(!flagArray[i])
         {
-                QVBoxLayout *thermoLayout = new QVBoxLayout(this);
+                thermoLayout[i] = new QVBoxLayout(this);
                 ui->groupBox->setLayout(ui->horizontalLayout_2);
                 thermo[i] = new QwtThermo(this);
                 axisButton[i] = new QPushButton(this);
@@ -833,11 +848,11 @@ void MainWindow::initiateThermos()
                 else
                     axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
                 ui->horizontalLayout_2->addWidget(label1);
-                thermoLayout->addWidget(axisButton[i]);
-                thermoLayout->addWidget(thermo[i]);
-                thermoLayout->setMargin(0);
-                thermoLayout->setSpacing(0);
-                ui->horizontalLayout_2->addLayout(thermoLayout);
+                thermoLayout[i]->addWidget(axisButton[i]);
+                thermoLayout[i]->addWidget(thermo[i]);
+                thermoLayout[i]->setMargin(0);
+                thermoLayout[i]->setSpacing(0);
+                ui->horizontalLayout_2->addLayout(thermoLayout[i]);
         }
     }
 
@@ -1055,30 +1070,89 @@ void MainWindow::setGlobalArrays()
 
 void MainWindow::on_actionOpen_triggered()
 {
+    if(!isOpened)
+    {
+            isOpened=true;
+            openLog();
+    }
+    else
+   {
+        isOpened=false;
+        closeLog();
+       // openLog();
+   }
+}
+void MainWindow::closeLog()
+{
+    ui->qwtPlot->setEnabled(false);
+    ui->qwtPlot_2->setEnabled(false);
+   ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotItem,true);
+   ui->qwtPlot->replot();
+   ui->qwtPlot_2->detachItems(QwtPlotItem::Rtti_PlotItem,true);
+   ui->qwtPlot_2->replot();
+//    delete axisButton;
+//    for(int i = 0; i < varCounter;i++)
+//    {
+//        delete axisButton[i];
+//       // if(flagArray[i]);
+//        delete thermoLayout[i];
+//            //delete checkBox
+//    }
 
-     filename = QFileDialog::getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл лога регистратора(*.alg)");
-     //qDebug()<< filename;
-     if(filename!="")
-     {
-         ui->qwtPlot->setEnabled(true);
-            ui->qwtPlot_2->setEnabled(true);
-                ui->tableWidget->setEnabled(true);
-                    ui->actionPrint->setEnabled(true);
-                        ui->actionOpen->setEnabled(true);
-                            ui->groupBox->setEnabled(true);
-                                ui->pushButton->setEnabled(true);
-                                    ui->pushButton_2->setEnabled(true);
-                                        ui->pushButton_3->setEnabled(true);
-                                            ui->pushButton_4->setEnabled(true);
-     checkFileHeaderCRC();
-     readHeadTableData();
-     readDataFromLog();
-     setGlobalArrays();
-     initiatePlotMarkers();
-     initiateThermos();
-     initiateRadios();
-     initiateCurves();
-     hideWasteAxes(axisCount);
+    QObjectList tmpList= ui->groupBox->children();
+    qDebug() << tmpList;
+    qDeleteAll(tmpList.begin(), tmpList.end());
+    tmpList.clear();
+    //qDebug() << tmpList;
+    //qDeleteAll
+//    QIt tmp = tmpList.begin();
+//    while (tmp!=tmpList.end())
+//    {
+//        QObject *item = *tmpList;
+//        delete item;
+//    }
+    //    delete parLabel;
+  //  delete checkBox;
+
+    delete X;
+    delete Y;
+    delete curve2;
+    delete curve1;
+    delete timeArray;
+    delete thermoPlotMaxs;
+
+    delete newTmiInterp;
+    delete flagMarker;
+    for (int i =0; i < 24; i++)
+        flagArray[i]=0;
+
+}
+
+void MainWindow::openLog()
+{
+    filename = QFileDialog::getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл лога регистратора(*.alg)");
+    //qDebug()<< filename;
+    if(filename!="")
+    {
+        ui->qwtPlot->setEnabled(true);
+           ui->qwtPlot_2->setEnabled(true);
+               ui->tableWidget->setEnabled(true);
+                   ui->actionPrint->setEnabled(true);
+                       ui->actionOpen->setEnabled(true);
+                           ui->groupBox->setEnabled(true);
+                               ui->pushButton->setEnabled(true);
+                                   ui->pushButton_2->setEnabled(true);
+                                       ui->pushButton_3->setEnabled(true);
+                                           ui->pushButton_4->setEnabled(true);
+    checkFileHeaderCRC();
+    readHeadTableData();
+    readDataFromLog();
+    setGlobalArrays();
+    initiatePlotMarkers();
+    initiateThermos();
+    initiateRadios();
+    initiateCurves();
+    hideWasteAxes(axisCount);
     }
 }
 void MainWindow::initiateRadios()
@@ -1087,7 +1161,7 @@ void MainWindow::initiateRadios()
     {
         if(flagArray[i])
         {
-                QVBoxLayout *thermoLayout = new QVBoxLayout(this);
+               thermoLayout[i]= new QVBoxLayout(this);
                 ui->groupBox->setLayout(ui->horizontalLayout_2);
 //                radio[i] = new QRadioButton(this);
                 checkBox[i] = new QCheckBox (this);
@@ -1109,12 +1183,12 @@ void MainWindow::initiateRadios()
                 axisButton[i]->setFixedSize(20,20);
                 axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
                 ui->horizontalLayout_2->addWidget(label1);
-                thermoLayout->addWidget(axisButton[i]);
+                thermoLayout[i]->addWidget(axisButton[i]);
 //                thermoLayout->addWidget(radio[i]);
-                thermoLayout->addWidget(checkBox[i]);
-                thermoLayout->setMargin(0);
-                thermoLayout->setSpacing(0);
-                ui->horizontalLayout_2->addLayout(thermoLayout);
+                thermoLayout[i]->addWidget(checkBox[i]);
+                thermoLayout[i]->setMargin(0);
+                thermoLayout[i]->setSpacing(0);
+                ui->horizontalLayout_2->addLayout(thermoLayout[i]);
         }
     }
 }
@@ -1266,4 +1340,12 @@ void MainWindow::upPlotMagnifier(int factor)
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
     ui->qwtPlot_2->replot();
    // return round(retVal);
+}
+
+void MainWindow::upPlotMoveCursor(int cursorpos)
+{
+
+    //ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
+    //upPlotMagnifier(globalMagnifyFactor);
+    //ui->qwtPlot_2->replot();
 }
