@@ -181,6 +181,7 @@ private:
     const double setOffset;
 };
     bool isOpened=false;
+    bool reOpenWindow = false;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
     VerticalFlagScaleDraw *verticalFlagScale;
@@ -210,7 +211,7 @@ private:
     TMIinterpretator *newTmiInterp;
     #define smallTableID 0x80000012
     #define bigTableID 0x80000011
-
+    MainWindow *newWin = 0;
     QtRPT *report;
     double *X;
     double *Y[24];
@@ -274,6 +275,7 @@ private:
     void upPlotMoveCursor(int);
     void openLog();
     void closeLog();
+    void openNewMainWindow();
     ~MainWindow();
 public slots:
 
@@ -281,6 +283,7 @@ private slots:
 
     void hideAxis();
     void mousePressEvent(QMouseEvent *);
+
    // void mouseGrabber(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void on_pushButton_clicked();
