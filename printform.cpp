@@ -26,6 +26,19 @@ QDateTime PrintForm::returnFromTime()
     return ui->dateTimeEdit->dateTime();
 }
 
+void PrintForm::setBaseTime(time_t last, QDateTime first)
+{
+
+//    ui->dateTimeEdit->setMaximumDateTime(first);
+//    ui->dateTimeEdit_2->setMaximumDateTime(first);
+//    ui->dateTimeEdit->setMinimumDateTime(QDateTime::fromTime_t(last-1));
+//    ui->dateTimeEdit_2->setMinimumDateTime(QDateTime::fromTime_t(last));
+    //first.addSecs(120);
+     ui->dateTimeEdit->setDateTime(first);
+    ui->dateTimeEdit_2->setDateTime(first.addSecs(120));
+
+}
+
 QDateTime PrintForm::retutnToTime()
 {
     return ui->dateTimeEdit_2->dateTime();

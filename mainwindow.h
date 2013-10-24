@@ -187,7 +187,7 @@ private:
     VerticalFlagScaleDraw *verticalFlagScale;
     QTimer *mapTimer;
     int mapTimerDelay = 1000;
-    int globalMagnifyFactor=150;
+    int globalMagnifyFactor=100;
     int globalMagnifierPreviosPos;
     int globalCursorPos;
     QIcon *tmpIcon;
@@ -271,7 +271,7 @@ private:
     void openAndPlayVideo();
     void initiateRadios();
     double getOffsetValue(int flagIndex);
-    void upPlotMagnifier(int);
+    double upPlotMagnifier(int);
     void upPlotMoveCursor(int);
     void openLog();
     void closeLog();

@@ -4,5 +4,6 @@
         <file alias="openLog">res/Nandostudio-Rubber-Documents-folder.ico</file>
         <file alias="Video">res/movies.png</file>
         <file alias="print">res/Print.ico</file>
+        <file alias="closeLog">res/Nandostudio-Rubber-Folder-closed.ico</file>
     </qresource>
 </RCC>

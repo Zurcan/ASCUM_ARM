@@ -20,14 +20,14 @@ MainWindow::MainWindow(QWidget *parent) :
      tmpIcon = new QIcon(":new/p/print");
      ui->actionPrint->setIcon(*tmpIcon);
      ui->actionPrint->setEnabled(false);
-     tmpIcon = new QIcon(":new/p/openLog");
+     tmpIcon = new QIcon(":new/p/closeLog");
     ui->actionOpen->setIcon(*tmpIcon);
 
    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
-   if(reOpenWindow)
-       openLog();
-    reOpenWindow = false;
+//   if(reOpenWindow)
+//       openLog();
+//    reOpenWindow = false;
 }
 
 
@@ -76,6 +76,7 @@ void MainWindow::initiatePlotMarkers()
     verticalMapMarker->setValue(0,0);
 //    double tmpOffset=5;
      //int tmpCounter=0;
+
     for(int i = 0; i < varCounter; i++)
     {
 
@@ -86,7 +87,8 @@ void MainWindow::initiatePlotMarkers()
             flagMarker[i]->setLineStyle(QwtPlotMarker::NoLine);
 //            flagMarker[i]->setLinePen(QPen(colors[i]));
           //  flagMarker[i]->attach(ui->qwtPlot_2);
-            flagMarker[i]->setValue(90,getOffsetValue(i));
+
+            flagMarker[i]->setValue(80,getOffsetValue(i));
       //      flagMarker[i]->show();
 //            tmpCounter++;
         }
@@ -753,19 +755,34 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
 void MainWindow::mousePressEvent(QMouseEvent  *event)
 {
     QWidget *widget = qApp->widgetAt(QCursor::pos());
+    int plotPosOffset = ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
     QString widget_name = widget->objectName();
     QString parent_name = widget->parent()->objectName();
+//    ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
+//    ui->qwtPlot_2->transform(QwtPlot::xBottom, 0);
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
     {
         if(event->buttons()==Qt::LeftButton)
         {
-            moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+            moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
             globalCursorPos = QCursor::pos().x();
         }
-        if(event->buttons()==Qt::RightButton)globalMagnifierPreviosPos=QCursor::pos().x();
+        if(event->buttons()==Qt::RightButton)
+            globalMagnifierPreviosPos=QCursor::pos().x();
+        qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();//положение плота в абсолютных координатах
+        qDebug()<< ui->qwtPlot_2->mapFromGlobal(ui->qwtPlot_2->pos()).x();
+        qDebug() << ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x());//положение относительно конца крайнего левого аксиса+бордюр(зачем-то)
+        qDebug() << QCursor::pos().x();//абсолютное положение
+        qDebug() << ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();// положение относительно начала плота в начальном виде(без осей)
+        //qDebug() << currentTimeMarker->plot()->pos().x();
     }
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,QCursor::pos().x()));
+    {
+        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,QCursor::pos().x()- plotPosOffset));
+        qDebug() << QCursor::pos().x();
+        qDebug() << ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
+        qDebug() << ui->qwtPlot->transform(QwtPlot::xBottom, 0);
+    }
 }
 
 void MainWindow::moveMapMarker(long int position)
@@ -777,12 +794,16 @@ void MainWindow::moveMapMarker(long int position)
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
-    if(tmpDate.date()!=AxisLabelDate.date())ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpDate.date().toString());
+    if(tmpDate.date()!=AxisLabelDate.date())
+    {
+        ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpDate.date().toString());
+        AxisLabelDate = tmpDate;
+    }
 //    ui->qwtPlot_2->axisTitle(QwtPlot::xBottom).setRenderFlags(Qt::AlignRight);
    // markerLbl.setText("123");
     //currentTimeMarker->setLabel(markerLbl);
  //   timeScale->updateBaseTime(QDateTime::fromTime_t(timeScale->timeArr[]));
-    upPlotMagnifier(globalMagnifyFactor);
+    double magnifiedVal = upPlotMagnifier(globalMagnifyFactor);
   //  ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100+position,100+position,1);// -100 and 100 are some constants indeed
     int tmpCounter=0;
     //qDebug() << "new cycle";
@@ -799,7 +820,7 @@ void MainWindow::moveMapMarker(long int position)
 //            radio[i]->setChecked((int)Y[i][position]%2);
 
             checkBox[i]->setChecked((int)Y[i][position]%2);
-
+            flagMarker[i]->setValue(0.8*magnifiedVal +position,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
 //            radio[i]->setEnabled(true);
 //            radio[i]->setCheckable(true);
 //            qDebug() << i;
@@ -807,7 +828,7 @@ void MainWindow::moveMapMarker(long int position)
 //            if(((int)Y[i][position])%2==1)radio[i]->setChecked(true);
 //            else radio[i]->setChecked(false);
            // radio[i]->setDisabled(true);
-            flagMarker[i]->setValue(90+position,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
+
             tmpCounter++;
             //flagMarker[i]->setValue(position, curve2[i]->maxYValue());
         }
@@ -889,7 +910,8 @@ void MainWindow::hideAxis()
     }
     //qDebug() << index ;
     isAxisHidden[index] = !isAxisHidden[index];
-
+    double tmpMagVal = upPlotMagnifier(globalMagnifyFactor);
+   // int tmpCounter = 0;
     if(isAxisHidden[index])
     {
         curve2[index]->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
@@ -900,7 +922,7 @@ void MainWindow::hideAxis()
             curve2[index]->setAxes(1,tmpIndex);//this one
             ui->qwtPlot_2->enableAxis(tmpIndex,false);//and enable it
 
-          //  flagMarker[i]->setValue(90,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
+          // flagMarker[index]->setValue(0.8*tmpMagVal,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
         }
         else
             flagMarker[index]->detach();
@@ -923,7 +945,7 @@ void MainWindow::hideAxis()
         else
         {
             flagMarker[index]->attach(ui->qwtPlot_2);
-            flagMarker[index]->setValue(90+verticalMapMarker->value().x(),getOffsetValue(index));
+            flagMarker[index]->setValue(tmpMagVal*0.8+verticalMapMarker->value().x(),getOffsetValue(index));
             qDebug()<< getOffsetValue(index);
         }
         ui->qwtPlot_2->replot();
@@ -1087,7 +1109,6 @@ void MainWindow::on_actionOpen_triggered()
 {
     if(!isOpened)
     {
-            isOpened=true;
             openLog();
     }
     else
@@ -1101,27 +1122,27 @@ void MainWindow::on_actionOpen_triggered()
 }
 void MainWindow::closeLog()
 {
-    ui->qwtPlot->setEnabled(false);
-    ui->qwtPlot_2->setEnabled(false);
+//    ui->qwtPlot->setEnabled(false);
+//    ui->qwtPlot_2->setEnabled(false);
 
-  // delete timeScale;
-   ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotItem,true);
-   ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotUserItem,true);
-   //ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotScale,true);
-   ui->qwtPlot->replot();
-   ui->qwtPlot_2->detachItems(QwtPlotItem::Rtti_PlotItem,true);
-   ui->qwtPlot_2->replot();
-   ui->tableWidget->clear();
-   ui->tableWidget->setEnabled(false);
-   ui->pushButton->setEnabled(false);
-   ui->pushButton_2->setEnabled(false);
-   ui->pushButton_3->setEnabled(false);
-   ui->pushButton_4->setEnabled(false);
-    QObjectList tmpList= ui->groupBox->children();
-    qDebug() << tmpList;
-    qDeleteAll(tmpList.begin(), tmpList.end());
-    tmpList.clear();
-    //qDebug() << tmpList;
+//  // delete timeScale;
+//   ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotItem,true);
+//   ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotUserItem,true);
+//   //ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotScale,true);
+//   ui->qwtPlot->replot();
+//   ui->qwtPlot_2->detachItems(QwtPlotItem::Rtti_PlotItem,true);
+//   ui->qwtPlot_2->replot();
+//   ui->tableWidget->clear();
+//   ui->tableWidget->setEnabled(false);
+//   ui->pushButton->setEnabled(false);
+//   ui->pushButton_2->setEnabled(false);
+//   ui->pushButton_3->setEnabled(false);
+//   ui->pushButton_4->setEnabled(false);
+//    QObjectList tmpList= ui->groupBox->children();
+//    qDebug() << tmpList;
+//    qDeleteAll(tmpList.begin(), tmpList.end());
+//    tmpList.clear();
+//    //qDebug() << tmpList;
     //qDeleteAll
 //    QIt tmp = tmpList.begin();
 //    while (tmp!=tmpList.end())
@@ -1176,6 +1197,11 @@ void MainWindow::openLog()
     initiateRadios();
     initiateCurves();
     hideWasteAxes(axisCount);
+    isOpened=true;
+    tmpIcon = new QIcon(":new/p/openLog");
+    ui->actionOpen->setIcon(*tmpIcon);
+    ui->actionOpen->setToolTip("Закрыть файл журнала регистратора");
+    pf->setBaseTime(timeArray[0],firstDateTime);
     }
 }
 void MainWindow::initiateRadios()
@@ -1305,10 +1331,10 @@ void MainWindow::on_actionPrint_triggered()
    pf->SetMapMarkerPosition(timeArray[(int)verticalMapMarker->value().x()]);
    if(QDialog::Accepted == result)
    {
-       qDebug() << pf->returnFromTime();
-       qDebug() << pf->retutnToTime();
+      // qDebug() << pf->returnFromTime();
+      // qDebug() << pf->retutnToTime();
        convertTimeToPosition(pf->returnFromTime(),pf->retutnToTime());
-       qDebug() << ui->tableWidget->verticalHeaderItem(0)->text();
+      // qDebug() << ui->tableWidget->verticalHeaderItem(0)->text();
        report = new QtRPT(this);
        QFileDialog dialog(this);
        //QString fileName = dialog.getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл (*.*)");;
@@ -1319,8 +1345,8 @@ void MainWindow::on_actionPrint_triggered()
        }
        else
        {
-           qDebug()<<"File found processing";
-           qDebug()<<fileName;
+      //     qDebug()<<"File found processing";
+      //     qDebug()<<fileName;
            QObject::connect(report, SIGNAL(setValue(int&, QString&, QVariant&, int)),
                             this, SLOT(setValue(int&, QString&, QVariant&, int)));
        }
@@ -1332,6 +1358,7 @@ void MainWindow::on_actionPrint_triggered()
 
 void MainWindow::convertTimeToPosition(QDateTime firstTime, QDateTime secondTime)
 {
+    bool error1, error2;
     for(int i = 0; i < sizeOfArray; i++)
     {
         if(firstTime.toTime_t()<=timeArray[i])
@@ -1341,7 +1368,7 @@ void MainWindow::convertTimeToPosition(QDateTime firstTime, QDateTime secondTime
         }
 
     }
-    qDebug() << printLeftTimeIndex;
+  //  qDebug() << printLeftTimeIndex;
     for(int i = printLeftTimeIndex; i < sizeOfArray; i++)
     {
         if(secondTime.toTime_t()<=timeArray[i])
@@ -1351,18 +1378,29 @@ void MainWindow::convertTimeToPosition(QDateTime firstTime, QDateTime secondTime
         }
 
     }
-    qDebug()<<printRightTimeIndex;
+ //   qDebug()<<printRightTimeIndex;
 }
 
-void MainWindow::upPlotMagnifier(int factor)
+double MainWindow::upPlotMagnifier(int factor)
 {
-    if(factor>350) factor=350;
+    if(factor>200) factor=200;
     if(factor<0)factor=0;
-    double magVal = exp((double)factor/50);
+    double magVal = exp((double)factor/20);
     magVal=round(magVal);
+    if(magVal>3000)magVal=3000;
+    if(magVal<0)magVal = 0;
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
+    int tmpCounter=0;
+    for(int i =0; i < varCounter; i++)
+    {
+        if(flagArray[i])
+        {
+            flagMarker[i]->setValue(0.8*magVal +currentTimeMarker->value().x(),flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
+            tmpCounter++;
+        }
+    }
     ui->qwtPlot_2->replot();
-   // return round(retVal);
+    return magVal;
 }
 
 void MainWindow::upPlotMoveCursor(int cursorpos)

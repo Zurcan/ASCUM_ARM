@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Задайте границы печати</string>
   </property>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">

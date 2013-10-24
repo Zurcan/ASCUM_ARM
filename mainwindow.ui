@@ -23,7 +23,7 @@
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>400</height>
+        <height>450</height>
        </size>
       </property>
      </widget>
@@ -235,7 +235,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>150</height>
+          <height>120</height>
          </size>
         </property>
         <property name="cursor">
@@ -350,6 +350,9 @@
    <property name="text">
     <string>open</string>
    </property>
+   <property name="toolTip">
+    <string>Открыть файл журнала регистратора</string>
+   </property>
   </action>
   <action name="actionPrint">
    <property name="checkable">
@@ -360,6 +363,9 @@
    </property>
    <property name="text">
     <string>print</string>
+   </property>
+   <property name="toolTip">
+    <string>Печать файла</string>
    </property>
   </action>
  </widget>

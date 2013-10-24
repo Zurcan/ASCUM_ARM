@@ -44,7 +44,7 @@ FORMS    += mainwindow.ui \
 
 OTHER_FILES += \
     qwt.pri
-LIBS+= -LC:\Qt\Qwt-6.0.2\lib -lqwtd
+LIBS+= -LC:\Qt\Qwt-6.0.2\lib -lqwt
 INCLUDEPATH+= C:\Qt\qt-creator-2.7.0\bin
 #LIBS += libpqdll.lib
 INCLUDEPATH+= C:\Qt\Qwt-6.0.2\include

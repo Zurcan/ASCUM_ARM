@@ -15,6 +15,7 @@ class PrintForm : public QDialog
 public:
     explicit PrintForm(QWidget *parent = 0);
     void SetMapMarkerPosition(time_t DateTimePosition);
+    void setBaseTime(time_t,QDateTime);
     QDateTime returnFromTime();
     QDateTime retutnToTime();
     ~PrintForm();
