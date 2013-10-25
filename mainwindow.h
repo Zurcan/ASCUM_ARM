@@ -181,6 +181,8 @@ private:
     const double setOffset;
 };
     bool isOpened=false;
+    bool leftButtonPressed=false;
+    bool leftButtonReleased=false;
     bool reOpenWindow = false;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
@@ -283,8 +285,7 @@ private slots:
 
     void hideAxis();
     void mousePressEvent(QMouseEvent *);
-
-   // void mouseGrabber(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();

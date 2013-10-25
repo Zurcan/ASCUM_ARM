@@ -713,6 +713,7 @@ void MainWindow::initiateVideoScreens()
 //    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
 //    moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->cursor().pos().x()));
 //}
+
 void MainWindow::mouseMoveEvent(QMouseEvent * event)
 {
    // if(QCursor::pos())
@@ -751,6 +752,21 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
             if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,cursorXPos));
     }
 }
+/* If leftButtonPressed (if mouse been moved, leftButtonPressed = false), we have to move marker to this position
+ *if pressed right button (leftButtonPressed = false too), we do nothing,
+ */
+void MainWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+   int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
+    if(leftButtonPressed)
+    {
+        if(globalCursorPos==QCursor::pos().x())
+        {
+            moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,cursorPositionOnPlot));
+            leftButtonPressed=false;
+        }
+    }
+}
 
 void MainWindow::mousePressEvent(QMouseEvent  *event)
 {
@@ -764,17 +780,27 @@ void MainWindow::mousePressEvent(QMouseEvent  *event)
     {
         if(event->buttons()==Qt::LeftButton)
         {
-            moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
+         //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
             globalCursorPos = QCursor::pos().x();
+            leftButtonPressed = true;
         }
         if(event->buttons()==Qt::RightButton)
             globalMagnifierPreviosPos=QCursor::pos().x();
-        qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();//положение плота в абсолютных координатах
+        //qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();//положение плота в абсолютных координатах
         qDebug()<< ui->qwtPlot_2->mapFromGlobal(ui->qwtPlot_2->pos()).x();
-        qDebug() << ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x());//положение относительно конца крайнего левого аксиса+бордюр(зачем-то)
+        qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->contentsRect().bottomLeft()).x();//собственно начало плота в абсолютных координатах, еще до осей
+        //qDebug() << ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x());//положение маркера относительно конца крайней правой оси+бордюр(зачем-то)
         qDebug() << QCursor::pos().x();//абсолютное положение
+        qDebug() << ui->qwtPlot_2->mapToParent(QCursor::pos()).x();
+        qDebug()<< ui->qwtPlot_2->mapFromParent(QCursor::pos()).x();
         qDebug() << ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();// положение относительно начала плота в начальном виде(без осей)
-        //qDebug() << currentTimeMarker->plot()->pos().x();
+        //qDebug() << ui->qwtPlot_2->mapToGlobal()
+        //qDebug() << ui->qwtPlot_2->width();
+        //QPoint tmp = currentTimeMarker->value().toPoint();
+       // qDebug()<< ui->qwtPlot_2->mapToGlobal(currentTimeMarker->value().toPoint()).x();
+    //    qDebug()<< ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x()-upPlotMagnifier(globalMagnifyFactor));
+     //  qDebug()<< ui->qwtPlot_2->mapToGlobal((currentTimeMarker->value().toPoint()-ui->qwtPlot_2->ax).toPoint()).x();
+        //qDebug() <<
     }
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
     {
