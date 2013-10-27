@@ -100,16 +100,23 @@ public:
     time_t *timeArr;
     virtual QwtText label(double v) const
     {
+        QwtText retVal;
        QDateTime upTime = QDateTime::fromTime_t(timeArr[(int)v]);
     //QDateTime t = QDateTime::fromTime_t((int)v);
     //return t.toString(format);
        if(v==0)
        {
            //label.setColor(Qt::yellow);
-           return upTime.toString("             dd.MM.yyyy hh:mm:ss");
+          // label(QwtText::setRenderFlags(Qt::AlignRight));
+           retVal = upTime.toString("                         dd.MM.yyyy hh:mm:ss");
+           //retVal.setRenderFlags(Qt::AlignRight);
+          // retVal.setRenderFlags(Qt::AlignTrailing);
+           return retVal;
        }
        else return upTime.toString(format);
     }
+
+
     private:
     const QString format;
     //const QString firstFormat="dd MM hh:mm:ss yy";
