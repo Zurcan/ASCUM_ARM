@@ -758,19 +758,29 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
  */
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    double tmpMagVal = upPlotMagnifier(globalMagnifyFactor);
-   int cursorPositionOnPlot = ((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,
-                                                                ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x()
-                                                                -ui->qwtPlot_2->contentsMargins().left())
-                                                                - ui->qwtPlot_2->transform(QwtPlot::xBottom,
-                                                                                           currentTimeMarker->value().x()-tmpMagVal));//ui->qwtPlot_2->invTransform(QCursor::pos()).x()+ui->qwtPlot->transform(QwtPlot::xBottom, -upPlotMagnifier(globalMagnifyFactor) );
+    QWidget *widget = qApp->widgetAt(QCursor::pos());
+    QString widget_name = widget->objectName();
+    QString parent_name = widget->parent()->objectName();
+//    ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
+//    ui->qwtPlot_2->transform(QwtPlot::xBottom, 0);
+
+   // double tmpMagVal = upPlotMagnifier(globalMagnifyFactor);
+   int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
+   int cursorOffset= calculateCursorPlotOffset();
+   //qDebug() << cursorOffset;
+   //qDebug() << ui->qwtPlot_2->invTransform(QwtPlot::xBottom, currentTimeMarker->value().x()-upPlotMagnifier(globalMagnifyFactor));
+   qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].x();
+  // qDebug() << ui->qwtPlot_2->axisCnt;
     if(leftButtonPressed)
     {
-        if(globalCursorPos==QCursor::pos().x())
-        {
-            moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,globalCursorPos+ cursorPositionOnPlot));
-            leftButtonPressed=false;
-        }
+        if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+            if(globalCursorPos==QCursor::pos().x())
+            {
+                int moveVal = (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorOffset ));
+                moveMapMarker(moveVal);
+                qDebug() << moveVal;
+                leftButtonPressed=false;
+            }
     }
 }
 
@@ -793,13 +803,13 @@ void MainWindow::mousePressEvent(QMouseEvent  *event)
         if(event->buttons()==Qt::RightButton)
             globalMagnifierPreviosPos=QCursor::pos().x();
         //qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();//положение плота в абсолютных координатах
-        qDebug()<< ui->qwtPlot_2->mapFromGlobal(ui->qwtPlot_2->pos()).x();
-        qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->contentsRect().bottomLeft()).x();//собственно начало плота в абсолютных координатах, еще до осей
+      //  qDebug()<< ui->qwtPlot_2->mapFromGlobal(ui->qwtPlot_2->pos()).x();
+     //   qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->contentsRect().bottomLeft()).x();//собственно начало плота в абсолютных координатах, еще до осей
         //qDebug() << ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x());//положение маркера относительно конца крайней правой оси+бордюр(зачем-то)
-        qDebug() << QCursor::pos().x();//абсолютное положение
-        qDebug() << ui->qwtPlot_2->mapToParent(QCursor::pos()).x();
-        qDebug()<< ui->qwtPlot_2->mapFromParent(QCursor::pos()).x();
-        qDebug() << ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();// положение относительно начала плота в начальном виде(без осей)
+        //qDebug() << QCursor::pos().x();//абсолютное положение
+       // qDebug() << ui->qwtPlot_2->mapToParent(QCursor::pos()).x();
+      //  qDebug()<< ui->qwtPlot_2->mapFromParent(QCursor::pos()).x();
+      //  qDebug() << ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();// положение относительно начала плота в начальном виде(без осей)
         //qDebug() << ui->qwtPlot_2->mapToGlobal()
         //qDebug() << ui->qwtPlot_2->width();
         //QPoint tmp = currentTimeMarker->value().toPoint();
@@ -811,9 +821,9 @@ void MainWindow::mousePressEvent(QMouseEvent  *event)
     if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
     {
         if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
-        qDebug() << QCursor::pos().x();
-        qDebug() << ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
-        qDebug() << ui->qwtPlot->transform(QwtPlot::xBottom, 0);
+      //  qDebug() << QCursor::pos().x();
+     //   qDebug() << ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
+     //   qDebug() << ui->qwtPlot->transform(QwtPlot::xBottom, 0);
     }
 }
 
@@ -1435,10 +1445,25 @@ double MainWindow::upPlotMagnifier(int factor)
     return magVal;
 }
 
-void MainWindow::upPlotMoveCursor(int cursorpos)
+int MainWindow::calculateCursorPlotOffset()
 {
-
-    //ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
-    //upPlotMagnifier(globalMagnifyFactor);
-    //ui->qwtPlot_2->replot();
+    int offset=0;
+    if(ui->qwtPlot_2->visibleRegion().rects().count()>1)
+    {
+        if(ui->qwtPlot_2->visibleRegion().rects()[0].x()>0)
+        {
+            //offset = ui->qwtPlot_2->visibleRegion().rects()[0].width();
+            int tmpOffset = ui->qwtPlot_2->width() -ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x()+upPlotMagnifier(globalMagnifyFactor));
+            offset = 0;
+            qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].width();
+            //offset = tmpOffset + offset - ui->qwtPlot_2->width() ;
+        }
+        else
+            offset = -ui->qwtPlot_2->visibleRegion().rects()[0].width();
+    }
+    qDebug() << offset;
+ //   qDebug() << ui->qwtPlot_2->width();
+    qDebug() << ui->qwtPlot_2->visibleRegion();
+//    qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].width();
+    return offset;
 }

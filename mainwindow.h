@@ -249,7 +249,7 @@ private:
     QWidget *videoScreen2;
     QMessageBox newMessage;
     NcFramelessHelper *fh1,*fh2;
-   QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed, Qt::darkMagenta, Qt::darkYellow, Qt::darkGray, Qt::blue, Qt::black,Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed};
+    QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed, Qt::darkMagenta, Qt::darkYellow, Qt::darkGray, Qt::blue, Qt::black,Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed};
     QDateTime firstDateTime;
     int printLeftTimeIndex=0, printRightTimeIndex=0;
 
@@ -281,10 +281,11 @@ private:
     void initiateRadios();
     double getOffsetValue(int flagIndex);
     double upPlotMagnifier(int);
-    void upPlotMoveCursor(int);
+    //void upPlotMoveCursor(int);
     void openLog();
     void closeLog();
     void openNewMainWindow();
+    int calculateCursorPlotOffset();
     ~MainWindow();
 public slots:
 
