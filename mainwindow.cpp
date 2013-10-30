@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //       WelcomeDialog wd;
 //        wd.exec();
     // initiateVideoScreens();
-     ui->setupUi(this);
+     ui->setupUi(this); 
      pf = new PrintForm(this);
     ui->qwtPlot->enableAxis(QwtPlot::yLeft,false);
      ui->pushButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
