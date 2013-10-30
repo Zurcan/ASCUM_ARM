@@ -285,6 +285,8 @@ private:
     void openLog();
     void closeLog();
     void openNewMainWindow();
+    bool isCursorPositionOnUpPlot();
+    bool isCursorPositionOnDownPlot();
     int calculateCursorPlotOffset();
     ~MainWindow();
 public slots:
