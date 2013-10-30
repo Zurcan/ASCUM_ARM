@@ -715,33 +715,37 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
             {
                 if(leftButtonPressed)
                 {
-                    int currentPos = QCursor::pos().x();
-                   // globalPos.x()  <<  globalCursorPos;
-                    int cursorPositionMoved = globalCursorPos - currentPos;
+
+                    int globalPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, globalCursorPoint.x());
+                    int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
+                    qDebug() << globalPos;
+                    qDebug() << currentPos;
+                    int cursorPositionMoved = globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
                     //qDebug() << currentPos;
                     //qDebug() << globalCursorPos;
                     //qDebug() << (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,cursorPositionMoved);
 
-                    int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
+                    int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(globalCursorPoint).x();
                     int cursorOffset= calculateCursorPlotOffset();
                     qDebug()<<globalCursorPos;
-                    qDebug() <<cursorPositionOnPlot;
-                    qDebug() << cursorOffset;
                     qDebug() << cursorPositionMoved;
-                    int moveVal = (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorOffset+cursorPositionMoved));
-                    //qDebug() << moveVal;
+                    qDebug() << cursorPositionOnPlot;
+                    int moveVal =  (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot+cursorOffset)) +cursorPositionMoved;
+                    qDebug() << moveVal;
                     moveMapMarker(moveVal);
                    // moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()+(globalCursorPos-QCursor::pos().x())));
                     globalCursorPos=QCursor::pos().x();
+                    globalCursorPoint = QCursor::pos();
                 }
             }
             if(event->buttons()==Qt::RightButton)
             {
                 //if()
                 if(globalMagnifierPreviosPos>QCursor::pos().x())
-                    globalMagnifyFactor--;
-                if(globalMagnifierPreviosPos<QCursor::pos().x())
                     globalMagnifyFactor++;
+                if(globalMagnifierPreviosPos<QCursor::pos().x())
+                    globalMagnifyFactor--;
+                globalMagnifierPreviosPos = QCursor::pos().x();
                 upPlotMagnifier(globalMagnifyFactor);
             }
         }
@@ -809,6 +813,7 @@ void MainWindow::mousePressEvent(QMouseEvent  *event)
         {
          //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
             globalCursorPos = QCursor::pos().x();
+            globalCursorPoint = QCursor::pos();
             leftButtonPressed = true;
         }
         if(event->buttons()==Qt::RightButton)

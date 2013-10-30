@@ -199,6 +199,7 @@ private:
     int globalMagnifyFactor=100;
     int globalMagnifierPreviosPos;
     int globalCursorPos;
+    QPoint globalCursorPoint;
     QIcon *tmpIcon;
     QwtAbstractScale *abstractScale;
     QwtAbstractScaleDraw *abstractScDraw;
