@@ -1,4 +1,4 @@
-﻿#include "mainwindow.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -462,6 +462,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             case 10 :
                                             {
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+                                                recTime = mktime(gmtime(&recTime));
                                                 if(index==tmpRecordCount-1)
                                                          firstDateTime = QDateTime::fromTime_t(recTime);
                                                 timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
@@ -715,23 +716,17 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
             {
                 if(leftButtonPressed)
                 {
-
+                    globalMoveFlag = true;
                     int globalPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, globalCursorPoint.x());
                     int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
-                    qDebug() << globalPos;
-                    qDebug() << currentPos;
-                    int cursorPositionMoved = globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
-                    //qDebug() << currentPos;
-                    //qDebug() << globalCursorPos;
-                    //qDebug() << (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,cursorPositionMoved);
-
+                    int cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
                     int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(globalCursorPoint).x();
-                    int cursorOffset= calculateCursorPlotOffset();
-                    qDebug()<<globalCursorPos;
-                    qDebug() << cursorPositionMoved;
-                    qDebug() << cursorPositionOnPlot;
-                    int moveVal =  (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot+cursorOffset)) +cursorPositionMoved;
-                    qDebug() << moveVal;
+                    int cursorOffset= calculateCursorPlotOffset()+cursorPositionMoved;
+//                    qDebug()<<globalCursorPos;
+//                    qDebug() << cursorPositionMoved;
+//                    qDebug() << currentTimeMarker->value().x();
+                    int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
+//                    qDebug() << moveVal;
                     moveMapMarker(moveVal);
                    // moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()+(globalCursorPos-QCursor::pos().x())));
                     globalCursorPos=QCursor::pos().x();
@@ -751,9 +746,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
         }
         if(isCursorPositionOnDownPlot())
         {
-            qDebug() << "here we are";
+
             if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-                if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+            {
+                if(event->buttons()==Qt::LeftButton)
+                    moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+//            qDebug() << "here we are";
+            }
         }
     }
 }
@@ -772,16 +771,23 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
             if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
                 if(leftButtonPressed)
                 {
-
+                    if(globalMoveFlag)
+                    {
+                        globalMoveFlag = false;
+                        leftButtonPressed = false;
+                    }
+                    else
                         if(globalCursorPos==QCursor::pos().x())
                         {
                             int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
                             int cursorOffset= calculateCursorPlotOffset();
                             int moveVal = (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorOffset ));
+//                            qDebug() << moveVal;
                             moveMapMarker(moveVal);
                             leftButtonPressed=false;
                         }
                 }
+
         }
      else
       {
@@ -841,50 +847,23 @@ void MainWindow::moveMapMarker(long int position)
         ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpDate.date().toString());
         AxisLabelDate = tmpDate;
     }
-//    ui->qwtPlot_2->axisTitle(QwtPlot::xBottom).setRenderFlags(Qt::AlignRight);
-   // markerLbl.setText("123");
-    //currentTimeMarker->setLabel(markerLbl);
- //   timeScale->updateBaseTime(QDateTime::fromTime_t(timeScale->timeArr[]));
     double magnifiedVal = upPlotMagnifier(globalMagnifyFactor);
-  //  ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100+position,100+position,1);// -100 and 100 are some constants indeed
     int tmpCounter=0;
-    //qDebug() << "new cycle";
     for(int i =0; i <varCounter; i++ )
     {
         if(!flagArray[i])
         {
             thermo[i]->setValue(Y[i][position]);
-//            qDebug() << Y[i][position];
-//            qDebug() << thermo[i]->maxValue();
         }
         else
         {
-//            radio[i]->setChecked((int)Y[i][position]%2);
-
             checkBox[i]->setChecked((int)Y[i][position]%2);
             flagMarker[i]->setValue(0.8*magnifiedVal +position,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
-//            radio[i]->setEnabled(true);
-//            radio[i]->setCheckable(true);
-//            qDebug() << i;
-//            qDebug() << ((int)Y[i][position])%2;
-//            if(((int)Y[i][position])%2==1)radio[i]->setChecked(true);
-//            else radio[i]->setChecked(false);
-           // radio[i]->setDisabled(true);
-
             tmpCounter++;
-            //flagMarker[i]->setValue(position, curve2[i]->maxYValue());
         }
 
     }
-//    if(pf->isVisible())
-//    {
-//        pf->close();
-//        pf->show();
-//    }
-
     pf->SetMapMarkerPosition(timeArray[position]);
-    //qDebug() << tmpCounter;
-    //qDebug() << verticalMapMarker->xValue();
     ui->qwtPlot->replot();
     ui->qwtPlot_2->replot();
 }
@@ -1453,7 +1432,7 @@ int MainWindow::calculateCursorPlotOffset()
         if(ui->qwtPlot_2->visibleRegion().rects()[0].x()>0)
         {
             //offset = ui->qwtPlot_2->visibleRegion().rects()[0].width();
-            int tmpOffset = ui->qwtPlot_2->width() -ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x()+upPlotMagnifier(globalMagnifyFactor));
+            int tmpOffset = ui->qwtPlot_2->width() - ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x()+upPlotMagnifier(globalMagnifyFactor));
             offset = 0;
 //            qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].width();
             //offset = tmpOffset + offset - ui->qwtPlot_2->width() ;

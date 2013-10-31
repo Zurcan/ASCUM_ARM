@@ -102,6 +102,8 @@ public:
     {
         QwtText retVal;
        QDateTime upTime = QDateTime::fromTime_t(timeArr[(int)v]);
+
+
     //QDateTime t = QDateTime::fromTime_t((int)v);
     //return t.toString(format);
        if(v==0)
@@ -199,6 +201,8 @@ private:
     int globalMagnifyFactor=100;
     int globalMagnifierPreviosPos;
     int globalCursorPos;
+    int beforeMovePosition;
+    int globalMoveFlag=false;
     QPoint globalCursorPoint;
     QIcon *tmpIcon;
     QwtAbstractScale *abstractScale;
