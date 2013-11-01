@@ -560,6 +560,7 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     timeScale = new TimeScaleDraw(startPoint);
     timeScale->maxVal=sizeOfArray;
     mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
+    mapTimeScale->setLabelAlignment(Qt::AlignRight);
   //  SecondsLinearScaleEngine *mapTimeScale = new SecondsLinearScaleEngine;
     qDebug() << length;
     timeScale->timeArr= (time_t*)malloc(length*sizeof(time_t));
@@ -603,6 +604,8 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 void MainWindow::initiateCurves()
 {
     verticalFlagScale = new VerticalFlagScaleDraw(24);
+   // ui->qwtPlot->enableAxis(QwtPlot::xTop,true);
+    ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
     AxisLabelDate = firstDateTime;
      //srand(double(NULL));
     for (int i =0; i<varCounter; i++)
@@ -616,7 +619,7 @@ void MainWindow::initiateCurves()
                 curve1[i]->attach(ui->qwtPlot);
                 curve1[i]->setAxes(QwtPlot::xBottom,i);
                 ui->qwtPlot->enableAxis(i,false);
-                ui->qwtPlot->setContentsMargins(-100,0,0,0);
+                ui->qwtPlot->setContentsMargins(-50,0,0,0);
                 ui->qwtPlot->replot();
             }
             if(!flagArray[i])
@@ -664,6 +667,7 @@ void MainWindow::initiateCurves()
                 ui->qwtPlot_2->setAxisScale(11, 0, 23, 1);
                 //ui->qwtPlot_2->setAxisLabelAlignment(QwtPlot::xBottom,Qt::AlignLeft);
                 ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, firstDateTime.date().toString());
+                plotPointer = new QwtPlotPicker;
                 ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                 ui->qwtPlot_2->replot();
                // offset+=2;

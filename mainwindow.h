@@ -42,6 +42,7 @@
 #include <qtrpt.h>
 #include <qwt_scale_div.h>
 #include <QMouseEvent>
+#include <qwt_plot_picker.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -110,7 +111,7 @@ public:
        {
            //label.setColor(Qt::yellow);
           // label(QwtText::setRenderFlags(Qt::AlignRight));
-           retVal = upTime.toString("                         dd.MM.yyyy hh:mm:ss");
+           retVal = upTime.toString("dd.MM.yyyy hh:mm:ss");
            //retVal.setRenderFlags(Qt::AlignRight);
           // retVal.setRenderFlags(Qt::AlignTrailing);
            return retVal;
@@ -189,6 +190,7 @@ private:
 private:
     const double setOffset;
 };
+    QwtPlotPicker *plotPointer;
     bool isOpened=false;
     bool leftButtonPressed=false;
     bool leftButtonReleased=false;
