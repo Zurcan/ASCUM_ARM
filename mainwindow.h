@@ -42,6 +42,7 @@
 #include <qtrpt.h>
 #include <qwt_scale_div.h>
 #include <QMouseEvent>
+#include <QCursor>
 #include <qwt_plot_picker.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
@@ -251,7 +252,7 @@ private:
     QMediaPlayer *videoPlayer1,*videoPlayer2;
     QHBoxLayout *videoLayout1, *videoLayout2;
     QMediaPlaylist *playlist;
-    QVBoxLayout *thermoLayout[24] ;
+    QHBoxLayout *thermoLayout[24] ;
     QWidget  *videoScreen1;
     QWidget *videoScreen2;
     QMessageBox newMessage;
@@ -304,6 +305,7 @@ private slots:
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
+    void cursorMoved(QPoint);
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
     void indexChanged();

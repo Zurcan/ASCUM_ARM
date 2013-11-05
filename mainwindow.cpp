@@ -667,7 +667,11 @@ void MainWindow::initiateCurves()
                 ui->qwtPlot_2->setAxisScale(11, 0, 23, 1);
                 //ui->qwtPlot_2->setAxisLabelAlignment(QwtPlot::xBottom,Qt::AlignLeft);
                 ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, firstDateTime.date().toString());
-                plotPointer = new QwtPlotPicker;
+                plotPointer = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
+                                                QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
+                                                ui->qwtPlot_2->canvas());
+                connect(plotPointer, SIGNAL(moved(QPoint)),
+                        this, SLOT(cursorMoved(QPoint)));
                 ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                 ui->qwtPlot_2->replot();
                // offset+=2;
@@ -877,12 +881,17 @@ void MainWindow::moveMapMarker(long int position)
 void MainWindow::initiateThermos()
 {
     QPalette thermoPalette;
+
     for(int i = 0; i<varCounter; i++)
     {
         if(!flagArray[i])
         {
-                thermoLayout[i] = new QVBoxLayout(this);
-                ui->groupBox->setLayout(ui->horizontalLayout_2);
+                thermoLayout[i] = new QHBoxLayout(this);
+
+                ui->groupBox->setLayout(ui->verticalLayout_7);
+                //ui->verticalScrollBar->setLayout(ui->verticalLayout_7);
+                //ui->verticalScrollBar->setParent(ui->groupBox);
+                //ui->verticalLayout_7->addWidget(ui->verticalScrollBar,);
                 thermo[i] = new QwtThermo(this);
                 axisButton[i] = new QPushButton(this);
                 //qDebug() << i;
@@ -894,26 +903,31 @@ void MainWindow::initiateThermos()
                 qDebug() << thermoPlotMins[i];
                 thermo[i]->setMaxValue(thermoPlotMaxs[i]);
                 thermo[i]->setMinValue(thermoPlotMins[i]);
+                thermo[i]->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
                 thermo[i]->setValue(Y[i][0]);
                 thermo[i]->setMaximumHeight(100);
-                thermo[i]->setScalePosition(QwtThermo::RightScale);
-                thermo[i]->setScalePosition(QwtThermo::NoScale);
+ //               thermo[i]->setScalePosition(QwtThermo::RightScale);
+ //               thermo[i]->setScalePosition(QwtThermo::NoScale);
                 thermo[i]->setAlarmEnabled(false);
                 thermo[i]->setPalette(thermoPalette);
                 //QString *tmpStr = parLabel[i];
                 RotatedLabel *label1 = new RotatedLabel(parLabel[i]);
-                label1->setAngle(270);
+                label1->setAngle(0);
                 axisButton[i]->setFixedSize(20,20);
                 if(isAxisHidden[i])
                     axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
                 else
                     axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-                ui->horizontalLayout_2->addWidget(label1);
+
+                ui->verticalLayout_7->addWidget(label1);
+
+               // thermoLayout[i]->addWidget(label1);
                 thermoLayout[i]->addWidget(axisButton[i]);
                 thermoLayout[i]->addWidget(thermo[i]);
                 thermoLayout[i]->setMargin(0);
                 thermoLayout[i]->setSpacing(0);
-                ui->horizontalLayout_2->addLayout(thermoLayout[i]);
+            //    ui->groupBox->setLayout(thermoLayout[i]);
+                ui->verticalLayout_7->addLayout(thermoLayout[i]);
         }
     }
 
@@ -1235,8 +1249,8 @@ void MainWindow::initiateRadios()
     {
         if(flagArray[i])
         {
-               thermoLayout[i]= new QVBoxLayout(this);
-                ui->groupBox->setLayout(ui->horizontalLayout_2);
+               thermoLayout[i]= new QHBoxLayout(this);
+                ui->groupBox->setLayout(ui->verticalLayout_7);
 //                radio[i] = new QRadioButton(this);
                 checkBox[i] = new QCheckBox (this);
 //                radio[i]->setEnabled(false);
@@ -1253,16 +1267,16 @@ void MainWindow::initiateRadios()
                 checkBox[i]->setChecked((int)Y[i][0]%2);
                 //checkBox[i]->setCheckable(false);
                  RotatedLabel *label1 = new RotatedLabel(parLabel[i]);
-                label1->setAngle(270);
+                label1->setAngle(0);
                 axisButton[i]->setFixedSize(20,20);
                 axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
-                ui->horizontalLayout_2->addWidget(label1);
+                ui->verticalLayout_7->addWidget(label1);
                 thermoLayout[i]->addWidget(axisButton[i]);
 //                thermoLayout->addWidget(radio[i]);
                 thermoLayout[i]->addWidget(checkBox[i]);
                 thermoLayout[i]->setMargin(0);
                 thermoLayout[i]->setSpacing(0);
-                ui->horizontalLayout_2->addLayout(thermoLayout[i]);
+                ui->verticalLayout_7->addLayout(thermoLayout[i]);
         }
     }
 }
@@ -1487,4 +1501,9 @@ bool MainWindow::isCursorPositionOnUpPlot()
             ((cursorYpos<(windowYpos+ui->qwtPlot_2->height()))&(cursorYpos>(windowYpos))))
         return true;
     else return false;
+}
+
+void MainWindow::cursorMoved(QPoint pos)
+{
+    qDebug() << pos;
 }
