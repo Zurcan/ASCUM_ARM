@@ -44,6 +44,7 @@
 #include <QMouseEvent>
 #include <QCursor>
 #include <qwt_plot_picker.h>
+#include <QSpacerItem>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -253,6 +254,8 @@ private:
     QHBoxLayout *videoLayout1, *videoLayout2;
     QMediaPlaylist *playlist;
     QHBoxLayout *thermoLayout[24] ;
+    QHBoxLayout *labelLayout[24];//we have to add this layout to print value of the thermo near to the label1
+    QLabel *valueLabel[24];// here we will print value of the thermo
     QWidget  *videoScreen1;
     QWidget *videoScreen2;
     QMessageBox newMessage;

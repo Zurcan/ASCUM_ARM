@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
+
 //   if(reOpenWindow)
 //       openLog();
 //    reOpenWindow = false;
@@ -713,6 +714,7 @@ void MainWindow::initiateVideoScreens()
 
 void MainWindow::mouseMoveEvent(QMouseEvent * event)
 {
+
     if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
     {
         QWidget *widget = qApp->widgetAt(QCursor::pos());
@@ -763,6 +765,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
             }
         }
     }
+
 }
 /* If leftButtonPressed (if mouse been moved, leftButtonPressed = false), we have to move marker to this position
  *if pressed right button (leftButtonPressed = false too), we do nothing,
@@ -872,6 +875,23 @@ void MainWindow::moveMapMarker(long int position)
 
     }
     pf->SetMapMarkerPosition(timeArray[position]);
+
+    for(int i = 0; i<varCounter; i++)
+    {
+        QVariant tmp;
+        if(!flagArray[i])
+        {
+            //thermo[i]->
+//            QwtScaleDraw scldrw;
+//            scldrw.label(thermo[i]->value());
+//            thermo[i]->setScaleDraw(&scldrw);
+//            thermo[i]->setShortcutEnabled(1,true);
+
+            tmp = thermo[i]->value();
+            thermo[i]->setToolTip(tmp.toString());
+            valueLabel[i]->setText(tmp.toString());
+        }
+    }
     ui->qwtPlot->replot();
     ui->qwtPlot_2->replot();
 }
@@ -887,10 +907,10 @@ void MainWindow::initiateThermos()
         if(!flagArray[i])
         {
                 thermoLayout[i] = new QHBoxLayout(this);
-
-                ui->groupBox->setLayout(ui->verticalLayout_7);
+                labelLayout[i] = new QHBoxLayout(this);
+                ui->scrollArea->setLayout(ui->verticalLayout_7);
                 //ui->verticalScrollBar->setLayout(ui->verticalLayout_7);
-                //ui->verticalScrollBar->setParent(ui->groupBox);
+                //ui->verticalScrollBar->setParent(ui->scrollArea);
                 //ui->verticalLayout_7->addWidget(ui->verticalScrollBar,);
                 thermo[i] = new QwtThermo(this);
                 axisButton[i] = new QPushButton(this);
@@ -905,28 +925,38 @@ void MainWindow::initiateThermos()
                 thermo[i]->setMinValue(thermoPlotMins[i]);
                 thermo[i]->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
                 thermo[i]->setValue(Y[i][0]);
-                thermo[i]->setMaximumHeight(100);
+                thermo[i]->setMaximumHeight(70);
+                QVariant tmp;
+                tmp = thermo[i]->value();
+                thermo[i]->setToolTip(tmp.toString());
+
  //               thermo[i]->setScalePosition(QwtThermo::RightScale);
  //               thermo[i]->setScalePosition(QwtThermo::NoScale);
                 thermo[i]->setAlarmEnabled(false);
                 thermo[i]->setPalette(thermoPalette);
                 //QString *tmpStr = parLabel[i];
                 RotatedLabel *label1 = new RotatedLabel(parLabel[i]);
+                valueLabel[i] = new QLabel(tmp.toString());
                 label1->setAngle(0);
                 axisButton[i]->setFixedSize(20,20);
                 if(isAxisHidden[i])
-                    axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+                    axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
                 else
-                    axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
-
-                ui->verticalLayout_7->addWidget(label1);
+                    axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+                labelLayout[i]->addWidget(label1);
+                //QSpacerItem *tmpSpace = new QSpacerItem(10,5,QSizePolic);
+                //labelLayout[i]->addSpacerItem();
+                labelLayout[i]->addWidget(valueLabel[i]);
+                ui->verticalLayout_7->addLayout(labelLayout[i]);
+               // ui->verticalLayout_7->addWidget(label1);
 
                // thermoLayout[i]->addWidget(label1);
-                thermoLayout[i]->addWidget(axisButton[i]);
+
                 thermoLayout[i]->addWidget(thermo[i]);
+                 thermoLayout[i]->addWidget(axisButton[i]);
                 thermoLayout[i]->setMargin(0);
                 thermoLayout[i]->setSpacing(0);
-            //    ui->groupBox->setLayout(thermoLayout[i]);
+            //    ui->scrollArea->setLayout(thermoLayout[i]);
                 ui->verticalLayout_7->addLayout(thermoLayout[i]);
         }
     }
@@ -967,7 +997,7 @@ void MainWindow::hideAxis()
             flagMarker[index]->detach();
 
         ui->qwtPlot_2->replot();
-        axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+        axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
      }
     else
     {
@@ -988,7 +1018,7 @@ void MainWindow::hideAxis()
             qDebug()<< getOffsetValue(index);
         }
         ui->qwtPlot_2->replot();
-        axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+        axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
     }
 }
 
@@ -1085,7 +1115,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)
                 ui->qwtPlot_2->enableAxis(tmpIndex,false);//and enable it
             }
             ui->qwtPlot_2->replot();
-            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
+            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
          }
         else
         {
@@ -1098,7 +1128,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)
                 ui->qwtPlot_2->enableAxis(tmpIndex,true);//and enable it
             }
             ui->qwtPlot_2->replot();
-            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
         }
     }
 }
@@ -1177,7 +1207,7 @@ void MainWindow::closeLog()
 //   ui->pushButton_2->setEnabled(false);
 //   ui->pushButton_3->setEnabled(false);
 //   ui->pushButton_4->setEnabled(false);
-//    QObjectList tmpList= ui->groupBox->children();
+//    QObjectList tmpList= ui->scrollArea->children();
 //    qDebug() << tmpList;
 //    qDeleteAll(tmpList.begin(), tmpList.end());
 //    tmpList.clear();
@@ -1222,7 +1252,7 @@ void MainWindow::openLog()
                ui->tableWidget->setEnabled(true);
                    ui->actionPrint->setEnabled(true);
                        ui->actionOpen->setEnabled(true);
-                           ui->groupBox->setEnabled(true);
+                           ui->scrollArea->setEnabled(true);
                                ui->pushButton->setEnabled(true);
                                    ui->pushButton_2->setEnabled(true);
                                        ui->pushButton_3->setEnabled(true);
@@ -1250,7 +1280,7 @@ void MainWindow::initiateRadios()
         if(flagArray[i])
         {
                thermoLayout[i]= new QHBoxLayout(this);
-                ui->groupBox->setLayout(ui->verticalLayout_7);
+                ui->scrollArea->setLayout(ui->verticalLayout_7);
 //                radio[i] = new QRadioButton(this);
                 checkBox[i] = new QCheckBox (this);
 //                radio[i]->setEnabled(false);
@@ -1269,11 +1299,12 @@ void MainWindow::initiateRadios()
                  RotatedLabel *label1 = new RotatedLabel(parLabel[i]);
                 label1->setAngle(0);
                 axisButton[i]->setFixedSize(20,20);
-                axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowUp));
+                axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
                 ui->verticalLayout_7->addWidget(label1);
-                thermoLayout[i]->addWidget(axisButton[i]);
+
 //                thermoLayout->addWidget(radio[i]);
                 thermoLayout[i]->addWidget(checkBox[i]);
+                thermoLayout[i]->addWidget(axisButton[i]);
                 thermoLayout[i]->setMargin(0);
                 thermoLayout[i]->setSpacing(0);
                 ui->verticalLayout_7->addLayout(thermoLayout[i]);
@@ -1497,7 +1528,7 @@ bool MainWindow::isCursorPositionOnUpPlot()
 //    qDebug() << cursorXPos;
 
     //ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();
-    if(((cursorXPos<(windowXpos+ui->qwtPlot_2->width()))&(cursorXPos>(windowXpos)))&
+    if(((cursorXPos<(windowXpos+MainWindow::width()))&(cursorXPos>(windowXpos+ui->scrollArea->width())))&
             ((cursorYpos<(windowYpos+ui->qwtPlot_2->height()))&(cursorYpos>(windowYpos))))
         return true;
     else return false;
