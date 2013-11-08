@@ -9,6 +9,9 @@ MainWindow::MainWindow(QWidget *parent) :
 //        wd.exec();
     // initiateVideoScreens();
      ui->setupUi(this); 
+     installEventFilter(this);
+    // upPlot = this->ui->qwtPlot_2;
+     //this->layout()->addWidget(upPlot);
      pf = new PrintForm(this);
     ui->qwtPlot->enableAxis(QwtPlot::yLeft,false);
      ui->pushButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -17,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
                 ui->pushButton_4->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
      mapTimer = new QTimer(this);
      connect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
+     //connect(ui->qwtPlot_2, SIGNAL())
      tmpIcon = new QIcon(":new/p/print");
      ui->actionPrint->setIcon(*tmpIcon);
      ui->actionPrint->setEnabled(false);
@@ -25,7 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
-
+//   ui->qwtPlot->installEventFilter(this);
+//   ui->qwtPlot_2->installEventFilter(this);
+   //ui->qwtPlot_2->setObjectName("upPlot");
 //   if(reOpenWindow)
 //       openLog();
 //    reOpenWindow = false;
@@ -668,11 +674,11 @@ void MainWindow::initiateCurves()
                 ui->qwtPlot_2->setAxisScale(11, 0, 23, 1);
                 //ui->qwtPlot_2->setAxisLabelAlignment(QwtPlot::xBottom,Qt::AlignLeft);
                 ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, firstDateTime.date().toString());
-                plotPointer = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
-                                                QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
-                                                ui->qwtPlot_2->canvas());
-                connect(plotPointer, SIGNAL(moved(QPoint)),
-                        this, SLOT(cursorMoved(QPoint)));
+ //               plotPointer = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
+ //                                               QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
+ //                                               ui->qwtPlot_2->canvas());
+//                connect(plotPointer, SIGNAL(moved(QPoint)),
+//                        this, SLOT(cursorMoved(QPoint)));
                 ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                 ui->qwtPlot_2->replot();
                // offset+=2;
@@ -711,75 +717,114 @@ void MainWindow::initiateVideoScreens()
 
 }
 
+//void MainWindow::mouseMoveEvent(QMouseEvent * event)
+//{
 
-void MainWindow::mouseMoveEvent(QMouseEvent * event)
-{
+//    if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
+//    {
+//        QWidget *widget = qApp->widgetAt(QCursor::pos());
+//        QString widget_name = widget->objectName();
+//        QString parent_name = widget->parent()->objectName();
+//        if(isCursorPositionOnUpPlot())
+//        {
 
-    if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
-    {
-        QWidget *widget = qApp->widgetAt(QCursor::pos());
-        QString widget_name = widget->objectName();
-        QString parent_name = widget->parent()->objectName();
-        if(isCursorPositionOnUpPlot())
-        {
-            if(event->buttons()==Qt::LeftButton)
-            {
-                if(leftButtonPressed)
-                {
-                    globalMoveFlag = true;
-                    int globalPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, globalCursorPoint.x());
-                    int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
-                    int cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
-                    int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(globalCursorPoint).x();
-                    int cursorOffset= calculateCursorPlotOffset()+cursorPositionMoved;
-//                    qDebug()<<globalCursorPos;
-//                    qDebug() << cursorPositionMoved;
-//                    qDebug() << currentTimeMarker->value().x();
-                    int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
-//                    qDebug() << moveVal;
-                    moveMapMarker(moveVal);
-                   // moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()+(globalCursorPos-QCursor::pos().x())));
-                    globalCursorPos=QCursor::pos().x();
-                    globalCursorPoint = QCursor::pos();
-                }
-            }
-            if(event->buttons()==Qt::RightButton)
-            {
-                //if()
-                if(globalMagnifierPreviosPos>QCursor::pos().x())
-                    globalMagnifyFactor++;
-                if(globalMagnifierPreviosPos<QCursor::pos().x())
-                    globalMagnifyFactor--;
-                globalMagnifierPreviosPos = QCursor::pos().x();
-                upPlotMagnifier(globalMagnifyFactor);
-            }
-        }
-        if(isCursorPositionOnDownPlot())
-        {
+// }
 
-            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-            {
-                if(event->buttons()==Qt::LeftButton)
-                    moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
-//            qDebug() << "here we are";
-            }
-        }
-    }
 
-}
+
 /* If leftButtonPressed (if mouse been moved, leftButtonPressed = false), we have to move marker to this position
  *if pressed right button (leftButtonPressed = false too), we do nothing,
  */
-void MainWindow::mouseReleaseEvent(QMouseEvent *event)
+//void MainWindow::mouseReleaseEvent(QMouseEvent *event)
+//{
+
+//    if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
+//    {
+//        QWidget *widget = qApp->widgetAt(QCursor::pos());
+//        QString widget_name = widget->objectName();
+//        QString parent_name = widget->parent()->objectName();
+//        if(isCursorPositionOnUpPlot())
+//        {
+//            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+//                if(leftButtonPressed)
+//                {
+//                    if(globalMoveFlag)
+//                    {
+//                        globalMoveFlag = false;
+//                        leftButtonPressed = false;
+//                    }
+//                    else
+//                        if(globalCursorPos==QCursor::pos().x())
+//                        {
+//                            int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
+//                            int cursorOffset= calculateCursorPlotOffset();
+//                            int moveVal = (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorOffset ));
+////                            qDebug() << moveVal;
+//                            moveMapMarker(moveVal);
+//                            leftButtonPressed=false;
+//                        }
+//                }
+
+//        }
+//     else
+//      {
+//           if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+//           {
+//               if(leftButtonPressed)
+//               {
+//                    if(globalCursorPos==QCursor::pos().x())
+//                    {
+//                       // int downCursorPos = (int)ui->qwtPlot->transform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x())+ui->qwtPlot->transform(QwtPlot::xBottom, 0);
+//                        //qDebug() << downCursorPos;
+//                      //  moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+//                        leftButtonPressed = false;
+//                    }
+//               }
+//           }
+//      }
+//    }
+//}
+bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
-    if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
+   // if(target==Ui::MainWindow)
+    qDebug() << target;
+
+        if(target==ui->qwtPlot || target == ui->qwtPlot_2)// || target->parent()->objectName()=="qwtPlot_2" ||target->parent()->objectName()=="qwtPlot")
     {
         QWidget *widget = qApp->widgetAt(QCursor::pos());
         QString widget_name = widget->objectName();
         QString parent_name = widget->parent()->objectName();
-        if(isCursorPositionOnUpPlot())
+        if(event->type() == QEvent::MouseButtonPress)
         {
+            QMouseEvent *mouseEvent = (QMouseEvent *) event;
             if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+            {
+                if(mouseEvent->buttons()==Qt::LeftButton)
+                {
+                 //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
+                    globalCursorPos = QCursor::pos().x();
+                    globalCursorPoint = QCursor::pos();
+                    leftButtonPressed = true;
+                }
+                if(mouseEvent->buttons()==Qt::RightButton)
+                {
+                    globalMagnifierPreviosPos=QCursor::pos().x();
+                    rightButtonPressed = true;
+                }
+            }
+            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+            {
+                if(mouseEvent->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+                globalCursorPos = QCursor::pos().x();
+                mapPlotUsed = true;
+            }
+           return true;
+        }
+        if(event->type()==QEvent::MouseButtonRelease)
+        {
+            //QMouseEvent *mouseEvent = (QMouseEvent *) event;
+            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+            {
                 if(leftButtonPressed)
                 {
                     if(globalMoveFlag)
@@ -798,67 +843,121 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
                             leftButtonPressed=false;
                         }
                 }
-
+                else rightButtonPressed = false;
+            }
+            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+            {
+                if(leftButtonPressed)
+                {
+                     if(globalCursorPos==QCursor::pos().x())
+                     {
+                        // int downCursorPos = (int)ui->qwtPlot->transform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x())+ui->qwtPlot->transform(QwtPlot::xBottom, 0);
+                         //qDebug() << downCursorPos;
+                       //  moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+                         mapPlotUsed = false;
+                     }
+                }
+            }
+            return true;
         }
-     else
-      {
-           if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+       if(event->type()==QEvent::MouseMove)
+        {
+           QMouseEvent *mouseEvent = (QMouseEvent *) event;
+           if(mouseEvent->buttons()==Qt::LeftButton)
            {
                if(leftButtonPressed)
                {
-                    if(globalCursorPos==QCursor::pos().x())
-                    {
-                       // int downCursorPos = (int)ui->qwtPlot->transform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x())+ui->qwtPlot->transform(QwtPlot::xBottom, 0);
-                        //qDebug() << downCursorPos;
-                      //  moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
-                        leftButtonPressed = false;
-                    }
+                   globalMoveFlag = true;
+                   //int globalPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, globalCursorPoint.x());
+                   int globalPos =  globalCursorPoint.x();
+                   //int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
+                   int currentPos = QCursor::pos().x();
+                   int cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
+                   cursorPositionMoved = cursorPositionMoved*(globalMagVal*2/ui->qwtPlot_2->width());
+                   int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
+                   qDebug() << moveVal;
+
+                   moveMapMarker(moveVal);
+
+                   //return;
+                  // moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()+(globalCursorPos-QCursor::pos().x())));
+                   globalCursorPos=QCursor::pos().x();
+                   globalCursorPoint = QCursor::pos();
+               }
+               else
+               if(mapPlotUsed)
+               {
+                  // if(mouseEvent>buttons()==Qt::LeftButton)
+                       moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+                  // mapPlotUsed = false;
                }
            }
-      }
-    }
+           if(mouseEvent->buttons()==Qt::RightButton)
+           {
+               if(rightButtonPressed)
+               {
+               if(globalMagnifierPreviosPos>QCursor::pos().x())
+                   globalMagnifyFactor++;
+               if(globalMagnifierPreviosPos<QCursor::pos().x())
+                   globalMagnifyFactor--;
+               globalMagnifierPreviosPos = QCursor::pos().x();
+               upPlotMagnifier(globalMagnifyFactor);
+               //rightButtonPressed=false;
+               }
+           }
+       return true;
+       }
+        //return true;
+        }
+
+ //   return false;
+    return QMainWindow::eventFilter(target, event);
 }
 
-void MainWindow::mousePressEvent(QMouseEvent  *event)
-{
-    QWidget *widget = qApp->widgetAt(QCursor::pos());
-    QString widget_name = widget->objectName();
-    QString parent_name = widget->parent()->objectName();
-    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
-    {
-        if(event->buttons()==Qt::LeftButton)
-        {
-         //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
-            globalCursorPos = QCursor::pos().x();
-            globalCursorPoint = QCursor::pos();
-            leftButtonPressed = true;
-        }
-        if(event->buttons()==Qt::RightButton)
-            globalMagnifierPreviosPos=QCursor::pos().x();
-    }
-    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-    {
-        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
-        globalCursorPos = QCursor::pos().x();
-        leftButtonPressed = true;
-    }
-}
+//void MainWindow::mousePressEvent(QMouseEvent  *event)
+//{
+//    QWidget *widget = qApp->widgetAt(QCursor::pos());
+//    QString widget_name = widget->objectName();
+//    QString parent_name = widget->parent()->objectName();
+//    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+//    {
+//        if(event->buttons()==Qt::LeftButton)
+//        {
+//         //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
+//            globalCursorPos = QCursor::pos().x();
+//            globalCursorPoint = QCursor::pos();
+//            leftButtonPressed = true;
+//        }
+//        if(event->buttons()==Qt::RightButton)
+//            globalMagnifierPreviosPos=QCursor::pos().x();
+//    }
+//    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+//    {
+//        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+//        globalCursorPos = QCursor::pos().x();
+//        leftButtonPressed = true;
+//    }
+//}
 
 void MainWindow::moveMapMarker(long int position)
 {
-    if(position>=sizeOfArray)position=sizeOfArray-1;
+    if(position>=sizeOfArray)position=sizeOfArray;
     if(position < 0)position = 0;
+   // qDebug()<< "position is" << position;
     timeScale->currentIndex = position;
     ui->actionPrint->setEnabled(true);
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
+
     if(tmpDate.date()!=AxisLabelDate.date())
     {
         ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpDate.date().toString());
         AxisLabelDate = tmpDate;
     }
+
     double magnifiedVal = upPlotMagnifier(globalMagnifyFactor);
+
     int tmpCounter=0;
     for(int i =0; i <varCounter; i++ )
     {
@@ -874,6 +973,7 @@ void MainWindow::moveMapMarker(long int position)
         }
 
     }
+
     pf->SetMapMarkerPosition(timeArray[position]);
 
     for(int i = 0; i<varCounter; i++)
@@ -892,6 +992,7 @@ void MainWindow::moveMapMarker(long int position)
             valueLabel[i]->setText(tmp.toString());
         }
     }
+
     ui->qwtPlot->replot();
     ui->qwtPlot_2->replot();
 }
@@ -946,7 +1047,9 @@ void MainWindow::initiateThermos()
                 labelLayout[i]->addWidget(label1);
                 //QSpacerItem *tmpSpace = new QSpacerItem(10,5,QSizePolic);
                 //labelLayout[i]->addSpacerItem();
+                labelLayout[i]->addStretch();
                 labelLayout[i]->addWidget(valueLabel[i]);
+
                 ui->verticalLayout_7->addLayout(labelLayout[i]);
                // ui->verticalLayout_7->addWidget(label1);
 
@@ -1133,6 +1236,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)
     }
 }
 
+
 void MainWindow::setGlobalArrays()
 {
 //    tmpMinFloat = newTmiInterp->TInterpItemArray[i].min/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
@@ -1271,6 +1375,13 @@ void MainWindow::openLog()
     ui->actionOpen->setIcon(*tmpIcon);
     ui->actionOpen->setToolTip("Закрыть файл журнала регистратора");
     pf->setBaseTime(timeArray[0],firstDateTime);
+        ui->qwtPlot->setMouseTracking(true);
+        ui->qwtPlot_2->setMouseTracking(true);
+        ui->qwtPlot->canvas()->setMouseTracking(true);
+        ui->qwtPlot_2->canvas()->setMouseTracking(true);
+       ui->qwtPlot->installEventFilter(this);
+       ui->qwtPlot_2->installEventFilter(this);
+
     }
 }
 void MainWindow::initiateRadios()
@@ -1300,13 +1411,16 @@ void MainWindow::initiateRadios()
                 label1->setAngle(0);
                 axisButton[i]->setFixedSize(20,20);
                 axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
-                ui->verticalLayout_7->addWidget(label1);
+               // ui->verticalLayout_7->addWidget(label1);
 
-//                thermoLayout->addWidget(radio[i]);
+                thermoLayout[i]->addWidget(label1);
+                thermoLayout[i]->addStretch();
                 thermoLayout[i]->addWidget(checkBox[i]);
+               // thermoLayout[i]->addStretch();
                 thermoLayout[i]->addWidget(axisButton[i]);
                 thermoLayout[i]->setMargin(0);
                 thermoLayout[i]->setSpacing(0);
+                //thermoLayout[i]->addStretch();
                 ui->verticalLayout_7->addLayout(thermoLayout[i]);
         }
     }
@@ -1459,17 +1573,22 @@ double MainWindow::upPlotMagnifier(int factor)
     magVal=round(magVal);
     if(magVal>3000)magVal=3000;
     if(magVal<0)magVal = 0;
+
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
+
     int tmpCounter=0;
     for(int i =0; i < varCounter; i++)
     {
+
         if(flagArray[i])
         {
             flagMarker[i]->setValue(0.8*magVal +currentTimeMarker->value().x(),flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
             tmpCounter++;
         }
     }
+
     ui->qwtPlot_2->replot();
+    globalMagVal = magVal;
     return magVal;
 }
 
@@ -1537,4 +1656,9 @@ bool MainWindow::isCursorPositionOnUpPlot()
 void MainWindow::cursorMoved(QPoint pos)
 {
     qDebug() << pos;
+}
+
+void MainWindow::on_qwtPlot_2_destroyed()
+{
+
 }

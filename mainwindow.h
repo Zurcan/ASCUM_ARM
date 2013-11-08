@@ -193,10 +193,14 @@ private:
     const double setOffset;
 };
     QwtPlotPicker *plotPointer;
+    bool mapPlotUsed = false;
+    bool rightButtonPressed = false;
+//    QwtPlot upPlot;// = new QwtPlot()
     bool isOpened=false;
     bool leftButtonPressed=false;
     bool leftButtonReleased=false;
     bool reOpenWindow = false;
+    double globalMagVal=100;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
     VerticalFlagScaleDraw *verticalFlagScale;
@@ -301,13 +305,14 @@ private:
     int calculateCursorPlotOffset();
     ~MainWindow();
 public slots:
-
+    bool eventFilter(QObject *, QEvent *);
+   // void ::mouseMoveEvent(QMouseEvent *);
 private slots:
 
     void hideAxis();
-    void mousePressEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *);
+//    void mousePressEvent(QMouseEvent *);
+//    void mouseReleaseEvent(QMouseEvent *);
+//    void mouseMoveEvent(QMouseEvent *);
     void cursorMoved(QPoint);
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
@@ -320,6 +325,8 @@ private slots:
 
     void on_actionPrint_triggered();
     void setValue(int &recNo, QString &paramName, QVariant &paramValue, int reportPage);
+    void on_qwtPlot_2_destroyed();
+
 private:
     int buttonIndex;
     Ui::MainWindow *ui;
