@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //        wd.exec();
     // initiateVideoScreens();
      ui->setupUi(this); 
-     installEventFilter(this);
+
     // upPlot = this->ui->qwtPlot_2;
      //this->layout()->addWidget(upPlot);
      pf = new PrintForm(this);
@@ -787,16 +787,19 @@ void MainWindow::initiateVideoScreens()
 bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
    // if(target==Ui::MainWindow)
-    qDebug() << target;
+    //qDebug() << target->parent();
+   // if(target->parent())
+//    qDebug() << target;
+//    qDebug() << event;
+//    if(target==ui->qwtPlot || target == ui->qwtPlot_2)// || target->parent()->objectName()=="qwtPlot_2" ||target->parent()->objectName()=="qwtPlot")
+//    {
 
-        if(target==ui->qwtPlot || target == ui->qwtPlot_2)// || target->parent()->objectName()=="qwtPlot_2" ||target->parent()->objectName()=="qwtPlot")
-    {
-        QWidget *widget = qApp->widgetAt(QCursor::pos());
-        QString widget_name = widget->objectName();
-        QString parent_name = widget->parent()->objectName();
         if(event->type() == QEvent::MouseButtonPress)
         {
             QMouseEvent *mouseEvent = (QMouseEvent *) event;
+            QWidget *widget = qApp->widgetAt(QCursor::pos());
+            QString widget_name = widget->objectName();
+            QString parent_name = widget->parent()->objectName();
             if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
             {
                 if(mouseEvent->buttons()==Qt::LeftButton)
@@ -814,7 +817,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
             }
             if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
             {
-                if(mouseEvent->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+                if(mouseEvent->button()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
                 globalCursorPos = QCursor::pos().x();
                 mapPlotUsed = true;
             }
@@ -823,8 +826,12 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
         if(event->type()==QEvent::MouseButtonRelease)
         {
             //QMouseEvent *mouseEvent = (QMouseEvent *) event;
-            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
-            {
+//            QWidget *widget = qApp->widgetAt(QCursor::pos());
+//            QString widget_name = widget->objectName();
+ //           QString parent_name = target->parent()->objectName();//widget->parent()->objectName();
+          //  if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+//            if(parent_name=="qwtPlot_2")
+//            {
                 if(leftButtonPressed)
                 {
                     if(globalMoveFlag)
@@ -844,10 +851,11 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                         }
                 }
                 else rightButtonPressed = false;
-            }
-            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-            {
-                if(leftButtonPressed)
+//            }
+           // if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+//            if(parent_name=="qwtPlot")
+//            {
+                if(mapPlotUsed)
                 {
                      if(globalCursorPos==QCursor::pos().x())
                      {
@@ -857,11 +865,11 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                          mapPlotUsed = false;
                      }
                 }
-            }
+//            }
             return true;
         }
        if(event->type()==QEvent::MouseMove)
-        {
+       {
            QMouseEvent *mouseEvent = (QMouseEvent *) event;
            if(mouseEvent->buttons()==Qt::LeftButton)
            {
@@ -873,9 +881,9 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                    //int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
                    int currentPos = QCursor::pos().x();
                    int cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
-                   cursorPositionMoved = cursorPositionMoved*(globalMagVal*2/ui->qwtPlot_2->width());
+                   cursorPositionMoved = cursorPositionMoved*(globalMagVal*4/ui->qwtPlot_2->canvas()->width());
                    int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
-                   qDebug() << moveVal;
+                 //  qDebug() << moveVal;
 
                    moveMapMarker(moveVal);
 
@@ -908,9 +916,9 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
        return true;
        }
         //return true;
-        }
+ //       }
 
- //   return false;
+  // return false;
     return QMainWindow::eventFilter(target, event);
 }
 
@@ -941,7 +949,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 
 void MainWindow::moveMapMarker(long int position)
 {
-    if(position>=sizeOfArray)position=sizeOfArray;
+    if(position>=sizeOfArray)position=sizeOfArray-1;
     if(position < 0)position = 0;
    // qDebug()<< "position is" << position;
     timeScale->currentIndex = position;
@@ -1375,10 +1383,11 @@ void MainWindow::openLog()
     ui->actionOpen->setIcon(*tmpIcon);
     ui->actionOpen->setToolTip("Закрыть файл журнала регистратора");
     pf->setBaseTime(timeArray[0],firstDateTime);
-        ui->qwtPlot->setMouseTracking(true);
-        ui->qwtPlot_2->setMouseTracking(true);
-        ui->qwtPlot->canvas()->setMouseTracking(true);
-        ui->qwtPlot_2->canvas()->setMouseTracking(true);
+//         installEventFilter(this);
+//        ui->qwtPlot->setMouseTracking(true);
+//        ui->qwtPlot_2->setMouseTracking(true);
+//        ui->qwtPlot->canvas()->setMouseTracking(true);
+//        ui->qwtPlot_2->canvas()->setMouseTracking(true);
        ui->qwtPlot->installEventFilter(this);
        ui->qwtPlot_2->installEventFilter(this);
 

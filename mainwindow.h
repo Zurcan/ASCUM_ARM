@@ -192,6 +192,7 @@ private:
 private:
     const double setOffset;
 };
+   // QwtPlot
     QwtPlotPicker *plotPointer;
     bool mapPlotUsed = false;
     bool rightButtonPressed = false;
