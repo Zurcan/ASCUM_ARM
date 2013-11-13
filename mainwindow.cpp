@@ -794,13 +794,14 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 //    if(target==ui->qwtPlot || target == ui->qwtPlot_2)// || target->parent()->objectName()=="qwtPlot_2" ||target->parent()->objectName()=="qwtPlot")
 //    {
 
-        if(event->type() == QEvent::MouseButtonPress)
+        if(event->type() == QEvent::MouseButtonPress & target!=0x0)
         {
             QMouseEvent *mouseEvent = (QMouseEvent *) event;
-            QWidget *widget = qApp->widgetAt(QCursor::pos());
-            QString widget_name = widget->objectName();
-            QString parent_name = widget->parent()->objectName();
-            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+           // QWidget *widget = qApp->widgetAt(QCursor::pos());
+           // QString widget_name = widget->objectName();
+            QString parent_name = target->objectName();
+           // if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
+            if(parent_name=="qwtPlot_2")
             {
                 if(mouseEvent->buttons()==Qt::LeftButton)
                 {
@@ -808,6 +809,8 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                     globalCursorPos = QCursor::pos().x();
                     globalCursorPoint = QCursor::pos();
                     leftButtonPressed = true;
+                    globalCursorFirstPressPos = QCursor::pos().x();
+                    globalCursorMove = 0;
                 }
                 if(mouseEvent->buttons()==Qt::RightButton)
                 {
@@ -815,7 +818,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                     rightButtonPressed = true;
                 }
             }
-            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
+            if(parent_name=="qwtPlot")
             {
                 if(mouseEvent->button()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
                 globalCursorPos = QCursor::pos().x();
@@ -836,6 +839,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                 {
                     if(globalMoveFlag)
                     {
+                        globalCursorMove = 0;
                         globalMoveFlag = false;
                         leftButtonPressed = false;
                     }
@@ -877,11 +881,22 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                {
                    globalMoveFlag = true;
                    //int globalPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, globalCursorPoint.x());
-                   int globalPos =  globalCursorPoint.x();
+                   double globalPos =  globalCursorPos;
+                   qDebug() << globalPos;
                    //int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
-                   int currentPos = QCursor::pos().x();
-                   int cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
-                   cursorPositionMoved = cursorPositionMoved*(globalMagVal*4/ui->qwtPlot_2->canvas()->width());
+                   double currentPos = QCursor::pos().x();
+                   qDebug() << currentPos;
+                   int cursorOffset= calculateCursorPlotOffset();
+                   double cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
+                   globalCursorMove +=cursorPositionMoved;
+                   int cursorGlobalError = (globalCursorFirstPressPos-currentPos) - globalCursorMove;
+                   cursorPositionMoved = ceil((cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/(ui->qwtPlot_2->canvas()->width())));
+                   qDebug()<< globalCursorMove;
+                   qDebug()<< globalCursorFirstPressPos - currentPos;
+                   globalCursorMove = globalCursorFirstPressPos - currentPos;
+                   //qDebug() << cursorPositionMoved;
+                   //qDebug() << globalMagVal;
+                   //qDebug() << ui->qwtPlot_2->canvas()->width()+cursorOffset;
                    int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
                  //  qDebug() << moveVal;
 

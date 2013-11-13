@@ -194,6 +194,8 @@ private:
 };
    // QwtPlot
     QwtPlotPicker *plotPointer;
+    int globalCursorMove;
+    int globalCursorFirstPressPos;
     bool mapPlotUsed = false;
     bool rightButtonPressed = false;
 //    QwtPlot upPlot;// = new QwtPlot()
