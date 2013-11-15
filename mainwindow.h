@@ -45,6 +45,7 @@
 #include <QCursor>
 #include <qwt_plot_picker.h>
 #include <QSpacerItem>
+#include <qwt_plot_directpainter.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -193,6 +194,7 @@ private:
     const double setOffset;
 };
    // QwtPlot
+    QwtPlotDirectPainter *rtPainter;
     QwtPlotPicker *plotPointer;
     int globalCursorMove;
     int globalCursorFirstPressPos;

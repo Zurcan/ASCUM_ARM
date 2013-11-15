@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
+   rtPainter = new QwtPlotDirectPainter(this);
+
 //   ui->qwtPlot->installEventFilter(this);
 //   ui->qwtPlot_2->installEventFilter(this);
    //ui->qwtPlot_2->setObjectName("upPlot");
@@ -428,7 +430,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     }
                                                 }
                                                 tmpFloat = tmpFloat*pow(10,newTmiInterp->TInterpItemArray[i].mask_);
-                                                tmpIntFloat =lround((double)tmpFloat);
+                                                tmpIntFloat =(int)(lround((double)tmpFloat));
 //                                                if(tmpFloat>0)
 //                                                {
 //                                                    if(tmpIntFloat!=0)
@@ -450,7 +452,11 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //                                                    }
 //                                                }
                                                 tmpFloat = (float)(tmpIntFloat/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
-
+                                                //if(i-2)
+                                                int tmpInt = (int)(tmpFloat*pow(10,newTmiInterp->TInterpItemArray[i].mask_));
+                                               // tmpFloat = tmpInt;
+                                                tmpInt = ceil(tmpInt);
+                                                tmpFloat=(float)(tmpInt/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
                                                 Y[i-2][backIndex] =  tmpFloat; //round((double)tmpFloat);
 
                                                 }
@@ -641,6 +647,7 @@ void MainWindow::initiateCurves()
                  myPalette.setColor(QPalette::Foreground,colors[i]);
                  myPalette.setColor(QPalette::Text,colors[i]);
  //                curve2[i]->setTitle(parLabel[i]);
+                 qDebug() << newTmiInterp->TInterpItemArray[i].mask_;
                  ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                  ui->qwtPlot_2->replot();
             }
@@ -969,6 +976,7 @@ void MainWindow::moveMapMarker(long int position)
    // qDebug()<< "position is" << position;
     timeScale->currentIndex = position;
     ui->actionPrint->setEnabled(true);
+   // verticalMapMarker->hide();
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
@@ -1016,8 +1024,14 @@ void MainWindow::moveMapMarker(long int position)
         }
     }
 
+ // verticalMapMarker->show();
+    ui->qwtPlot_2->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore,true);
+    ui->qwtPlot->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore,true);
+    ui->qwtPlot_2->canvas()->setPaintAttribute(QwtPlotCanvas::Opaque,false);
+    ui->qwtPlot->canvas()->setPaintAttribute(QwtPlotCanvas::Opaque,false);
     ui->qwtPlot->replot();
     ui->qwtPlot_2->replot();
+
 }
 
 
