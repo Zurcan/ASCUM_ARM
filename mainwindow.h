@@ -269,7 +269,7 @@ private:
     QWidget *videoScreen2;
     QMessageBox newMessage;
     NcFramelessHelper *fh1,*fh2;
-    QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed, Qt::darkMagenta, Qt::darkYellow, Qt::darkGray, Qt::blue, Qt::black,Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::yellow, Qt::green, Qt::cyan, Qt::magenta, Qt::darkCyan, Qt::darkRed};
+    QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::darkGray, Qt::green, Qt::darkCyan, Qt::magenta, QColor(204,255,102,255), Qt::darkRed, Qt::darkMagenta, QColor(255,0,0,127), QColor(255,204,255,255), QColor(0,102,255,127), QColor(255,204,255,255),QColor(160,102,0,255), QColor(255,160,255,255), QColor(202,255,0,255), QColor(255,0,0,127), Qt::darkYellow, Qt::cyan, QColor(202,202,255,255), QColor(102,0,160,255), QColor(255,160,50,255)};
     QDateTime firstDateTime;
     int printLeftTimeIndex=0, printRightTimeIndex=0;
 

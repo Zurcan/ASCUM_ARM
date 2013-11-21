@@ -5,5 +5,6 @@
         <file alias="Video">res/movies.png</file>
         <file alias="print">res/Print.ico</file>
         <file alias="closeLog">res/Nandostudio-Rubber-Folder-closed.ico</file>
+        <file alias="formIcon">res/monitor.ico</file>
     </qresource>
 </RCC>
