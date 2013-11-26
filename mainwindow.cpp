@@ -18,7 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->pushButton_2->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
             ui->pushButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
                 ui->pushButton_4->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
-
+                //ui->widget->setParent(ui->qwtPlot_2);
+                 ui->widget->setEnabled(false);
+                ui->widget->setVisible(false);
      mapTimer = new QTimer(this);
      connect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
      //connect(ui->qwtPlot_2, SIGNAL())
@@ -27,7 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
      ui->actionPrint->setEnabled(false);
      tmpIcon = new QIcon(":new/p/closeLog");
     ui->actionOpen->setIcon(*tmpIcon);
-
+    QIcon *zoominIcon = new QIcon(":new/p/zoomin");
+    QIcon *zoomoutIcon = new QIcon(":new/p/zoomout");
+    ui->pushButton_5->setIcon(*zoominIcon);
+    ui->pushButton_6->setIcon(*zoomoutIcon);
    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
    rtPainter = new QwtPlotDirectPainter(this);
@@ -904,17 +909,26 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                    //int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
                    double currentPos = QCursor::pos().x();
                    //qDebug() << currentPos;
-                   int cursorOffset= calculateCursorPlotOffset();
+
+//                   qDebug() << "zero rect " << ui->qwtPlot_2->visibleRegion().rects()[0].width();
+//                   qDebug() << "1st rect " << ui->qwtPlot_2->visibleRegion().rects()[1].width();
+//                   qDebug() << "2nd rect " <<ui->qwtPlot_2->visibleRegion().rects()[2].width();
+//                  // qDebug() << ui->qwtPlot_2
+//                   qDebug() << ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
+                   int visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
+                  // if(ui->qwtPlot_2->visibleRegion().rectCount()>2)visWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width();
+                   //else visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
                    double cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
                    globalCursorMove +=cursorPositionMoved;
                    int cursorGlobalError = (globalCursorFirstPressPos-currentPos) - globalCursorMove;
-                   cursorPositionMoved = ceil((cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/(ui->qwtPlot_2->canvas()->width())));
+                   cursorPositionMoved = round((cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/visWidth));
                    //qDebug()<< globalCursorMove;
                    //qDebug()<< globalCursorFirstPressPos - currentPos;
+
                    globalCursorMove = globalCursorFirstPressPos - currentPos;
-                   ////qDebug() << cursorPositionMoved;
-                   ////qDebug() << globalMagVal;
-                   ////qDebug() << ui->qwtPlot_2->canvas()->width()+cursorOffset;
+                   //qDebug() << cursorPositionMoved;
+                   //qDebug() << globalMagVal;
+                   //qDebug() << ui->qwtPlot_2->canvas()->width()+cursorOffset;
                    int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
                  //  //qDebug() << moveVal;
 
@@ -938,9 +952,19 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                if(rightButtonPressed)
                {
                if(globalMagnifierPreviosPos>QCursor::pos().x())
-                   globalMagnifyFactor++;
+               {
+                   double tmpInc = 10*globalMagVal/ui->qwtPlot_2->canvas()->width();
+                   if(tmpInc<1)tmpInc = 1;
+                   globalMagnifyFactor+=tmpInc;
+               }
+           //    qDebug() << globalMagVal*2/ui->qwtPlot_2->canvas()->width();
                if(globalMagnifierPreviosPos<QCursor::pos().x())
-                   globalMagnifyFactor--;
+               {
+                   double tmpInc = 10*globalMagVal/ui->qwtPlot_2->canvas()->width();
+                   if(tmpInc<1)tmpInc = 1;
+                   globalMagnifyFactor-=tmpInc;
+               }
+
                globalMagnifierPreviosPos = QCursor::pos().x();
                upPlotMagnifier(globalMagnifyFactor);
                //rightButtonPressed=false;
@@ -1068,6 +1092,11 @@ void MainWindow::initiateThermos()
 
     for(int i = 0; i<varCounter; i++)
     {
+//        if(!i)
+//        {
+//            QPushButton *collapseAllButton = new QPushButton(this);
+//            QLabel *collapseAllLabel = new QLabel (this);
+       // ui->checkBox->
         if(!flagArray[i])
         {
                 thermoLayout[i] = new QHBoxLayout(this);
@@ -1419,7 +1448,7 @@ void MainWindow::openLog()
     {
         ui->qwtPlot->setEnabled(true);
            ui->qwtPlot_2->setEnabled(true);
-               ui->tableWidget->setEnabled(true);
+              // ui->tableWidget->setEnabled(true);
                    ui->actionPrint->setEnabled(true);
                        ui->actionOpen->setEnabled(true);
                            ui->scrollArea->setEnabled(true);
@@ -1491,6 +1520,11 @@ void MainWindow::initiateRadios()
                 ui->verticalLayout_7->addLayout(thermoLayout[i]);
         }
     }
+    ui->checkBox->setEnabled(true);
+//    ui->tableWidget->setEnabled(true);
+    connect(ui->checkBox,SIGNAL(toggled(bool)),this,SLOT(showAllCurves()));
+
+   // connect(ui->checkBox, SIGNAL(clicked(bool)),this,SLOT(collapseAllCurves()));
 }
 
 void MainWindow::on_pushButton_4_clicked()
@@ -1729,3 +1763,72 @@ void MainWindow::on_qwtPlot_2_destroyed()
 {
 
 }
+void MainWindow::showAllCurves()
+{
+    int index;
+//    int hiddenCounter=0;
+//    for(int i = 0; i<varCounter; i++)
+//    {
+//        if(isAxisHidden[i])hiddenCounter++;
+//        if(hiddenCounter>=notHiddenIndex)isAxisHidden[i]=true;
+//    }
+    for( index =0; index< varCounter;index++)
+    {
+         if(ui->checkBox->checkState())
+         {
+         if(isAxisHidden[index])
+                {
+                curve2[index]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
+                 if(!flagArray[index])
+                {
+                    //tmpIndex = index;
+                    curve2[index]->setAxes(1,index);//this one
+                    ui->qwtPlot_2->enableAxis(index,true);//and enable it
+                }
+
+                ui->qwtPlot_2->replot();
+                axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+                isAxisHidden[index] = false;
+            }
+         }
+            else
+            {
+             if(!isAxisHidden[index])
+             {
+                curve2[index]->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
+                if(!flagArray[index])
+                {
+                    curve2[index]->setAxes(1,index);//this one
+                    ui->qwtPlot_2->enableAxis(index,false);//and enable it
+                }
+
+                ui->qwtPlot_2->replot();
+                axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+                isAxisHidden[index] =true;
+            }
+         }
+        }
+    }
+
+
+//void MainWindow::collapseAllCurves()
+//{
+//    int index;
+
+//    for( index =0; index< varCounter;index++)
+//    {
+//        if(!isAxisHidden[index])
+//        {
+//            curve2[index]->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
+//            if(!flagArray[index])
+//            {
+//                curve2[index]->setAxes(1,index);//this one
+//                ui->qwtPlot_2->enableAxis(index,false);//and enable it
+//            }
+
+//            ui->qwtPlot_2->replot();
+//            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+//            isAxisHidden[index] =true;
+//        }
+//    }
+//}

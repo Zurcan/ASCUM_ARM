@@ -322,6 +322,8 @@ private slots:
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
     void indexChanged();
+    //void collapseAllCurves();
+    void showAllCurves();
     void on_actionOpen_triggered();
     void incrementMarkerPosition();
     void on_pushButton_4_clicked();

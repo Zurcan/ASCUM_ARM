@@ -6,5 +6,7 @@
         <file alias="print">res/Print.ico</file>
         <file alias="closeLog">res/Nandostudio-Rubber-Folder-closed.ico</file>
         <file alias="formIcon">res/monitor.ico</file>
+        <file alias="zoomin">res/zoomin_2752.ico</file>
+        <file alias="zoomout">res/zoomout_4510.ico</file>
     </qresource>
 </RCC>
