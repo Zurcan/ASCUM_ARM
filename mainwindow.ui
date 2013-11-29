@@ -595,16 +595,19 @@
         <widget class="QWidget" name="widget" native="true">
          <property name="geometry">
           <rect>
-           <x>580</x>
+           <x>570</x>
            <y>0</y>
-           <width>120</width>
+           <width>131</width>
            <height>51</height>
           </rect>
          </property>
-         <widget class="QPushButton" name="pushButton_5">
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <widget class="QPushButton" name="pushButton_6">
           <property name="geometry">
            <rect>
-            <x>0</x>
+            <x>100</x>
             <y>10</y>
             <width>31</width>
             <height>31</height>
@@ -617,10 +620,23 @@
            <bool>true</bool>
           </property>
          </widget>
-         <widget class="QPushButton" name="pushButton_6">
+         <widget class="QLabel" name="label">
           <property name="geometry">
            <rect>
-            <x>80</x>
+            <x>60</x>
+            <y>20</y>
+            <width>31</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>100%</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_5">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
             <y>10</y>
             <width>31</width>
             <height>31</height>

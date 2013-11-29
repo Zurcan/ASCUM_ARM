@@ -18,11 +18,34 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->pushButton_2->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
             ui->pushButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
                 ui->pushButton_4->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
-                //ui->widget->setParent(ui->qwtPlot_2);
-                 ui->widget->setEnabled(false);
-                ui->widget->setVisible(false);
+//                QPalette red;
+//                red.setColor(QPalette::Background,Qt::red);
+                ui->widget->setParent(ui->qwtPlot_2);
+                ui->widget->setMouseTracking(true);
+                QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect;
+                opacityEffect->setOpacity(0.5);
+                ui->widget->setGraphicsEffect(opacityEffect);
+                ui->widget->setVisible(true);
+
+//                ui->widget->setPalette(red);
+//                ui->widget->show();
+//                ui->pushButton_5->setParent(ui->widget);
+//                ui->pushButton_6->setParent(ui->widget);
+//                QPalette transparency;
+//                QColor transColor = transparency.light().color();
+//                transColor.setAlpha(150);
+//                transparency.setColor(QPalette::Background,transColor);
+//                //ui->pushButton_5->setba
+//                //.setAlpha(100);
+//                qDebug() << transparency.light().color().alpha();
+//                ui->widget->setPalette(transparency);
+                // ui->widget->setEnabled(false);
+               // ui->widget->setVisible(false);
      mapTimer = new QTimer(this);
      connect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
+
+     //connect(ui, SIGNAL())
+     //connect(ui->widget, SIGNAL())
      //connect(ui->qwtPlot_2, SIGNAL())
      tmpIcon = new QIcon(":new/p/print");
      ui->actionPrint->setIcon(*tmpIcon);
@@ -31,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionOpen->setIcon(*tmpIcon);
     QIcon *zoominIcon = new QIcon(":new/p/zoomin");
     QIcon *zoomoutIcon = new QIcon(":new/p/zoomout");
+
     ui->pushButton_5->setIcon(*zoominIcon);
     ui->pushButton_6->setIcon(*zoomoutIcon);
    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
@@ -810,7 +834,8 @@ void MainWindow::initiateVideoScreens()
 bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
    // if(target==Ui::MainWindow)
-    ////qDebug() << target->parent();
+    //if()
+//    qDebug() << target;
    // if(target->parent())
 //    //qDebug() << target;
 //    //qDebug() << event;
@@ -947,7 +972,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                   // mapPlotUsed = false;
                }
            }
-           if(mouseEvent->buttons()==Qt::RightButton)
+           else if(mouseEvent->buttons()==Qt::RightButton)
            {
                if(rightButtonPressed)
                {
@@ -970,11 +995,37 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                //rightButtonPressed=false;
                }
            }
+           //else if(target->) qDebug
+
        return true;
        }
         //return true;
  //       }
+       if(event->type()==QEvent::Resize)
+       {
+           //int *x1,*x2,*y1,*y2;
+        //   qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].right();
+        //   qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].top();
+//           qDebug()<<x1;
+//           qDebug()<<x2;
+//           qDebug()<<y1;
+//           qDebug()<<y2;
+          // qDebug()<< ui->widget->rect();
+           qDebug()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos());
+          // ui->widget->setMouseTracking(true);
+           if(ui->qwtPlot_2->visibleRegion().rectCount()<3)
+           {
+               //ui->widget->visibleRegion().rects()[0].setTop(ui->qwtPlot_2->visibleRegion().rects()[1].top());
 
+                qDebug() << ui->widget->pos();
+                qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topRight());
+                qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topLeft());
+                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
+                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
+             //  ui->widget->move(ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).x() - ui->widget->width(), ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).y() + ui->widget->height());
+                //ui->widget->move( ui->qwtPlot_2->mapToParent(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).x(), ui->qwtPlot_2->mapToParent(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).y());
+           }
+       }
   // return false;
     return QMainWindow::eventFilter(target, event);
 }
@@ -1523,7 +1574,8 @@ void MainWindow::initiateRadios()
     ui->checkBox->setEnabled(true);
 //    ui->tableWidget->setEnabled(true);
     connect(ui->checkBox,SIGNAL(toggled(bool)),this,SLOT(showAllCurves()));
-
+    plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
+    qDebug() << plotRectBasicWidth;
    // connect(ui->checkBox, SIGNAL(clicked(bool)),this,SLOT(collapseAllCurves()));
 }
 
@@ -1809,7 +1861,10 @@ void MainWindow::showAllCurves()
          }
         }
     }
+void MainWindow::moveMagnifyWidget()
+{
 
+}
 
 //void MainWindow::collapseAllCurves()
 //{

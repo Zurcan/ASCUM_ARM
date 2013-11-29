@@ -198,6 +198,7 @@ private:
     QwtPlotPicker *plotPointer;
     int globalCursorMove;
     int globalCursorFirstPressPos;
+    int plotRectBasicWidth;
     bool mapPlotUsed = false;
     bool rightButtonPressed = false;
 //    QwtPlot upPlot;// = new QwtPlot()
@@ -318,6 +319,7 @@ private slots:
 //    void mousePressEvent(QMouseEvent *);
 //    void mouseReleaseEvent(QMouseEvent *);
 //    void mouseMoveEvent(QMouseEvent *);
+    void moveMagnifyWidget();
     void cursorMoved(QPoint);
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
