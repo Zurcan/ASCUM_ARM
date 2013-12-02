@@ -207,12 +207,15 @@ private:
     bool leftButtonReleased=false;
     bool reOpenWindow = false;
     double globalMagVal=100;
+    int globalMagnifyBaseVal = 148;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
     VerticalFlagScaleDraw *verticalFlagScale;
     QTimer *mapTimer;
     int mapTimerDelay = 1000;
     int globalMagnifyFactor=100;
+    bool rectsInc=false;
+    int rectQty = 2;
     int globalMagnifierPreviosPos;
     int globalCursorPos;
     int beforeMovePosition;
@@ -320,6 +323,8 @@ private slots:
 //    void mouseReleaseEvent(QMouseEvent *);
 //    void mouseMoveEvent(QMouseEvent *);
     void moveMagnifyWidget();
+    void increaseMagnifyFactor();
+    void decreaseMagnifyFactor();
     void cursorMoved(QPoint);
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();

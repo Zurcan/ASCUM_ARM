@@ -999,33 +999,37 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 
        return true;
        }
-        //return true;
- //       }
-       if(event->type()==QEvent::Resize)
+//           qDebug()<< ui->qwtPlot_2->visibleRegion().rects()[1].width();
+//           qDebug()<< ui->qwtPlot_2->visibleRegion().rectCount();
+//       if(ui->qwtPlot_2->visibleRegion().rectCount()-rectQty!=0)
+//       {
+//           if(rectQty==2)plotRectBasicWidth =ui->qwtPlot_2->visibleRegion().rects()[2].width() - ui->qwtPlot_2->visibleRegion().rects()[1].width();
+//           else plotRectBasicWidth =  ui->qwtPlot_2->visibleRegion().rects()[1].width();
+
+//       }
+       if(plotRectBasicWidth==0)
        {
-           //int *x1,*x2,*y1,*y2;
-        //   qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].right();
-        //   qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].top();
-//           qDebug()<<x1;
-//           qDebug()<<x2;
-//           qDebug()<<y1;
-//           qDebug()<<y2;
-          // qDebug()<< ui->widget->rect();
-           qDebug()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos());
-          // ui->widget->setMouseTracking(true);
+           plotRectBasicWidth = ui->widget->pos().x()+ui->widget->width();
+       }
            if(ui->qwtPlot_2->visibleRegion().rectCount()<3)
            {
-               //ui->widget->visibleRegion().rects()[0].setTop(ui->qwtPlot_2->visibleRegion().rects()[1].top());
-
-                qDebug() << ui->widget->pos();
-                qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topRight());
-                qDebug() << ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topLeft());
                 ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
                 plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
-             //  ui->widget->move(ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).x() - ui->widget->width(), ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).y() + ui->widget->height());
-                //ui->widget->move( ui->qwtPlot_2->mapToParent(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).x(), ui->qwtPlot_2->mapToParent(ui->qwtPlot_2->visibleRegion().rects()[1].topRight()).y());
+
+               // rectQty = ui->qwtPlot_2->visibleRegion().rectCount();
            }
-       }
+           else //if(ui->qwtPlot_2->visibleRegion().rectCount()==3)
+           {
+
+               ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[2].width()-ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
+               plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width() - ui->qwtPlot_2->visibleRegion().rects()[1].width();
+               //rectQty = ui->qwtPlot_2->visibleRegion().rectCount();
+           }
+//           qDebug() << ui->widget->pos().x()+ui->widget->width();
+//           qDebug() << plotRectBasicWidth;
+//           qDebug() << ui->qwtPlot_2->visibleRegion().rectCount();
+//           qDebug() << ui->widget->pos();
+       //}
   // return false;
     return QMainWindow::eventFilter(target, event);
 }
@@ -1574,6 +1578,8 @@ void MainWindow::initiateRadios()
     ui->checkBox->setEnabled(true);
 //    ui->tableWidget->setEnabled(true);
     connect(ui->checkBox,SIGNAL(toggled(bool)),this,SLOT(showAllCurves()));
+    connect(ui->pushButton_6,SIGNAL(clicked()),this,SLOT(increaseMagnifyFactor()));
+    connect(ui->pushButton_5,SIGNAL(clicked()),this,SLOT(decreaseMagnifyFactor()));
     plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
     qDebug() << plotRectBasicWidth;
    // connect(ui->checkBox, SIGNAL(clicked(bool)),this,SLOT(collapseAllCurves()));
@@ -1722,26 +1728,25 @@ double MainWindow::upPlotMagnifier(int factor)
 {
     if(factor>200) factor=200;
     if(factor<0)factor=0;
-    double magVal = exp((double)factor/20);
+    double magVal = exp((double)factor/25);
     magVal=round(magVal);
     if(magVal>3000)magVal=3000;
     if(magVal<0)magVal = 0;
-
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
-
     int tmpCounter=0;
     for(int i =0; i < varCounter; i++)
     {
-
         if(flagArray[i])
         {
             flagMarker[i]->setValue(0.8*magVal +currentTimeMarker->value().x(),flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
             tmpCounter++;
         }
     }
-
     ui->qwtPlot_2->replot();
     globalMagVal = magVal;
+    QVariant tmpPercents = (int)((magVal/globalMagnifyBaseVal) *100);
+
+    ui->label->setText(tmpPercents.toString()+"%");
     return magVal;
 }
 
@@ -1887,3 +1892,22 @@ void MainWindow::moveMagnifyWidget()
 //        }
 //    }
 //}
+void MainWindow::increaseMagnifyFactor()
+{
+
+    if(globalMagnifyFactor>200)globalMagnifyFactor = 200;
+     if(globalMagnifyFactor<0)globalMagnifyFactor = 0;
+     globalMagnifyFactor++;
+    upPlotMagnifier(globalMagnifyFactor);
+}
+
+void MainWindow::decreaseMagnifyFactor()
+{
+
+     if(globalMagnifyFactor>200)globalMagnifyFactor = 200;
+     if(globalMagnifyFactor<0)globalMagnifyFactor = 0;
+      globalMagnifyFactor--;
+   //   qDebug()<<globalMagnifyFactor;
+    upPlotMagnifier(globalMagnifyFactor);
+
+}
