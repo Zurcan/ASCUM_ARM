@@ -207,6 +207,7 @@ private:
     bool leftButtonReleased=false;
     bool reOpenWindow = false;
     double globalMagVal=100;
+    double globalSavedCursorMove=0;
     int globalMagnifyBaseVal = 148;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;

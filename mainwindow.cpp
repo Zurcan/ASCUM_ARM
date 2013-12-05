@@ -883,6 +883,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
           //  if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
 //            if(parent_name=="qwtPlot_2")
 //            {
+            globalSavedCursorMove=0;
                 if(leftButtonPressed)
                 {
                     if(globalMoveFlag)
@@ -933,29 +934,38 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                    //qDebug() << globalPos;
                    //int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
                    double currentPos = QCursor::pos().x();
-                   //qDebug() << currentPos;
-
-//                   qDebug() << "zero rect " << ui->qwtPlot_2->visibleRegion().rects()[0].width();
-//                   qDebug() << "1st rect " << ui->qwtPlot_2->visibleRegion().rects()[1].width();
-//                   qDebug() << "2nd rect " <<ui->qwtPlot_2->visibleRegion().rects()[2].width();
-//                  // qDebug() << ui->qwtPlot_2
-//                   qDebug() << ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
                    int visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
                   // if(ui->qwtPlot_2->visibleRegion().rectCount()>2)visWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width();
                    //else visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
                    double cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
                    globalCursorMove +=cursorPositionMoved;
                    int cursorGlobalError = (globalCursorFirstPressPos-currentPos) - globalCursorMove;
-                   cursorPositionMoved = round((cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/visWidth));
-                   //qDebug()<< globalCursorMove;
-                   //qDebug()<< globalCursorFirstPressPos - currentPos;
-
+                   cursorPositionMoved = (cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/visWidth);
+                   globalSavedCursorMove+=cursorPositionMoved;
                    globalCursorMove = globalCursorFirstPressPos - currentPos;
                    //qDebug() << cursorPositionMoved;
                    //qDebug() << globalMagVal;
                    //qDebug() << ui->qwtPlot_2->canvas()->width()+cursorOffset;
-                   int moveVal = currentTimeMarker->value().x() + cursorPositionMoved;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
-                 //  //qDebug() << moveVal;
+//                   globalSavedCursorMove = globalSavedCursorMove
+                   int moveVal = currentTimeMarker->value().x() + globalSavedCursorMove;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
+                   qDebug()<< cursorGlobalError;
+                   qDebug() << globalSavedCursorMove;
+                    qDebug() << moveVal;
+//                   if(globalSavedCursorMove>=0)
+                       globalSavedCursorMove-=(int)globalSavedCursorMove;
+//                   else
+//                       globalSavedCursorMove+=abs((int)globalSavedCursorMove);
+//                   if(((int)globalSavedCursorMove)==-1)
+//                   {
+//                       moveVal = moveVal -1;
+//                       globalSavedCursorMove++;
+//                   }
+//                   if((int)globalSavedCursorMove==1)
+//                   {
+//                       moveVal = moveVal + 1;
+//                       globalSavedCursorMove--;
+//                   }
+
 
                    moveMapMarker(moveVal);
 
@@ -1744,7 +1754,7 @@ double MainWindow::upPlotMagnifier(int factor)
     }
     ui->qwtPlot_2->replot();
     globalMagVal = magVal;
-    QVariant tmpPercents = (int)((magVal/globalMagnifyBaseVal) *100);
+    QVariant tmpPercents = (int)((globalMagnifyBaseVal/magVal) *100);
 
     ui->label->setText(tmpPercents.toString()+"%");
     return magVal;
