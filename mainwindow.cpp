@@ -953,7 +953,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                if(mapPlotUsed)
                {
                   // if(mouseEvent>buttons()==Qt::LeftButton)
-                       moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+                       moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x() - ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
                   // mapPlotUsed = false;
                }
            }
