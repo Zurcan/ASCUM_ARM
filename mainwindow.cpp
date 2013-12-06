@@ -939,38 +939,13 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                    //else visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
                    double cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
                    globalCursorMove +=cursorPositionMoved;
-                   int cursorGlobalError = (globalCursorFirstPressPos-currentPos) - globalCursorMove;
-                   cursorPositionMoved = (cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/visWidth);
-                   globalSavedCursorMove+=cursorPositionMoved;
-                   globalCursorMove = globalCursorFirstPressPos - currentPos;
-                   //qDebug() << cursorPositionMoved;
-                   //qDebug() << globalMagVal;
-                   //qDebug() << ui->qwtPlot_2->canvas()->width()+cursorOffset;
-//                   globalSavedCursorMove = globalSavedCursorMove
-                   int moveVal = currentTimeMarker->value().x() + globalSavedCursorMove;// (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorPositionMoved)) ;//+cursorPositionMoved;
-                   qDebug()<< cursorGlobalError;
-                   qDebug() << globalSavedCursorMove;
-                    qDebug() << moveVal;
-//                   if(globalSavedCursorMove>=0)
-                       globalSavedCursorMove-=(int)globalSavedCursorMove;
-//                   else
-//                       globalSavedCursorMove+=abs((int)globalSavedCursorMove);
-//                   if(((int)globalSavedCursorMove)==-1)
-//                   {
-//                       moveVal = moveVal -1;
-//                       globalSavedCursorMove++;
-//                   }
-//                   if((int)globalSavedCursorMove==1)
-//                   {
-//                       moveVal = moveVal + 1;
-//                       globalSavedCursorMove--;
-//                   }
-
-
+                   int cursorGlobalError = (globalCursorFirstPressPos-currentPos) - globalCursorMove;//some errors of scroll navigation appears if we just make int from double, truncated value is became lost
+                   cursorPositionMoved = (cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/visWidth);//making conversion from pixels to units of upPlot
+                   globalSavedCursorMove+=cursorPositionMoved; // save all double shifts into global counter
+                   int moveVal = currentTimeMarker->value().x() + (int)globalSavedCursorMove;// get only integer part of double
+                   globalCursorMove = globalCursorFirstPressPos - currentPos; //this string needs to calculate global error value
+                   globalSavedCursorMove-=(int)globalSavedCursorMove; // subtract integer part from the double, same as delphi trunc() operation
                    moveMapMarker(moveVal);
-
-                   //return;
-                  // moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x()+(globalCursorPos-QCursor::pos().x())));
                    globalCursorPos=QCursor::pos().x();
                    globalCursorPoint = QCursor::pos();
                }
