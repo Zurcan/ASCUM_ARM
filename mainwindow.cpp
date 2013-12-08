@@ -868,7 +868,13 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
             }
             if(parent_name=="qwtPlot")
             {
-                if(mouseEvent->button()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+//                double widthGain = sizeOfArray/ui->qwtPlot->axisWidget(QwtPlot::xBottom)->width();
+                if(mouseEvent->button()==Qt::LeftButton)moveMapMarker(ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()));//moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom,0));//100 - is offset
+//                qDebug()<< ui->qwtPlot->axisWidget(QwtPlot::xBottom)->width();
+//                qDebug()<< ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left());
+//                qDebug()<< sizeOfArray;
+//                qDebug()<< ui->qwtPlot->mapFromGlobal(QCursor::pos()).x();
+//                qDebug()<< ui->qwtPlot->transform(QwtPlot::xBottom,0);
                 globalCursorPos = QCursor::pos().x();
                 mapPlotUsed = true;
             }
@@ -953,7 +959,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                if(mapPlotUsed)
                {
                   // if(mouseEvent>buttons()==Qt::LeftButton)
-                       moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x() - ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
+                       moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x() - ui->qwtPlot->contentsMargins().left()) );//100 - is offset
                   // mapPlotUsed = false;
                }
            }
@@ -1046,12 +1052,14 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 
 void MainWindow::moveMapMarker(long int position)
 {
+   // qDebug()<< position;
     if(position>=sizeOfArray)position=sizeOfArray-1;
     if(position < 0)position = 0;
    // //qDebug()<< "position is" << position;
     timeScale->currentIndex = position;
     ui->actionPrint->setEnabled(true);
    // verticalMapMarker->hide();
+
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
