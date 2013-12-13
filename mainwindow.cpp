@@ -424,6 +424,9 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         QString tmpField = " ";
                         int tmpRecI = 0;
                         QVariant recFloat;
+                        int tmpErrVal = 0;
+                        int tmpErrLastVal = 0;
+                        int errCounter;
                         int backIndex=tmpRecordCount-1;
                         for (int index = 0; index < tmpRecordCount; index++)
                         {
@@ -434,6 +437,12 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                  tmpRecI =0;
                                     for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)//0 - it's some text, 1 - it's time, others are data
                                     {
+                                        if(index<3)
+                                        {
+                                         qDebug() << newTmiInterp->TInterpItemArray[i].typ;
+//                                            qDebug() << QString::fromStdString(newTmiInterp->TInterpItemArray[i].name);
+                                           // qDebug() << sizeof(int);
+                                        }
                                         tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
                                         if(newTmiInterp->TInterpItemArray[i].level)
                                         {
@@ -539,7 +548,28 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 flagOffset+=2;
                                                 break;
                                             }
+                                            case 4:
+                                            {
+                                                 tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+                                                if(tmpErrVal!=tmpErrLastVal)
+                                                        {
+                                                            if(tmpErrVal!=0)
+                                                            {
+                                                                errCounter++;
+                                                                ErrXCoords.insert(errCounter-1, backIndex);
+                                                                qDebug() << ErrXCoords.indexOf(backIndex, errCounter );
+//                                                                ErrXCoords.iterator++;
+                                                                tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+                                                                ErrCode.insert(errCounter-1, tmpErrVal);
+//                                                                ErrCode.iterator++;
+                                                                tmpErrLastVal = tmpErrVal;
+                                                            }
+                                                        }
 
+                                                // qDebug() << tmpErrVal;
+
+
+                                            }
 
                                                        default:
                                                     {
@@ -733,8 +763,37 @@ void MainWindow::initiateCurves()
 //             }
             // ui->qwtPlot_2->setAxisScale(i,thermoPlotMins[i],thermoPlotMaxs[i],0.25);
 
-
             }
+     errorCurve = new QwtPlotCurve;
+     QVector <QPointF> tmpSamples;
+     tmpSamples.begin();
+     tmpSamples.append(QPointF(10,10));
+     tmpSamples.insert(tmpSamples.begin(),QPointF(20,10));
+     errorCurve->setSamples(tmpSamples);
+     errorSym.setColor(Qt::black);
+     errorSym.setStyle(QwtSymbol::Diamond);
+     errorSym.setPen(QColor(Qt::black));
+
+     errorSym.setSize(4);
+//     QwtText tmp = "0x001234";
+     QwtText tmpTxt;
+     errorMarker = new QwtPlotMarker;
+     tmpTxt.setText("0x001234");
+     errorMarker->setLabel(tmpTxt);
+     //errorCurve->setTitle(tmpTxt);
+     errorMarker->setValue(QPointF(15,12));
+     errorMarker->setLineStyle(QwtPlotMarker::NoLine);
+     errorMarker->setLinePen(QPen(Qt::red,1,Qt::SolidLine));
+//     currentTimeMarker->setLineStyle(QwtPlotMarker::VLine);f
+//     verticalMapMarker->setLineStyle(QwtPlotMarker::VLine);
+//     currentTimeMarker->setLinePen(QPen(Qt::red,4,Qt::SolidLine));
+//     verticalMapMarker->setLinePen(QPen(Qt::red,2,Qt::SolidLine));
+     errorMarker->attach(ui->qwtPlot_2);
+     errorMarker->show();
+     errorCurve->setSymbol(&errorSym);
+     errorCurve->attach(ui->qwtPlot_2);
+
+
 
 }
 
@@ -1595,7 +1654,12 @@ double MainWindow::getOffsetValue(int flagIndex)
     double tmpOffset = flagMarkerOffsetBase;
     for(int i = 0; i < flagIndex; i++)
     {
-        if(flagArray[i])tmpOffset+=flagMarkerIncStep;
+        if(flagArray[i])
+        {
+            tmpOffset+=flagMarkerIncStep;
+            qDebug() << flagMarkerIncStep;
+        }
+
     }
     return tmpOffset;
 }
@@ -1834,7 +1898,10 @@ void MainWindow::showAllCurves()
                     //tmpIndex = index;
                     curve2[index]->setAxes(1,index);//this one
                     ui->qwtPlot_2->enableAxis(index,true);//and enable it
+
                 }
+                 else flagMarker[index]->attach(ui->qwtPlot_2);
+
 
                 ui->qwtPlot_2->replot();
                 axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
@@ -1851,6 +1918,7 @@ void MainWindow::showAllCurves()
                     curve2[index]->setAxes(1,index);//this one
                     ui->qwtPlot_2->enableAxis(index,false);//and enable it
                 }
+                else flagMarker[index]->detach();
 
                 ui->qwtPlot_2->replot();
                 axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));

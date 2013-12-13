@@ -46,6 +46,7 @@
 #include <qwt_plot_picker.h>
 #include <QSpacerItem>
 #include <qwt_plot_directpainter.h>
+#include <qwt_symbol.h>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -196,6 +197,10 @@ private:
    // QwtPlot
     QwtPlotDirectPainter *rtPainter;
     QwtPlotPicker *plotPointer;
+    QwtSymbol errorSym;
+    QVector <int> ErrXCoords;
+    QVector <long> ErrCode;
+    QVector <QPointF> ErrCoords;
     int globalCursorMove;
     int globalCursorFirstPressPos;
     int plotRectBasicWidth;
@@ -277,10 +282,11 @@ private:
     QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::darkGray, Qt::green, Qt::darkCyan, Qt::magenta, QColor(204,255,102,255), Qt::darkRed, Qt::darkMagenta, QColor(255,0,0,127), QColor(255,204,255,255), QColor(0,102,255,127), QColor(255,204,255,255),QColor(160,102,0,255), QColor(255,160,255,255), QColor(202,255,0,255), QColor(255,0,0,127), Qt::darkYellow, Qt::cyan, QColor(202,202,255,255), QColor(102,0,160,255), QColor(255,160,50,255)};
     QDateTime firstDateTime;
     int printLeftTimeIndex=0, printRightTimeIndex=0;
-
+    QwtPlotCurve *errorCurve;
     QwtPlotCurve *curve1[24];
     QwtPlotCurve *curve2[24];
     QwtPlotMarker *flagMarker[24];
+    QwtPlotMarker *errorMarker;
     double flagMarkerOffsetBase = 1.25;
     double flagMarkerIncStep = 5.25;
    /*here are the stats of the machine*/
