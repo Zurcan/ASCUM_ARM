@@ -289,6 +289,7 @@ private:
     QwtPlotMarker *errorMarker;
     double flagMarkerOffsetBase = 1.25;
     double flagMarkerIncStep = 5.25;
+    int flagCounter = 0;
    /*here are the stats of the machine*/
 
     explicit MainWindow(QWidget *parent = 0);

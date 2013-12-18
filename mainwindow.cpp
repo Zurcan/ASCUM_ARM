@@ -366,12 +366,15 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
             varCounter = newTmiInterp->interpreterRecordsCount-2;
             //qDebug() << varCounter;
             initGloabalArrays(varCounter);
+
             for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
 
                 if(newTmiInterp->TInterpItemArray[i].level!=0)
                 {
+
                     tmpStr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+                    if(newTmiInterp->TInterpItemArray[i].typ==8)flagCounter++;
                     //ui->tableWidget->verticalHeaderItem(i-1)->setText(verticalHeaderName);
                     //qDebug() << tmpStr;
                     //varCounter++;
@@ -401,13 +404,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
               newLogProc->logDataPointer = tmpLogDataPointer;
                 if(checkSegmentCRC(tmpID))
                     {
-//                        char buff[20];
-
                         time_t recTime;
-//                        time_t firstPointDateTime;
-//                        int firstPointInt;
-//                        //qDebug() << newLogProc->segmentHeader.size;
-//                        //qDebug() << newLogProc->segmentHeader.recordSize;
                         int tmpRecordCount = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                         sizeOfArray = tmpRecordCount;
                         globalInits(varCounter);
@@ -415,12 +412,6 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         int recCounter=0;
                         int recPosition=newLogProc->logDataPointer;
                         int recPositionCompareVal = recPosition;
-
-//                        //qDebug() << newLogProc->logDataPointer;
-//                        //qDebug() <<recPositionCompareVal;
-//                        //qDebug() << tmpRecordCount;
-//                        //newLogProc->selectLogFile(filename);
-//                        //qDebug() << newLogProc->tmpFile.bytesAvailable();
                         QString tmpField = " ";
                         int tmpRecI = 0;
                         QVariant recFloat;
@@ -439,7 +430,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                     {
                                         if(index<3)
                                         {
-                                         qDebug() << newTmiInterp->TInterpItemArray[i].typ;
+                                      //   qDebug() << newTmiInterp->TInterpItemArray[i].typ;
 //                                            qDebug() << QString::fromStdString(newTmiInterp->TInterpItemArray[i].name);
                                            // qDebug() << sizeof(int);
                                         }
@@ -535,10 +526,15 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             case 8 :
                                             {
                                                 //tmpRecI=newTmiInterp.TInterpItemArray[l].offset;
+                                               // if(i==1)
+                                                //{
+                                                 //   flagCounter++;
+                                                //    qDebug()<<flagCounter;
+                                                //}
 
                                                 if(newTmiInterp->fieldFlag(&newLogProc->record[tmpRecI], &newTmiInterp->TInterpItemArray[i].mask_))
                                                 {
-                                                    Y[i-2][backIndex]= 1+flagOffset;
+                                                    Y[i-2][backIndex]= 1+flagOffset; //here we forming the Y-array of flags
                                                 }
                                                 else
                                                 {
@@ -731,31 +727,15 @@ void MainWindow::initiateCurves()
                 if((int)Y[i][0]%2)curve2[i]->setBaseline(Y[i][0]-1);
                 else curve2[i]->setBaseline(Y[i][0]);
                 curve2[i]->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
-//                curve2[i]->setTitle(parLabel[i]);
-
-//                QwtSeriesData<QPointF> *myData;// = curve2[i]->data();
-//                curve2[i]->setData(myData);
-//                QPolygonF myPoints;
-//                for(int j =0; j < sizeOfArray; j++)
-//                {
-//                    myPoints << QPointF(X[j], Y[i][j]);
-//                }
-//                curve2[i]->setSamples(new ShiftData (myPoints));
                 curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                curve2[i]->setAxes(QwtPlot::xBottom,11);//this one
-                ui->qwtPlot_2->enableAxis(11,false);//and enable it
+                curve2[i]->setAxes(QwtPlot::xBottom,12);//this one
+                ui->qwtPlot_2->enableAxis(12,false);//and enable it
                 QPalette myPalette;
                 myPalette.setColor(QPalette::Foreground,Qt::black);
                 myPalette.setColor(QPalette::Text,Qt::black);
-                ui->qwtPlot_2->setAxisScaleDraw(11,verticalFlagScale);
-                ui->qwtPlot_2->setAxisScale(11, 0, 23, 1);
-                //ui->qwtPlot_2->setAxisLabelAlignment(QwtPlot::xBottom,Qt::AlignLeft);
+                ui->qwtPlot_2->setAxisScaleDraw(12,verticalFlagScale);
+                ui->qwtPlot_2->setAxisScale(12, 0, flagCounter*2-1, 1);
                 ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, firstDateTime.date().toString());
- //               plotPointer = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
- //                                               QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
- //                                               ui->qwtPlot_2->canvas());
-//                connect(plotPointer, SIGNAL(moved(QPoint)),
-//                        this, SLOT(cursorMoved(QPoint)));
                 ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                 ui->qwtPlot_2->replot();
                // offset+=2;
@@ -1467,7 +1447,11 @@ void MainWindow::setGlobalArrays()
     for(int i = 0; i < varCounter;i++)
     {
       //  parLabel[i] = new QString;
-        if(newTmiInterp->TInterpItemArray[i+2].typ==8)flagArray[i]=1;
+        if(newTmiInterp->TInterpItemArray[i+2].typ==8)
+        {
+            flagArray[i]=1;
+          //  flagCounter++;
+        }
         else flagArray[i] = 0;
         parLabel[i] = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i+2].name);// = QString::fromLocal8Bit();
         parLabel[i].replace("[","(");
@@ -1475,7 +1459,7 @@ void MainWindow::setGlobalArrays()
       //  //qDebug()<< parLabel[i];
     }
 //    //qDebug() << "flag count:";
-//    //qDebug() << flagCounter;
+//qDebug() << flagCounter;
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -1651,15 +1635,27 @@ void MainWindow::on_pushButton_3_clicked()
 double MainWindow::getOffsetValue(int flagIndex)
 {
 
-    double tmpOffset = flagMarkerOffsetBase;
+    double tmpOffset;
+   // flagMarkerIncStep =
+//     qDebug()<< ui->qwtPlot_2->axiss
+    //qDebug() << flagCounter;
+//    qDebug() << thermoPlotMaxs[0];
+//    qDebug() << flagCounter;
+    // ui->qwtPlot_2->setAxisScale(12, 0, flagCounter*2-1, 1);
+    tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
+     int tmpMax;
+     if(thermoPlotMaxs[0]<10)thermoPlotMaxs[0]=10;
+    if((int)thermoPlotMaxs[0]%10!=0)tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
+    else tmpMax = thermoPlotMaxs[0];
+    flagMarkerIncStep=tmpMax/(flagCounter-0.5);
+  //  qDebug() << tmpMax;
     for(int i = 0; i < flagIndex; i++)
     {
         if(flagArray[i])
         {
             tmpOffset+=flagMarkerIncStep;
-            qDebug() << flagMarkerIncStep;
-        }
 
+        }
     }
     return tmpOffset;
 }
