@@ -1642,19 +1642,24 @@ double MainWindow::getOffsetValue(int flagIndex)
 //    qDebug() << thermoPlotMaxs[0];
 //    qDebug() << flagCounter;
     // ui->qwtPlot_2->setAxisScale(12, 0, flagCounter*2-1, 1);
+
     tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
+    double tmpGain;
+    tmpGain = thermoPlotMaxs[0]/(flagCounter*2 -1);
      int tmpMax;
      if(thermoPlotMaxs[0]<10)thermoPlotMaxs[0]=10;
     if((int)thermoPlotMaxs[0]%10!=0)tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
     else tmpMax = thermoPlotMaxs[0];
-    flagMarkerIncStep=tmpMax/(flagCounter-0.5);
+   // flagMarkerIncStep=tmpMax/(flagCounter-0.5);
+    flagMarkerIncStep = tmpGain*2;
+    tmpOffset = tmpGain/2;
+//    flagMarkerIncStep = tmpGain*flagCounter;
   //  qDebug() << tmpMax;
     for(int i = 0; i < flagIndex; i++)
     {
         if(flagArray[i])
         {
             tmpOffset+=flagMarkerIncStep;
-
         }
     }
     return tmpOffset;

@@ -288,7 +288,7 @@ private:
     QwtPlotMarker *flagMarker[24];
     QwtPlotMarker *errorMarker;
     double flagMarkerOffsetBase = 1.25;
-    double flagMarkerIncStep = 5.25;
+    double flagMarkerIncStep = 0;
     int flagCounter = 0;
    /*here are the stats of the machine*/
 
