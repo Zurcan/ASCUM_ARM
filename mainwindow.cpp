@@ -134,6 +134,7 @@ void MainWindow::initiatePlotMarkers()
         }
 
     }
+
     currentTimeMarker->attach(ui->qwtPlot_2);
     verticalMapMarker->attach(ui->qwtPlot);
 
@@ -744,34 +745,27 @@ void MainWindow::initiateCurves()
             // ui->qwtPlot_2->setAxisScale(i,thermoPlotMins[i],thermoPlotMaxs[i],0.25);
 
             }
-     errorCurve = new QwtPlotCurve;
-     QVector <QPointF> tmpSamples;
-     tmpSamples.begin();
-     tmpSamples.append(QPointF(10,10));
-     tmpSamples.insert(tmpSamples.begin(),QPointF(20,10));
-     errorCurve->setSamples(tmpSamples);
-     errorSym.setColor(Qt::black);
-     errorSym.setStyle(QwtSymbol::Diamond);
-     errorSym.setPen(QColor(Qt::black));
-
-     errorSym.setSize(4);
-//     QwtText tmp = "0x001234";
-     QwtText tmpTxt;
-     errorMarker = new QwtPlotMarker;
-     tmpTxt.setText("0x001234");
-     errorMarker->setLabel(tmpTxt);
-     //errorCurve->setTitle(tmpTxt);
-     errorMarker->setValue(QPointF(15,12));
-     errorMarker->setLineStyle(QwtPlotMarker::NoLine);
-     errorMarker->setLinePen(QPen(Qt::red,1,Qt::SolidLine));
-//     currentTimeMarker->setLineStyle(QwtPlotMarker::VLine);f
-//     verticalMapMarker->setLineStyle(QwtPlotMarker::VLine);
-//     currentTimeMarker->setLinePen(QPen(Qt::red,4,Qt::SolidLine));
-//     verticalMapMarker->setLinePen(QPen(Qt::red,2,Qt::SolidLine));
-     errorMarker->attach(ui->qwtPlot_2);
-     errorMarker->show();
-     errorCurve->setSymbol(&errorSym);
-     errorCurve->attach(ui->qwtPlot_2);
+//     errorCurve = new QwtPlotCurve;
+//     QVector <QPointF> tmpSamples;
+//     tmpSamples.begin();
+//     tmpSamples.append(QPointF(10,10));
+//     tmpSamples.insert(tmpSamples.begin(),QPointF(20,10));
+//     errorCurve->setSamples(tmpSamples);
+//     errorSym.setColor(Qt::black);
+//     errorSym.setStyle(QwtSymbol::Diamond);
+//     errorSym.setPen(QColor(Qt::black));
+//     errorSym.setSize(4);
+//     QwtText tmpTxt;
+//     errorMarker = new QwtPlotMarker;
+//     tmpTxt.setText("0x001234");
+//     errorMarker->setLabel(tmpTxt);
+//     errorMarker->setValue(QPointF(15,12));
+//     errorMarker->setLineStyle(QwtPlotMarker::NoLine);
+//     errorMarker->setLinePen(QPen(Qt::red,1,Qt::SolidLine));
+//     errorMarker->attach(ui->qwtPlot_2);
+//     errorMarker->show();
+//     errorCurve->setSymbol(&errorSym);
+//     errorCurve->attach(ui->qwtPlot_2);
 
 
 
@@ -1645,14 +1639,36 @@ double MainWindow::getOffsetValue(int flagIndex)
 
     tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
     double tmpGain;
-    tmpGain = thermoPlotMaxs[0]/(flagCounter*2 -1);
-     int tmpMax;
-     if(thermoPlotMaxs[0]<10)thermoPlotMaxs[0]=10;
-    if((int)thermoPlotMaxs[0]%10!=0)tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
+
+     double tmpMax;
+     double tmpMin=0;
+    // if(curve2[0]->)
+   //  if(thermoPlotMaxs[0]==1)thermoPlotMaxs[0]=0;
+    // qDebug() << ui->qwtPlot_2->axisWidget(1)->scaleDraw()->maxTickLength();
+     if(thermoPlotMaxs[0]<10)
+     {
+         if(thermoPlotMaxs[0]<=1)
+         {
+             tmpMax = 0.6;
+             tmpMin = -0.6;
+         }
+       else  thermoPlotMaxs[0]=10;
+     }
+    if((int)thermoPlotMaxs[0]%10!=0)
+    {
+        if(thermoPlotMaxs[0]>1)
+            tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
+    }
     else tmpMax = thermoPlotMaxs[0];
+
+//    qDebug()<<tmpMax;
+//    qDebug()<<thermoPlotMaxs[0];
+    tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2 -1);
+//    qDebug()<< tmpGain;
    // flagMarkerIncStep=tmpMax/(flagCounter-0.5);
     flagMarkerIncStep = tmpGain*2;
-    tmpOffset = tmpGain/2;
+    tmpOffset = tmpGain/2 + tmpMin;
+    flagMarkerOffsetBase = tmpOffset;
 //    flagMarkerIncStep = tmpGain*flagCounter;
   //  qDebug() << tmpMax;
     for(int i = 0; i < flagIndex; i++)
@@ -1901,7 +1917,12 @@ void MainWindow::showAllCurves()
                     ui->qwtPlot_2->enableAxis(index,true);//and enable it
 
                 }
-                 else flagMarker[index]->attach(ui->qwtPlot_2);
+                 else
+                 {
+                     flagMarker[index]->attach(ui->qwtPlot_2);
+//                     qDebug() << flagMarker[index]->yValue();
+//                     qDebug() << thermoPlotMaxs[0];
+                 }
 
 
                 ui->qwtPlot_2->replot();
