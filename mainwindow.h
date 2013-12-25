@@ -299,7 +299,7 @@ private:
     void initiateThermos();
     void initiateVideoScreens();
     void initiateCurves();
-    void checkFileHeaderCRC();
+    bool checkFileHeaderCRC();
     void initiatePlotMarkers();
     void readHeadTableData();
     void readDataFromLog();

@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //       WelcomeDialog wd;
 //        wd.exec();
     // initiateVideoScreens();
-     ui->setupUi(this); 
+     ui->setupUi(this);
 
     // upPlot = this->ui->qwtPlot_2;
      //this->layout()->addWidget(upPlot);
@@ -57,8 +57,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->pushButton_5->setIcon(*zoominIcon);
     ui->pushButton_6->setIcon(*zoomoutIcon);
-   newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
-   newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
+    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
+    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
    rtPainter = new QwtPlotDirectPainter(this);
 
 //   ui->qwtPlot->installEventFilter(this);
@@ -147,7 +147,7 @@ void MainWindow::initiatePlotMarkers()
 
 }
 
-void MainWindow::checkFileHeaderCRC()
+bool MainWindow::checkFileHeaderCRC()
 {
 
     newLogProc->selectLogFile(filename);
@@ -176,8 +176,9 @@ void MainWindow::checkFileHeaderCRC()
         newMessage.setWindowTitle("Ошибка!");
         newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
         newMessage.exec();
-       // globalFileErrorFlag = true;
+       return true;
     }
+    return false;
    // else //qDebug()<<CRCtmpFH;
 }
 
@@ -326,17 +327,33 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                             //else; //if we
                         }
                     }
+                else
+                {
+                    newLogProc->tmpFile.close();
+                    isOpened=false;
+                    openNewMainWindow();
+                    this->close();
+                }
 
       }
+    else
+    {
+        newLogProc->tmpFile.close();
+        isOpened=false;
+        openNewMainWindow();
+        this->close();
+    }
 }
 
 void MainWindow::readDataFromLog()//and now we're reading all the data from our log
 {
+
     int tmpID= 0;
      double flagOffset=0;
     int cycleID = 0;
     int tmpLogDataPointer =0;
     newLogProc->logDataPointer = 40; // jump through file header
+
     newLogProc->tmpFile.seek(40);
     //buffArr = (char*)malloc(newLogProc->segmentHeader.size);
     for(int segCount = 0; segCount < 4; segCount++)
@@ -350,6 +367,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 newLogProc->selectSegment(cycleID);
                 newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
             }
+
     newLogProc->logDataPointer = tmpLogDataPointer;
     if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header
                                         also segment with ID begins from 0x8 - is only data interpreter */
@@ -359,6 +377,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
        *At this point we have calculated CRC of head table segment interpretator, and datapointer
        *pointed to the interpreter, but not to its header, so we can get from interpreter names of head
        */
+
             newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
             newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
 //            sizeOfArray = newTmiInterp->interpreterRecordsCount;
@@ -405,6 +424,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
               newLogProc->logDataPointer = tmpLogDataPointer;
                 if(checkSegmentCRC(tmpID))
                     {
+
                         time_t recTime;
                         int tmpRecordCount = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                         sizeOfArray = tmpRecordCount;
@@ -422,6 +442,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         int backIndex=tmpRecordCount-1;
                         for (int index = 0; index < tmpRecordCount; index++)
                         {
+                            qDebug() << "error?";
                             backIndex = tmpRecordCount-1-index;//but there is a little shaming moment, we have to reverse data arrays because first time indeed is last one
                             X[index]= index;
                             flagOffset=0;
@@ -598,8 +619,24 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                       //  //qDebug() << sizeOfArray;
                 }
+                else
+                {
+
+                    newLogProc->tmpFile.close();
+                    isOpened=false;
+                    openNewMainWindow();
+                    this->close();
+                }
 
       }
+    else
+    {
+
+        newLogProc->tmpFile.close();
+        isOpened=false;
+        openNewMainWindow();
+        this->close();
+    }
 }
 
 bool MainWindow::checkSegmentCRC(long segmentID)
@@ -638,9 +675,10 @@ bool MainWindow::checkSegmentCRC(long segmentID)
 void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
 {
     timeScale = new TimeScaleDraw(startPoint);
+
     timeScale->maxVal=sizeOfArray;
     mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
-    mapTimeScale->setLabelAlignment(Qt::AlignRight);
+   mapTimeScale->setLabelAlignment(Qt::AlignRight);
   //  SecondsLinearScaleEngine *mapTimeScale = new SecondsLinearScaleEngine;
     //qDebug() << length;
     timeScale->timeArr= (time_t*)malloc(length*sizeof(time_t));
@@ -686,7 +724,9 @@ void MainWindow::initiateCurves()
     verticalFlagScale = new VerticalFlagScaleDraw(24);
    // ui->qwtPlot->enableAxis(QwtPlot::xTop,true);
     ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
+
     AxisLabelDate = firstDateTime;
+
      //srand(double(NULL));
     for (int i =0; i<varCounter; i++)
            {
@@ -736,11 +776,18 @@ void MainWindow::initiateCurves()
                 myPalette.setColor(QPalette::Text,Qt::black);
                 ui->qwtPlot_2->setAxisScaleDraw(12,verticalFlagScale);
                 ui->qwtPlot_2->setAxisScale(12, 0, flagCounter*2-1, 1);
-                ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, firstDateTime.date().toString());
+                QwtText tmpTitle = firstDateTime.date().toString("dd.MM.yyyy");
+                QFont tmpFont;
+                tmpFont.setBold(false);
+                tmpTitle.setFont(tmpFont);
+                ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, tmpTitle);
                 ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
                 ui->qwtPlot_2->replot();
                // offset+=2;
             }
+//            QFont axisTitleFont;
+//            axisTitleFont.setBold(true);
+//            axisTitleFont.setWordSpacing(100);
 //             }
             // ui->qwtPlot_2->setAxisScale(i,thermoPlotMins[i],thermoPlotMaxs[i],0.25);
 
@@ -982,7 +1029,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                    cursorPositionMoved = (cursorPositionMoved+cursorGlobalError)*(globalMagVal*2/visWidth);//making conversion from pixels to units of upPlot
                    globalSavedCursorMove+=cursorPositionMoved; // save all double shifts into global counter
                    int moveVal = currentTimeMarker->value().x() + (int)globalSavedCursorMove;// get only integer part of double
-                   globalCursorMove = globalCursorFirstPressPos - currentPos; //this string needs to calculate global error value
+                   globalCursorMove = globalCursorFirstPressPos - currentPos; //this string is needed to calculate global error value
                    globalSavedCursorMove-=(int)globalSavedCursorMove; // subtract integer part from the double, same as delphi trunc() operation
                    moveMapMarker(moveVal);
                    globalCursorPos=QCursor::pos().x();
@@ -1037,9 +1084,23 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
        }
            if(ui->qwtPlot_2->visibleRegion().rectCount()<3)
            {
+//               qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].width();
+//               qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].width();
+//               qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].x();
+//               qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].x();
+               if(ui->qwtPlot_2->visibleRegion().rects()[1].x()>=ui->qwtPlot_2->visibleRegion().rects()[0].x())
+               {
                 ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
                 plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
+               }
+               else
+               {
+//                qDebug() << "here we are";
+                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth) - ui->qwtPlot_2->visibleRegion().rects()[0].width(), ui->widget->pos().y());
+                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width()- ui->qwtPlot_2->visibleRegion().rects()[0].width();
+//                qDebug() << ui->widget->pos().x();
 
+               }
                // rectQty = ui->qwtPlot_2->visibleRegion().rectCount();
            }
            else //if(ui->qwtPlot_2->visibleRegion().rectCount()==3)
@@ -1096,10 +1157,16 @@ void MainWindow::moveMapMarker(long int position)
     verticalMapMarker->setValue(position,0);
     currentTimeMarker->setValue(position,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
+    QwtText tmpTitle;
 
     if(tmpDate.date()!=AxisLabelDate.date())
     {
-        ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpDate.date().toString());
+        tmpTitle = tmpDate.date().toString("dd.MM.yyyy");
+        QFont tmpFont;
+        tmpFont.setBold(false);
+        tmpTitle.setFont(tmpFont);
+        ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpTitle);
+
         AxisLabelDate = tmpDate;
     }
 
@@ -1528,7 +1595,7 @@ void MainWindow::openLog()
 //    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
 //    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
     filename = QFileDialog::getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл лога регистратора(*.alg)");
-    ////qDebug()<< filename;
+    //qDebug()<< filename;
     if(filename!="")
     {
         ui->qwtPlot->setEnabled(true);
@@ -1541,9 +1608,21 @@ void MainWindow::openLog()
                                    ui->pushButton_2->setEnabled(true);
                                        ui->pushButton_3->setEnabled(true);
                                            ui->pushButton_4->setEnabled(true);
-    checkFileHeaderCRC();
+
+    if(checkFileHeaderCRC())
+    {
+        newLogProc->tmpFile.close();
+        isOpened=false;
+        openNewMainWindow();
+        this->close();
+     }
+    else
+    {
+
     readHeadTableData();
+
     readDataFromLog();
+
     setGlobalArrays();
     initiatePlotMarkers();
     initiateThermos();
@@ -1562,7 +1641,7 @@ void MainWindow::openLog()
 //        ui->qwtPlot_2->canvas()->setMouseTracking(true);
        ui->qwtPlot->installEventFilter(this);
        ui->qwtPlot_2->installEventFilter(this);
-
+     }
     }
 }
 void MainWindow::initiateRadios()
@@ -1630,21 +1709,10 @@ double MainWindow::getOffsetValue(int flagIndex)
 {
 
     double tmpOffset;
-   // flagMarkerIncStep =
-//     qDebug()<< ui->qwtPlot_2->axiss
-    //qDebug() << flagCounter;
-//    qDebug() << thermoPlotMaxs[0];
-//    qDebug() << flagCounter;
-    // ui->qwtPlot_2->setAxisScale(12, 0, flagCounter*2-1, 1);
-
     tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
     double tmpGain;
-
      double tmpMax;
      double tmpMin=0;
-    // if(curve2[0]->)
-   //  if(thermoPlotMaxs[0]==1)thermoPlotMaxs[0]=0;
-    // qDebug() << ui->qwtPlot_2->axisWidget(1)->scaleDraw()->maxTickLength();
      if(thermoPlotMaxs[0]<10)
      {
          if(thermoPlotMaxs[0]<=1)
@@ -1652,25 +1720,21 @@ double MainWindow::getOffsetValue(int flagIndex)
              tmpMax = 0.6;
              tmpMin = -0.6;
          }
-       else  thermoPlotMaxs[0]=10;
+       else  tmpMax=10;
      }
-    if((int)thermoPlotMaxs[0]%10!=0)
-    {
-        if(thermoPlotMaxs[0]>1)
-            tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
+     else
+     {
+          if((int)thermoPlotMaxs[0]%10!=0)
+            {
+            if(thermoPlotMaxs[0]>1)
+                tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
+            }
+        else tmpMax = thermoPlotMaxs[0];
     }
-    else tmpMax = thermoPlotMaxs[0];
-
-//    qDebug()<<tmpMax;
-//    qDebug()<<thermoPlotMaxs[0];
     tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2 -1);
-//    qDebug()<< tmpGain;
-   // flagMarkerIncStep=tmpMax/(flagCounter-0.5);
     flagMarkerIncStep = tmpGain*2;
     tmpOffset = tmpGain/2 + tmpMin;
     flagMarkerOffsetBase = tmpOffset;
-//    flagMarkerIncStep = tmpGain*flagCounter;
-  //  qDebug() << tmpMax;
     for(int i = 0; i < flagIndex; i++)
     {
         if(flagArray[i])
