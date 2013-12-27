@@ -79,9 +79,10 @@ long logProcessor::setTmpID()
 {
     char tmpIDarr[4];
     long *tmpID;
+    long tmpDataPointer = logDataPointer;
     tmpFile.seek(logDataPointer);
     int tmp1 = tmpFile.bytesAvailable();
-    while(tmp1>logDataPointer)
+    while(tmp1+tmpDataPointer>logDataPointer)
     {
     tmpFile.seek(logDataPointer);
     tmpFile.read(tmpIDarr,sizeof(tmpIDarr));
@@ -96,13 +97,15 @@ bool logProcessor::selectSegment(long ID)//first of all we need to find segment,
 {
 //    long *p;
     char tmparr[208];
+    long tmpDataPointer;
 //    int i=0;
     if(ID==0)return false;
     segmentHeaderPointer = &segmentHeader;
    // segmentHeaderPointer = &segmenHeaderCRC;
     tmpFile.seek(logDataPointer);
+    tmpDataPointer = logDataPointer;
     int tmp1 = tmpFile.bytesAvailable();
-    while(tmp1>logDataPointer)
+    while(tmp1+tmpDataPointer>logDataPointer)
     {
     //    qDebug() << logDataPointer;
     tmpFile.seek(logDataPointer);

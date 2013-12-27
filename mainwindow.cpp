@@ -1,6 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+/*
+PowON
+PowOFF
+PowOnTime
+DateChg
+*/
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -167,17 +172,25 @@ bool MainWindow::checkFileHeaderCRC()
     CRCtmpFH = CRCtmpFH^0xffffffff;
     for(int segCount = 0; segCount < 4; segCount++)
     {
-        newLogProc->selectSegment(newLogProc->setTmpID());
+        long tmpID = newLogProc->setTmpID();
+        newLogProc->selectSegment(tmpID);
+        qDebug() << tmpID;
         newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
         CRCtmpFH = CRCtmpFH^newLogProc->segmentHeader.CRC32;
+        qDebug()<< newLogProc->segmentHeader.CRC32;
     }
     if(CRCtmpFH!=newLogProc->fileHeader.CRC32)
     {
         newMessage.setWindowTitle("Ошибка!");
         newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
         newMessage.exec();
+        qDebug() << "error here!";
+        qDebug() << CRCtmpFH;
+        qDebug() << newLogProc->fileHeader.CRC32;
        return true;
     }
+    qDebug() << CRCtmpFH;
+    qDebug() << newLogProc->fileHeader.CRC32;
     return false;
    // else //qDebug()<<CRCtmpFH;
 }
