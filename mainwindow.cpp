@@ -442,6 +442,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         int tmpRecordCount = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                         sizeOfArray = tmpRecordCount;
                         globalInits(varCounter);
+                      //  newTmiInterp->TInterpItemArray[0].
                         timeArray = (time_t*)malloc((tmpRecordCount)*sizeof(time_t));
                         int recCounter=0;
                         int recPosition=newLogProc->logDataPointer;
@@ -2070,4 +2071,10 @@ void MainWindow::decreaseMagnifyFactor()
    //   qDebug()<<globalMagnifyFactor;
     upPlotMagnifier(globalMagnifyFactor);
 
+}
+
+void MainWindow::getPointsQuantity(time_t firstTime, time_t lastTime)
+{
+    pointsQuantity = firstTime - lastTime;
+    qDebug() << pointsQuantity;
 }

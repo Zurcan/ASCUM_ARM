@@ -254,6 +254,8 @@ private:
     double *Y[24];
     QwtText markerLbl;
     time_t *timeArray;
+    int pointsQuantity;
+    int lastTimeVal;
     int flagArray[24];
     double thermoPlotMins[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0,0};
     double thermoPlotMaxs[24];// = {10, 100, 80, 90, 200, 210, 1500, 130, 1, 1, 1, 1,1}; //
@@ -320,6 +322,7 @@ private:
     bool isCursorPositionOnUpPlot();
     bool isCursorPositionOnDownPlot();
     int calculateCursorPlotOffset();
+    void getPointsQuantity(time_t firstTime,time_t lastTime);
     ~MainWindow();
 public slots:
     bool eventFilter(QObject *, QEvent *);
