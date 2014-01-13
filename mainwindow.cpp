@@ -92,7 +92,7 @@ void MainWindow::openNewMainWindow()
   //openLog();
 
 }
-void MainWindow::globalInits(int arrayIndexSize)
+void MainWindow::globalInits(int arrayIndexSize)// here's the place to create vector of points
 {
 
     X = (double*)malloc((arrayIndexSize+1)*sizeOfArray*sizeof(double));
@@ -688,49 +688,38 @@ bool MainWindow::checkSegmentCRC(long segmentID)
 
 void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
 {
+    int pointsAmount=0;
+    pointsAmount = (int)times[sizeOfArray-1]-(int)times[0];
+    pointsQuantity = pointsAmount;
     timeScale = new TimeScaleDraw(startPoint);
 
     timeScale->maxVal=sizeOfArray;
     mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
    mapTimeScale->setLabelAlignment(Qt::AlignRight);
-  //  SecondsLinearScaleEngine *mapTimeScale = new SecondsLinearScaleEngine;
     //qDebug() << length;
-    timeScale->timeArr= (time_t*)malloc(length*sizeof(time_t));
-//    timeScale->move(QwtScaleDraw::LeftScale);
-//     for(int i = 0; i < length; i++)
-//         tmp->timeArr[i] = times[i];
-    timeScale->timeArr = times;
-    mapTimeScale->timeArr = times;
-//    for(int i = 0; i < length; i++)
-//        //qDebug() << timeScale->timeArr[i];
-//     for(int i =0; i<sizeOfArray; i++)                               //i need to change this construction with some foo that creates array of ints derives from beggining time in secs
-//     {
-//         tmp->add[i]=i+(rand()%10000+1);
-//     }
-     //tmpDraw->label(1000);
-    //ui->qwtPlot->setAxisScaleDraw(QwtPlot::xBottom,timeScale);
+    timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
+    time_t *allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
+    allPoints[0] = times[0];
+    allPoints[pointsAmount-1] = times[sizeOfArray -1];
+    for (int i = 1; i < pointsAmount-1; i++)
+    {
+        allPoints[i] = allPoints[i-1]+1;
+    }
+    timeScale->timeArr = allPoints;
+    mapTimeScale->timeArr =allPoints;
+
+    qDebug() << "pointsAmount";
+    qDebug() << pointsAmount;
+    qDebug() << sizeOfArray;
      ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
      ui->qwtPlot->setAxisScaleDraw(QwtPlot::xBottom,mapTimeScale);
-     ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, sizeOfArray, 0);
-    // ui->qwtPlot->axisScaleDraw(QwtPlot::xBottom)->setAlignment(Qt::AlignRight);
-//     ui->qwtPlot->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
-//     ui->qwtPlot->setAxisScaleEngine(  QwtPlot::xBottom, mapTimeScale );
-
-
+     ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
      QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
      sd->enableComponent(QwtScaleDraw::Ticks,false);
      ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
      QVariant tmpTimeIndex;
-     //tmpTimeIndex = firstDateTime.toTime_t();
     printLeftTimeIndex = 0;
     printRightTimeIndex = printLeftTimeIndex+120;
-     //ui->qwtPlot->setAxisScale(
-//     myScaleDraw = new QwtScaleDraw;
-//     abstractScale = new QwtAbstractScale;
-
-//     ui->qwtPlot->setAxisScaleDraw( QwtPlot::xBottom,
-//         timeScale );
-     //ui->qwtPlot->setAxisScale(QwtPlot::xBottom,-100,100,100);
 }
 
 void MainWindow::initiateCurves()
