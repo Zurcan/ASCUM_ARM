@@ -92,7 +92,7 @@ void MainWindow::openNewMainWindow()
   //openLog();
 
 }
-void MainWindow::globalInits(int arrayIndexSize)// here's the place to create vector of points
+void MainWindow::globalInits(int arrayIndexSize)// here's the place to create vector of points+
 {
 
     X = (double*)malloc((arrayIndexSize+1)*sizeOfArray*sizeof(double));
