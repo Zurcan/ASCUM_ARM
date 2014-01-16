@@ -254,6 +254,7 @@ private:
     double *Y[24];
     QwtText markerLbl;
     time_t *timeArray;
+    time_t endOfLogTime;
     int pointsQuantity;
     int lastTimeVal;
     int flagArray[24];
@@ -295,7 +296,7 @@ private:
    /*here are the stats of the machine*/
 
     explicit MainWindow(QWidget *parent = 0);
-    void moveMapMarker(long int position);
+    void moveMapMarker(long int globalPosition);
     void convertTimeToPosition(QDateTime firstTime, QDateTime secondTime);
     void preparePlotData();
     void initiateThermos();
@@ -318,6 +319,7 @@ private:
     //void upPlotMoveCursor(int);
     void openLog();
     void closeLog();
+    int getClosestToPositionIndex(int);
     void openNewMainWindow();
     bool isCursorPositionOnUpPlot();
     bool isCursorPositionOnDownPlot();

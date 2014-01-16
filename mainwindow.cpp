@@ -439,6 +439,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                     {
 
                         time_t recTime;
+                        time_t lastTime;
                         int tmpRecordCount = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                         sizeOfArray = tmpRecordCount;
                         globalInits(varCounter);
@@ -456,9 +457,9 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         int backIndex=tmpRecordCount-1;
                         for (int index = 0; index < tmpRecordCount; index++)
                         {
-                            qDebug() << "error?";
+                       //     qDebug() << "error?";
                             backIndex = tmpRecordCount-1-index;//but there is a little shaming moment, we have to reverse data arrays because first time indeed is last one
-                            X[index]= index;
+                           // X[index]= index+10;
                             flagOffset=0;
                             newLogProc->readRecord(tmpRecordCount,newLogProc->segmentHeader.recordSize, recPositionCompareVal);
                                  tmpRecI =0;
@@ -552,8 +553,16 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             {
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                 recTime = mktime(gmtime(&recTime));
+                                                if(index==0)
+                                                {
+
+                                                    lastTime = (int)recTime;
+                                                    endOfLogTime = lastTime;
+                                                }
                                                 if(index==tmpRecordCount-1)
                                                          firstDateTime = QDateTime::fromTime_t(recTime);
+                                                X[backIndex] = (int)lastTime - (int)recTime;
+                                                qDebug() << X[backIndex];
                                                 timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
 
                                               //  //qDebug() << QDateTime::fromTime_t(recTime);
@@ -693,30 +702,33 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     pointsQuantity = pointsAmount;
     timeScale = new TimeScaleDraw(startPoint);
 
-    timeScale->maxVal=sizeOfArray;
+    timeScale->maxVal=pointsAmount;
     mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
    mapTimeScale->setLabelAlignment(Qt::AlignRight);
     //qDebug() << length;
-    timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
+    timeScale->timeArr= (time_t*)malloc(sizeOfArray*sizeof(time_t));
     time_t *allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
-    allPoints[0] = times[0];
-    allPoints[pointsAmount-1] = times[sizeOfArray -1];
-    for (int i = 1; i < pointsAmount-1; i++)
-    {
-        allPoints[i] = allPoints[i-1]+1;
-    }
-    timeScale->timeArr = allPoints;
-    mapTimeScale->timeArr =allPoints;
+//    allPoints[0] = times[0];
+//    allPoints[pointsAmount-1] = times[sizeOfArray -1];
+//    for (int i = 1; i < pointsAmount-1; i++)
+//    {
+//        allPoints[i] = allPoints[i-1]+1;
+//    }
+    timeScale->timeArr = times;
+    mapTimeScale->timeArr =times;
 
     qDebug() << "pointsAmount";
     qDebug() << pointsAmount;
     qDebug() << sizeOfArray;
+    for(int i = 0; i < sizeOfArray; i++)
+        qDebug() << Y[0][i];
      ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
      ui->qwtPlot->setAxisScaleDraw(QwtPlot::xBottom,mapTimeScale);
      ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
      QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
      sd->enableComponent(QwtScaleDraw::Ticks,false);
-     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
+     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
+    // ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
      QVariant tmpTimeIndex;
     printLeftTimeIndex = 0;
     printRightTimeIndex = printLeftTimeIndex+120;
@@ -1147,18 +1159,20 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
 //    }
 //}
 
-void MainWindow::moveMapMarker(long int position)
+void MainWindow::moveMapMarker(long int globalPosition)
 {
    // qDebug()<< position;
-    if(position>=sizeOfArray)position=sizeOfArray-1;
-    if(position < 0)position = 0;
+    if(globalPosition>=pointsQuantity)globalPosition=pointsQuantity-1;
+    if(globalPosition < 0)globalPosition = 0;
+    int position = getClosestToPositionIndex(globalPosition);
+    qDebug() << position;
    // //qDebug()<< "position is" << position;
-    timeScale->currentIndex = position;
+    timeScale->currentIndex = globalPosition;
     ui->actionPrint->setEnabled(true);
    // verticalMapMarker->hide();
 
-    verticalMapMarker->setValue(position,0);
-    currentTimeMarker->setValue(position,0);
+    verticalMapMarker->setValue(globalPosition,0);
+    currentTimeMarker->setValue(globalPosition,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
     QwtText tmpTitle;
 
@@ -1226,10 +1240,10 @@ void MainWindow::moveMapMarker(long int position)
     }
 
  // verticalMapMarker->show();
-    ui->qwtPlot_2->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore,true);
-    ui->qwtPlot->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore,true);
-    ui->qwtPlot_2->canvas()->setPaintAttribute(QwtPlotCanvas::Opaque,false);
-    ui->qwtPlot->canvas()->setPaintAttribute(QwtPlotCanvas::Opaque,false);
+//    ui->qwtPlot_2->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore,true);
+//    ui->qwtPlot->canvas()->setPaintAttribute(QwtPlotCanvas::BackingStore,true);
+//    ui->qwtPlot_2->canvas()->setPaintAttribute(QwtPlotCanvas::Opaque,false);
+//    ui->qwtPlot->canvas()->setPaintAttribute(QwtPlotCanvas::Opaque,false);
     ui->qwtPlot->replot();
     ui->qwtPlot_2->replot();
 
@@ -2066,4 +2080,21 @@ void MainWindow::getPointsQuantity(time_t firstTime, time_t lastTime)
 {
     pointsQuantity = firstTime - lastTime;
     qDebug() << pointsQuantity;
+}
+
+int MainWindow::getClosestToPositionIndex(int pos)
+{
+//    qDebug() << pos;
+//    qDebug() << (int)endOfLogTime;
+//     qDebug() << (int) timeArray[0];
+//      qDebug() << (int)timeArray[sizeOfArray-2];
+    for (int i = 0; i < sizeOfArray; i++) //pointsQuantity - is a variable that discribes how many points should be on plot
+    {
+        qDebug() << (int)((int)endOfLogTime - (int)timeArray[i]);
+        if((int)endOfLogTime - (int)timeArray[i] <=pos)
+        return i;
+
+
+    }
+    return -1;
 }
