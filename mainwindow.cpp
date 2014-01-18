@@ -561,8 +561,8 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 }
                                                 if(index==tmpRecordCount-1)
                                                          firstDateTime = QDateTime::fromTime_t(recTime);
-                                                X[backIndex] = (int)lastTime - (int)recTime;
-                                                qDebug() << X[backIndex];
+                                                X[index] = (int)lastTime - (int)recTime;
+                                                qDebug() << X[index];
                                                 timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
 
                                               //  //qDebug() << QDateTime::fromTime_t(recTime);
@@ -637,7 +637,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
   //                      sizeOfArray = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                        // sizeOfArray = tmpRecordCount;
 
-
+                         qDebug() << "error??";
                         initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount);
 
                       //  //qDebug() << sizeOfArray;
@@ -708,15 +708,18 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     //qDebug() << length;
     timeScale->timeArr= (time_t*)malloc(sizeOfArray*sizeof(time_t));
     time_t *allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
-//    allPoints[0] = times[0];
-//    allPoints[pointsAmount-1] = times[sizeOfArray -1];
-//    for (int i = 1; i < pointsAmount-1; i++)
-//    {
-//        allPoints[i] = allPoints[i-1]+1;
-//    }
-    timeScale->timeArr = times;
-    mapTimeScale->timeArr =times;
+    allPoints[0] = times[0];
 
+    allPoints[pointsAmount-1] = times[sizeOfArray -1];
+    for (int i = 1; i < pointsAmount-1; i++)
+    {
+        allPoints[i] = allPoints[i-1]+1;
+    }
+
+//    timeScale->timeArr = times;
+//    mapTimeScale->timeArr =times;
+    timeScale->timeArr = allPoints;
+    mapTimeScale->timeArr = allPoints;
     qDebug() << "pointsAmount";
     qDebug() << pointsAmount;
     qDebug() << sizeOfArray;
@@ -736,6 +739,12 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 
 void MainWindow::initiateCurves()
 {
+    double *X1 = (double*)malloc(sizeOfArray*sizeof(double));
+    for(int i = 0; i < sizeOfArray; i++)
+    {
+        X1[i] = (int)timeArray[i]-(int)timeArray[0];
+        qDebug() << X1[i];
+    }
     verticalFlagScale = new VerticalFlagScaleDraw(24);
    // ui->qwtPlot->enableAxis(QwtPlot::xTop,true);
     ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
@@ -747,7 +756,7 @@ void MainWindow::initiateCurves()
            {
             curve1[i] = new QwtPlotCurve;
             curve1[i]->setPen(QPen(colors[i]));
-            curve1[i]->setSamples(X,Y[i],sizeOfArray);
+            curve1[i]->setSamples(X1,Y[i],sizeOfArray);
             if(i<2)
             {
 
@@ -761,7 +770,7 @@ void MainWindow::initiateCurves()
             {
                 curve2[i] = new QwtPlotCurve;
                 curve2[i]->setPen(QPen(colors[i]));
-                curve2[i]->setSamples(X,Y[i],sizeOfArray);
+                curve2[i]->setSamples(X1,Y[i],sizeOfArray);
                  curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
                  curve2[i]->setAxes(QwtPlot::xBottom,i);//this one
                  ui->qwtPlot_2->enableAxis(i,true);//and enable it
@@ -779,7 +788,7 @@ void MainWindow::initiateCurves()
                 curve2[i]->setPen(QPen(colors[i]));
 //                QwtLegend curveLegend;
                 // //qDebug()<< curve2[i]->offset;
-                curve2[i]->setSamples(X,Y[i],sizeOfArray);
+                curve2[i]->setSamples(X1,Y[i],sizeOfArray);
                 if((int)Y[i][0]%2)curve2[i]->setBaseline(Y[i][0]-1);
                 else curve2[i]->setBaseline(Y[i][0]);
                 curve2[i]->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
@@ -2091,8 +2100,8 @@ int MainWindow::getClosestToPositionIndex(int pos)
     for (int i = 0; i < sizeOfArray; i++) //pointsQuantity - is a variable that discribes how many points should be on plot
     {
         qDebug() << (int)((int)endOfLogTime - (int)timeArray[i]);
-        if((int)endOfLogTime - (int)timeArray[i] <=pos)
-        return i;
+        if((int)timeArray[i]-(int)timeArray[0] >pos)
+        return i-1;
 
 
     }

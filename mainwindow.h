@@ -319,6 +319,7 @@ private:
     //void upPlotMoveCursor(int);
     void openLog();
     void closeLog();
+
     int getClosestToPositionIndex(int);
     void openNewMainWindow();
     bool isCursorPositionOnUpPlot();
