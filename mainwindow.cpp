@@ -570,7 +570,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                  }
                                                 else
                                                 {
-                                                    Y[i-2][backIndex] = (int)recTime;
+                                                    Y[i-2][backIndex] = (int)recTime;//c
                                                 }
                                                       //  //qDebug() << QDateTime::fromTime_t(recTime);
                                                         break;
