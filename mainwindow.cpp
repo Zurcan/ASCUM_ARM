@@ -551,22 +551,29 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             }
                                             case 10 :
                                             {
+
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                 recTime = mktime(gmtime(&recTime));
-                                                if(index==0)
+                                                if(newTmiInterp->TInterpItemArray[i].name=="Время")
                                                 {
+                                                        if(index==0)
+                                                        {
 
-                                                    lastTime = (int)recTime;
-                                                    endOfLogTime = lastTime;
+                                                            lastTime = (int)recTime;
+                                                            endOfLogTime = lastTime;
+                                                        }
+                                                        if(index==tmpRecordCount-1)
+                                                                 firstDateTime = QDateTime::fromTime_t(recTime);
+                                                        X[index] = (int)lastTime - (int)recTime;
+                                                        qDebug() << X[index];
+                                                        timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
+                                                 }
+                                                else
+                                                {
+                                                    Y[i-2][backIndex] = (int)recTime;
                                                 }
-                                                if(index==tmpRecordCount-1)
-                                                         firstDateTime = QDateTime::fromTime_t(recTime);
-                                                X[index] = (int)lastTime - (int)recTime;
-                                                qDebug() << X[index];
-                                                timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
-
-                                              //  //qDebug() << QDateTime::fromTime_t(recTime);
-                                                break;
+                                                      //  //qDebug() << QDateTime::fromTime_t(recTime);
+                                                        break;
                                             }
                                             case 8 :
                                             {
@@ -744,10 +751,12 @@ void MainWindow::initiateCurves()
     {
         X1[i] = (int)timeArray[i]-(int)timeArray[0];
         qDebug() << X1[i];
+        qDebug() << Y[1][i];
     }
     verticalFlagScale = new VerticalFlagScaleDraw(24);
    // ui->qwtPlot->enableAxis(QwtPlot::xTop,true);
     ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
+//    QwtCurveFitter *fitter = new QwtCurveFitter;
 
     AxisLabelDate = firstDateTime;
 
@@ -756,6 +765,9 @@ void MainWindow::initiateCurves()
            {
             curve1[i] = new QwtPlotCurve;
             curve1[i]->setPen(QPen(colors[i]));
+            curve1[i]->setStyle(QwtPlotCurve::Steps);
+            curve1[i]->setCurveAttribute(QwtPlotCurve::Inverted);
+
             curve1[i]->setSamples(X1,Y[i],sizeOfArray);
             if(i<2)
             {
@@ -770,6 +782,9 @@ void MainWindow::initiateCurves()
             {
                 curve2[i] = new QwtPlotCurve;
                 curve2[i]->setPen(QPen(colors[i]));
+                curve2[i]->setStyle(QwtPlotCurve::Steps);
+                curve2[i]->setCurveAttribute(QwtPlotCurve::Inverted);
+                //curve2[i]->set
                 curve2[i]->setSamples(X1,Y[i],sizeOfArray);
                  curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
                  curve2[i]->setAxes(QwtPlot::xBottom,i);//this one
