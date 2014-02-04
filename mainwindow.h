@@ -236,6 +236,7 @@ private:
     QDateTime AxisLabelDate;
    int axisCount = 2;
    int varCounter;
+   int invisibleVarCounter;
    QString tmpStr;
    PrintForm *pf;
     QwtPlotMarker *verticalMapMarker;
@@ -257,6 +258,7 @@ private:
     QwtText markerLbl;
     time_t *timeArray;
     time_t endOfLogTime;
+
     int pointsQuantity;
     int lastTimeVal;
     int flagArray[24];

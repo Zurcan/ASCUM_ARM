@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
                // ui->widget->setVisible(false);
      mapTimer = new QTimer(this);
      connect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
-
+     invisibleVarCounter = 0;
      //connect(ui, SIGNAL())
      //connect(ui->widget, SIGNAL())
      //connect(ui->qwtPlot_2, SIGNAL())
@@ -174,23 +174,23 @@ bool MainWindow::checkFileHeaderCRC()
     {
         long tmpID = newLogProc->setTmpID();
         newLogProc->selectSegment(tmpID);
-        qDebug() << tmpID;
+//        qDebug() << tmpID;
         newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
         CRCtmpFH = CRCtmpFH^newLogProc->segmentHeader.CRC32;
-        qDebug()<< newLogProc->segmentHeader.CRC32;
+//        qDebug()<< newLogProc->segmentHeader.CRC32;
     }
     if(CRCtmpFH!=newLogProc->fileHeader.CRC32)
     {
         newMessage.setWindowTitle("Ошибка!");
         newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
         newMessage.exec();
-        qDebug() << "error here!";
-        qDebug() << CRCtmpFH;
-        qDebug() << newLogProc->fileHeader.CRC32;
+//        qDebug() << "error here!";
+//        qDebug() << CRCtmpFH;
+//        qDebug() << newLogProc->fileHeader.CRC32;
        return true;
     }
-    qDebug() << CRCtmpFH;
-    qDebug() << newLogProc->fileHeader.CRC32;
+//    qDebug() << CRCtmpFH;
+//    qDebug() << newLogProc->fileHeader.CRC32;
     return false;
    // else //qDebug()<<CRCtmpFH;
 }
@@ -396,7 +396,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //            sizeOfArray = newTmiInterp->interpreterRecordsCount;
 //            //qDebug()<< sizeOfArray;
            // tmpStr = new QString;
-            varCounter = newTmiInterp->interpreterRecordsCount-2;
+            varCounter = newTmiInterp->interpreterRecordsCount-2-invisibleVarCounter;
             //qDebug() << varCounter;
             initGloabalArrays(varCounter);
 
@@ -554,7 +554,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                 recTime = mktime(gmtime(&recTime));
-                                                if(newTmiInterp->TInterpItemArray[i].name=="Время")
+                                                if(newTmiInterp->TInterpItemArray[i].name!="PowOnTime")
                                                 {
                                                         if(index==0)
                                                         {
@@ -565,12 +565,15 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                         if(index==tmpRecordCount-1)
                                                                  firstDateTime = QDateTime::fromTime_t(recTime);
                                                         X[index] = (int)lastTime - (int)recTime;
-                                                        qDebug() << X[index];
+                                                      //  qDebug() << X[index];
                                                         timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
                                                  }
                                                 else
                                                 {
-                                                    Y[i-2][backIndex] = (int)recTime;//c
+
+                                                    //Y[i-2][backIndex] = (int)recTime;//c
+                                                    //qDebug() << newTmiInterp->TInterpItemArray[i].level;
+                                                    qDebug() << newTmiInterp->TInterpItemArray[i].name;
                                                 }
                                                       //  //qDebug() << QDateTime::fromTime_t(recTime);
                                                         break;
@@ -1731,7 +1734,7 @@ void MainWindow::initiateRadios()
     connect(ui->pushButton_6,SIGNAL(clicked()),this,SLOT(increaseMagnifyFactor()));
     connect(ui->pushButton_5,SIGNAL(clicked()),this,SLOT(decreaseMagnifyFactor()));
     plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
-    qDebug() << plotRectBasicWidth;
+   // qDebug() << plotRectBasicWidth;
    // connect(ui->checkBox, SIGNAL(clicked(bool)),this,SLOT(collapseAllCurves()));
 }
 
