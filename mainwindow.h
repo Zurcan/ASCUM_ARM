@@ -49,6 +49,7 @@
 #include <QSpacerItem>
 #include <qwt_plot_directpainter.h>
 #include <qwt_symbol.h>
+#include <QVector>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -237,6 +238,9 @@ private:
    int axisCount = 2;
    int varCounter;
    int invisibleVarCounter;
+   QVector <bool> invisibleVarsMask;
+   char *timeFract;
+   time_t *powOnTimeArray;
    QString tmpStr;
    PrintForm *pf;
     QwtPlotMarker *verticalMapMarker;
@@ -251,12 +255,15 @@ private:
     TMIinterpretator *newTmiInterp;
     #define smallTableID 0x80000012
     #define bigTableID 0x80000011
+    #define localizationTableID 0x80000001
     MainWindow *newWin = 0;
     QtRPT *report;
     double *X;
     double *Y[24];
+    bool *dateChangedArr;
     QwtText markerLbl;
     time_t *timeArray;
+
     time_t endOfLogTime;
 
     int pointsQuantity;
