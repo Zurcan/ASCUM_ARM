@@ -65,7 +65,10 @@ MainWindow::MainWindow(QWidget *parent) :
     newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
     newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
     rtPainter = new QwtPlotDirectPainter(this);
-
+    ErrXCoords<<QVector <int>();
+    ErrCode<<QVector <long>();
+    ErrCoords<< QVector <QPointF>();
+    invisibleVarsMask<<QVector <bool>();
 //   ui->qwtPlot->installEventFilter(this);
 //   ui->qwtPlot_2->installEventFilter(this);
    //ui->qwtPlot_2->setObjectName("upPlot");
@@ -89,7 +92,7 @@ void MainWindow::openNewMainWindow()
   newWin = new MainWindow();
 
   newWin->show();
-  //openLog();
+//  openLog();
 
 }
 void MainWindow::globalInits(int arrayIndexSize)// here's the place to create vector of points+
@@ -403,7 +406,9 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
             {
                 qDebug() << newTmiInterp->TInterpItemArray[i].name;
                 qDebug() << newTmiInterp->TInterpItemArray[i].typ;
+//                invisibleVarsMask.resize(i+1);
                 invisibleVarsMask.insert(i,false);
+//                invisibleVarsMask.squeeze();
                 if(newTmiInterp->TInterpItemArray[i].typ>40)
 
                 {
@@ -774,8 +779,9 @@ void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     int pointsAmount=0;
     for(int i = 1; i < sizeOfArray; i++)
     {
-        if(dateChangedArr[i])
-        pointsAmount += (int)times[i]-(int)times[i-1];
+        if(!dateChangedArr[i])                              //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
+        pointsAmount += (int)times[i]-(int)times[i-1];      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
+        else pointsAmount++;                                //of times[i]-times[i-1]
     }
     qDebug() << QDateTime::fromTime_t(times[sizeOfArray-1]) << "begin time" << QDateTime::fromTime_t(times[0])<< "end time";
 
@@ -837,6 +843,7 @@ void MainWindow::initiateCurves()
     for (int i =0; i<varCounter; i++)
            {
             curve1[i] = new QwtPlotCurve;
+//            this->chi
             curve1[i]->setPen(QPen(colors[i]));
             curve1[i]->setStyle(QwtPlotCurve::Steps);
             curve1[i]->setCurveAttribute(QwtPlotCurve::Inverted);
@@ -926,13 +933,14 @@ void MainWindow::initiateCurves()
 //     errorCurve->setSymbol(&errorSym);
 //     errorCurve->attach(ui->qwtPlot_2);
 
+    free(X1);
 
 
 }
 
 void MainWindow::initiateVideoScreens()
 {
-    videoScreen1 = new QWidget (this);
+    videoScreen1 = new QWidget(this);
     videoScreen2 = new QWidget(this);
     NcFramelessHelper fh;
     fh1 = new NcFramelessHelper;
@@ -956,73 +964,11 @@ void MainWindow::initiateVideoScreens()
 
 }
 
-//void MainWindow::mouseMoveEvent(QMouseEvent * event)
-//{
-
-//    if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
-//    {
-//        QWidget *widget = qApp->widgetAt(QCursor::pos());
-//        QString widget_name = widget->objectName();
-//        QString parent_name = widget->parent()->objectName();
-//        if(isCursorPositionOnUpPlot())
-//        {
-
-// }
-
-
 
 /* If leftButtonPressed (if mouse been moved, leftButtonPressed = false), we have to move marker to this position
  *if pressed right button (leftButtonPressed = false too), we do nothing,
  */
-//void MainWindow::mouseReleaseEvent(QMouseEvent *event)
-//{
 
-//    if(isCursorPositionOnUpPlot()||isCursorPositionOnDownPlot())
-//    {
-//        QWidget *widget = qApp->widgetAt(QCursor::pos());
-//        QString widget_name = widget->objectName();
-//        QString parent_name = widget->parent()->objectName();
-//        if(isCursorPositionOnUpPlot())
-//        {
-//            if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
-//                if(leftButtonPressed)
-//                {
-//                    if(globalMoveFlag)
-//                    {
-//                        globalMoveFlag = false;
-//                        leftButtonPressed = false;
-//                    }
-//                    else
-//                        if(globalCursorPos==QCursor::pos().x())
-//                        {
-//                            int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
-//                            int cursorOffset= calculateCursorPlotOffset();
-//                            int moveVal = (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorOffset ));
-////                            //qDebug() << moveVal;
-//                            moveMapMarker(moveVal);
-//                            leftButtonPressed=false;
-//                        }
-//                }
-
-//        }
-//     else
-//      {
-//           if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-//           {
-//               if(leftButtonPressed)
-//               {
-//                    if(globalCursorPos==QCursor::pos().x())
-//                    {
-//                       // int downCursorPos = (int)ui->qwtPlot->transform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x())+ui->qwtPlot->transform(QwtPlot::xBottom, 0);
-//                        ////qDebug() << downCursorPos;
-//                      //  moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
-//                        leftButtonPressed = false;
-//                    }
-//               }
-//           }
-//      }
-//    }
-//}
 bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
    // if(target==Ui::MainWindow)
@@ -1231,30 +1177,6 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
     return QMainWindow::eventFilter(target, event);
 }
 
-//void MainWindow::mousePressEvent(QMouseEvent  *event)
-//{
-//    QWidget *widget = qApp->widgetAt(QCursor::pos());
-//    QString widget_name = widget->objectName();
-//    QString parent_name = widget->parent()->objectName();
-//    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
-//    {
-//        if(event->buttons()==Qt::LeftButton)
-//        {
-//         //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
-//            globalCursorPos = QCursor::pos().x();
-//            globalCursorPoint = QCursor::pos();
-//            leftButtonPressed = true;
-//        }
-//        if(event->buttons()==Qt::RightButton)
-//            globalMagnifierPreviosPos=QCursor::pos().x();
-//    }
-//    if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-//    {
-//        if(event->buttons()==Qt::LeftButton)moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
-//        globalCursorPos = QCursor::pos().x();
-//        leftButtonPressed = true;
-//    }
-//}
 
 void MainWindow::moveMapMarker(long int globalPosition)
 {
@@ -1495,8 +1417,8 @@ void MainWindow::preparePlotData()
 
 MainWindow::~MainWindow()
 {
-    //delete ui;
-    delete ui;
+
+//    delete ui;
 }
 
 //void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -1637,6 +1559,16 @@ void MainWindow::setGlobalArrays()
 //qDebug() << flagCounter;
 }
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    event->ignore();
+    this->closeLog();
+//    this->deleteLater();
+    //QCoreApplication::quit();
+    QApplication::quit();
+
+}
+
 void MainWindow::on_actionOpen_triggered()
 {
     if(!isOpened)
@@ -1645,15 +1577,35 @@ void MainWindow::on_actionOpen_triggered()
     }
     else
    {
+
         isOpened=false;
+//        delete X;
+//        for(int i =0; i < varCounter; i++)delete Y[i];
+//        this->closeLog();
+//        for(int i = 0; i < varCounter; i++)
+//            if(!flagArray[i])
+//            {
+//                buttonIndex = i;
+//                disconnect(axisButton[buttonIndex],SIGNAL(clicked()),this,SLOT(indexChanged()));
+//                disconnect(axisButton[buttonIndex],SIGNAL(released()),this, SLOT(hideAxis()));
+//            }
+//        disconnect(ui->checkBox,SIGNAL(toggled(bool)),this,SLOT(showAllCurves()));
+//        disconnect(ui->pushButton_6,SIGNAL(clicked()),this,SLOT(increaseMagnifyFactor()));
+//        disconnect(ui->pushButton_5,SIGNAL(clicked()),this,SLOT(decreaseMagnifyFactor()));
+////        QObject::disconnect(report, SIGNAL(setValue(int&, QString&, QVariant&, int)),
+////                         this, SLOT(setValue(int&, QString&, QVariant&, int)));
+//        disconnect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
+       // qApp->closeAllWindows();
 
         openNewMainWindow();
-        //this->deleteLater();
-        this->close();
-      // delete ui;
+//        qDebug() << this->children();
+        this->deleteLater();
+//        this->hide();
+//       delete ui;
 
    }
 }
+
 void MainWindow::closeLog()
 {
 //    ui->qwtPlot->setEnabled(false);
@@ -1687,22 +1639,23 @@ void MainWindow::closeLog()
     //    delete parLabel;
   //  delete checkBox;
 
-//    free(X);// X;
-//    free(Y);
-//    newLogProc->tmpFile.close();
-//    //delete newLogProc;
+    free(X);// X;
+//    for(int i =0; i < varCounter; i++)
+    free(Y);
+    newLogProc->tmpFile.close();
+    delete newLogProc;
 
 //    delete curve2;
 //    delete curve1;
-//    delete timeArray;
-//    delete thermoPlotMaxs;
-//    //delete newLogProc;
-//    //delete newTmiInterp;
-//    delete flagMarker;
+    delete timeArray;
+    delete thermoPlotMaxs;
+    delete newTmiInterp;
+    delete flagMarker;
 //    for (int i =0; i < 24; i++)
 //        flagArray[i]=0;
 
 }
+
 
 void MainWindow::openLog()
 {
@@ -1807,6 +1760,7 @@ void MainWindow::initiateRadios()
    // qDebug() << plotRectBasicWidth;
    // connect(ui->checkBox, SIGNAL(clicked(bool)),this,SLOT(collapseAllCurves()));
 }
+
 
 void MainWindow::on_pushButton_4_clicked()
 {

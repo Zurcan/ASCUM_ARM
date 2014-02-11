@@ -340,6 +340,7 @@ private:
     ~MainWindow();
 public slots:
     bool eventFilter(QObject *, QEvent *);
+    void closeEvent(QCloseEvent *);
    // void ::mouseMoveEvent(QMouseEvent *);
 private slots:
 
