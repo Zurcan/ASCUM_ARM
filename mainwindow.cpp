@@ -69,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ErrCode<<QVector <long>();
     ErrCoords<< QVector <QPointF>();
     invisibleVarsMask<<QVector <bool>();
+
 //   ui->qwtPlot->installEventFilter(this);
 //   ui->qwtPlot_2->installEventFilter(this);
    //ui->qwtPlot_2->setObjectName("upPlot");
@@ -407,12 +408,14 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 qDebug() << newTmiInterp->TInterpItemArray[i].name;
                 qDebug() << newTmiInterp->TInterpItemArray[i].typ;
 //                invisibleVarsMask.resize(i+1);
-                invisibleVarsMask.insert(i,false);
+                invisibleVarsMask.append(false);
 //                invisibleVarsMask.squeeze();
-                if(newTmiInterp->TInterpItemArray[i].typ>40)
 
+                if(newTmiInterp->TInterpItemArray[i].typ>40)
                 {
-                    invisibleVarsMask[i] = true;
+
+
+                    invisibleVarsMask[i]=true;
                     invisibleVarCounter++;
                 }
 //                    if(newTmiInterp->TInterpItemArray[i].name=="PowOnTime")
@@ -429,15 +432,16 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
 
             }
-
+            qDebug() << "vector invisibleVarsMask size is " <<invisibleVarsMask.size();
             varCounter = newTmiInterp->interpreterRecordsCount-2-invisibleVarCounter;
             //qDebug() << varCounter;
 //            initGloabalArrays(varCounter);
-
+            for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+                qDebug() << invisibleVarsMask[i];
             for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
 
-                if((newTmiInterp->TInterpItemArray[i].level!=0)&&(!invisibleVarsMask[i]))
+                if((newTmiInterp->TInterpItemArray[i].level!=0)&&(!invisibleVarsMask.at(i)))
                 {
 
                     tmpStr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
@@ -500,6 +504,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                             newLogProc->readRecord(tmpRecordCount,newLogProc->segmentHeader.recordSize, recPositionCompareVal);
                                  tmpRecI =0;
                                  int tmpInvisibleVarDecrease=0;
+                                 qDebug() << "recCount is " << newTmiInterp->interpreterRecordsCount;
                                     for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)//0 - it's some text, 1 - it's time, others are data
                                     {
                                         if(index<3)
@@ -508,7 +513,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //                                            qDebug() << QString::fromStdString(newTmiInterp->TInterpItemArray[i].name);
                                            // qDebug() << sizeof(int);
                                         }
-                                        if(invisibleVarsMask[i])tmpInvisibleVarDecrease++;
+                                        if(invisibleVarsMask.at(i))tmpInvisibleVarDecrease++;
                                         tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
                                         if(newTmiInterp->TInterpItemArray[i].level)
                                         {
@@ -1418,7 +1423,7 @@ void MainWindow::preparePlotData()
 MainWindow::~MainWindow()
 {
 
-//    delete ui;
+    delete ui;
 }
 
 //void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -1561,12 +1566,21 @@ void MainWindow::setGlobalArrays()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    event->ignore();
-    this->closeLog();
-//    this->deleteLater();
-    //QCoreApplication::quit();
-    QApplication::quit();
+//    event->ignore();
+////    closeLog();
+////    closeLog();
+////    this->deleteLater();
+//    //QCoreApplication::quit();
+//    if(isOpened)
+//    {
 
+
+//        this->closeLog();
+//    }
+//    QApplication::quit();
+//    openNewMainWindow();
+//    this->deleteLater();
+//    event->ignore();
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -1595,11 +1609,18 @@ void MainWindow::on_actionOpen_triggered()
 ////        QObject::disconnect(report, SIGNAL(setValue(int&, QString&, QVariant&, int)),
 ////                         this, SLOT(setValue(int&, QString&, QVariant&, int)));
 //        disconnect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
-       // qApp->closeAllWindows();
+//        qApp->closeAllWindows();
+//        qApp->quit();
+//        this->closeLog();
 
+        this->close();
         openNewMainWindow();
+//        this->hide();
+//        QApplication::quit();
 //        qDebug() << this->children();
-        this->deleteLater();
+//        this->deleteLater();
+
+
 //        this->hide();
 //       delete ui;
 
@@ -1642,15 +1663,16 @@ void MainWindow::closeLog()
     free(X);// X;
 //    for(int i =0; i < varCounter; i++)
     free(Y);
-    newLogProc->tmpFile.close();
+//    newLogProc->tmpFile.close();
+//    this->deleteLater();
     delete newLogProc;
 
 //    delete curve2;
 //    delete curve1;
-    delete timeArray;
-    delete thermoPlotMaxs;
-    delete newTmiInterp;
-    delete flagMarker;
+//    delete timeArray;
+//    delete thermoPlotMaxs;
+//    delete newTmiInterp;
+//    delete flagMarker;
 //    for (int i =0; i < 24; i++)
 //        flagArray[i]=0;
 
