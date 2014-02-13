@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     TMIinterpretator.cpp \
     welcomedialog.cpp \
     qtrpt.cpp \
-    printform.cpp
+    printform.cpp \
+    msgSys.cpp
 
 HEADERS  += mainwindow.h \
     NcFramelessHelper.h \
@@ -36,7 +37,8 @@ HEADERS  += mainwindow.h \
     TMIinterpretator.h \
     welcomedialog.h \
     qtrpt.h \
-    printform.h
+    printform.h \
+    msgSys.h \
 
 FORMS    += mainwindow.ui \
     welcomedialog.ui \
