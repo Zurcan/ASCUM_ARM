@@ -39,6 +39,7 @@ HEADERS  += mainwindow.h \
     qtrpt.h \
     printform.h \
     msgSys.h \
+    ints.h
 
 FORMS    += mainwindow.ui \
     welcomedialog.ui \

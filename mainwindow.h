@@ -209,6 +209,10 @@ private:
     int plotRectBasicWidth;
     bool mapPlotUsed = false;
     bool rightButtonPressed = false;
+#define MAX_POINTS 100000
+    bool dateChangedArrExistFlag;
+    bool timeFractExistFlag;
+    bool powOnTimeArrayExistFlag;
 //    QwtPlot upPlot;// = new QwtPlot()
     bool isOpened=false;
     bool leftButtonPressed=false;
@@ -318,7 +322,7 @@ private:
     void readHeadTableData();
     void readDataFromLog();
     void globalInits(int arrayIndexSize);
-    void initiateTimeAxis(QDateTime startPoint, time_t *times, int length);
+    bool initiateTimeAxis(QDateTime startPoint, time_t *times, int length);
     void initGloabalArrays(int values);
     void setGlobalArrays();
     void hideWasteAxes(int notHiddenIndex);

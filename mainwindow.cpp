@@ -62,9 +62,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->pushButton_5->setIcon(*zoominIcon);
     ui->pushButton_6->setIcon(*zoomoutIcon);
+    delete zoominIcon;
+    delete zoomoutIcon;
+    delete tmpIcon;
     newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
     newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
-    rtPainter = new QwtPlotDirectPainter(this);
+//    rtPainter = new QwtPlotDirectPainter(this);
+    dateChangedArrExistFlag = false;
+    timeFractExistFlag = false;
+    powOnTimeArrayExistFlag = false;
     ErrXCoords<<QVector <int>();
     ErrCode<<QVector <long>();
     ErrCoords<< QVector <QPointF>();
@@ -109,6 +115,10 @@ void MainWindow::globalInits(int arrayIndexSize)// here's the place to create ve
     powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
     timeFract = (char*)malloc(sizeOfArray*sizeof(char));
     dateChangedArr = (bool*)malloc((sizeOfArray*sizeof(bool)));
+    for(int i = 0; i < sizeOfArray; i++)
+    {
+        dateChangedArr[i] = false;
+    }
  //   QPushButton *myButton = new QPushButton;
     ui->qwtPlot_2->setContentsMargins(0,0,-1,0);
     ui->qwtPlot_2->replot();
@@ -669,6 +679,7 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     {
                                                             if(newTmiInterp->TInterpItemArray[i].name=="PowOnTime")
                                                             {
+                                                                powOnTimeArrayExistFlag = true;
                                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                                 recTime = mktime(gmtime(&recTime));
 
@@ -680,10 +691,13 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                             }
                                                             if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
                                                             {
+
+                                                                timeFractExistFlag = true;
                                                                 timeFract[backIndex] = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                             }
                                                             if(newTmiInterp->TInterpItemArray[i].name=="DateChg")
                                                                {
+                                                                        dateChangedArrExistFlag = true;
 
                                                                         //dateTimeChangeIndex = i;
 
@@ -722,7 +736,14 @@ void MainWindow::readDataFromLog()//and now we're reading all the data from our 
                        // sizeOfArray = tmpRecordCount;
 
                          qDebug() << "error??";
-                        initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount);
+                        if(!initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount))
+                        {
+
+                            newLogProc->tmpFile.close();
+                            isOpened=false;
+                            openNewMainWindow();
+                            this->close();
+                        }
 
                       //  //qDebug() << sizeOfArray;
                 }
@@ -779,53 +800,81 @@ bool MainWindow::checkSegmentCRC(long segmentID)
      return true;
 }
 
-void MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
+bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
 {
+
     int pointsAmount=0;
-    for(int i = 1; i < sizeOfArray; i++)
+//    if(dateChangedArrExistFlag)
+//    {
+        for(int i = 1; i < sizeOfArray; i++)
+        {
+            if(!dateChangedArr[i])
+            {                                                       //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
+                pointsAmount += (int)times[i]-(int)times[i-1];      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
+                qDebug() << dateChangedArr[i] << " date Changed";
+
+            }
+            else pointsAmount++;                                    //of times[i]-times[i-1]
+        }
+//    }
+    if(times[sizeOfArray-1]<times[0])
     {
-        if(!dateChangedArr[i])                              //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
-        pointsAmount += (int)times[i]-(int)times[i-1];      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
-        else pointsAmount++;                                //of times[i]-times[i-1]
+        newMessage.setWindowTitle("Ошибка!");
+        newMessage.setText("Проверьте правильность лог-файла. Ось времени развернута в обратную сторону!");
+        newMessage.exec();
+        return false;
     }
     qDebug() << QDateTime::fromTime_t(times[sizeOfArray-1]) << "begin time" << QDateTime::fromTime_t(times[0])<< "end time";
-
-    pointsQuantity = pointsAmount;
-    timeScale = new TimeScaleDraw(startPoint);
-
-    timeScale->maxVal=pointsAmount;
-    mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
-   mapTimeScale->setLabelAlignment(Qt::AlignRight);
-    //qDebug() << length;
-    timeScale->timeArr= (time_t*)malloc(sizeOfArray*sizeof(time_t));
-    time_t *allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
-    allPoints[0] = times[0];
-
-    allPoints[pointsAmount-1] = times[sizeOfArray -1];
-    for (int i = 1; i < pointsAmount-1; i++)
+    if(pointsAmount > MAX_POINTS)
     {
-        allPoints[i] = allPoints[i-1]+1;
+        newMessage.setWindowTitle("Ошибка!");
+        newMessage.setText("Проверьте правильность лог-файла. Слишком много точек для построения!");
+        newMessage.exec();
+        return false;
     }
+    else
+    {
+            pointsQuantity = pointsAmount;
+            timeScale = new TimeScaleDraw(startPoint);
 
-//    timeScale->timeArr = times;
-//    mapTimeScale->timeArr =times;
-    timeScale->timeArr = allPoints;
-    mapTimeScale->timeArr = allPoints;
-    qDebug() << "pointsAmount";
-    qDebug() << pointsAmount;
-    qDebug() << sizeOfArray;
-    for(int i = 0; i < sizeOfArray; i++)
-        qDebug() << Y[0][i];
-     ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
-     ui->qwtPlot->setAxisScaleDraw(QwtPlot::xBottom,mapTimeScale);
-     ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
-     QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
-     sd->enableComponent(QwtScaleDraw::Ticks,false);
-     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
-    // ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
-     QVariant tmpTimeIndex;
-    printLeftTimeIndex = 0;
-    printRightTimeIndex = printLeftTimeIndex+120;
+
+            timeScale->maxVal=pointsAmount;
+            mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
+            mapTimeScale->setLabelAlignment(Qt::AlignRight);
+            //qDebug() << length;
+            timeScale->timeArr= (time_t*)malloc(sizeOfArray*sizeof(time_t));
+            time_t *allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
+            allPoints[0] = times[0];
+
+            allPoints[pointsAmount-1] = times[sizeOfArray -1];
+            for (int i = 1; i < pointsAmount-1; i++)
+            {
+                allPoints[i] = allPoints[i-1]+1;
+            }
+
+        //    timeScale->timeArr = times;
+        //    mapTimeScale->timeArr =times;
+            timeScale->timeArr = allPoints;
+            mapTimeScale->timeArr = allPoints;
+            qDebug() << "pointsAmount";
+            qDebug() << pointsAmount;
+            qDebug() << sizeOfArray;
+            for(int i = 0; i < sizeOfArray; i++)
+                qDebug() << Y[0][i];
+             ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
+             ui->qwtPlot->setAxisScaleDraw(QwtPlot::xBottom,mapTimeScale);
+             ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
+             QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
+             sd->enableComponent(QwtScaleDraw::Ticks,false);
+             ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
+            // ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-100,100,100);
+             QVariant tmpTimeIndex;
+            printLeftTimeIndex = 0;
+            printRightTimeIndex = printLeftTimeIndex+120;
+//            free(allPoints);
+//            delete(timeScale);
+            return true;
+    }
 }
 
 void MainWindow::initiateCurves()
@@ -1423,7 +1472,7 @@ void MainWindow::preparePlotData()
 MainWindow::~MainWindow()
 {
 
-    delete ui;
+//    delete ui;
 }
 
 //void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -1566,18 +1615,18 @@ void MainWindow::setGlobalArrays()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-//    event->ignore();
+    event->ignore();
 ////    closeLog();
 ////    closeLog();
 ////    this->deleteLater();
 //    //QCoreApplication::quit();
-//    if(isOpened)
-//    {
+    if(isOpened)
+    {
 
 
-//        this->closeLog();
-//    }
-//    QApplication::quit();
+        this->closeLog();
+    }
+    QApplication::quit();
 //    openNewMainWindow();
 //    this->deleteLater();
 //    event->ignore();
@@ -1611,14 +1660,20 @@ void MainWindow::on_actionOpen_triggered()
 //        disconnect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
 //        qApp->closeAllWindows();
 //        qApp->quit();
-//        this->closeLog();
 
-        this->close();
+
+//        this->close();
+        closeLog();
         openNewMainWindow();
+
+//        this->close();
+
+        this->deleteLater();
+
 //        this->hide();
 //        QApplication::quit();
 //        qDebug() << this->children();
-//        this->deleteLater();
+
 
 
 //        this->hide();
@@ -1657,22 +1712,40 @@ void MainWindow::closeLog()
 //        QObject *item = *tmpList;
 //        delete item;
 //    }
-    //    delete parLabel;
-  //  delete checkBox;
-
+    delete parLabel;
+    free(timeScale->timeArr);
+    delete checkBox;
+            for(int i = 0; i < varCounter; i++)
+                if(!flagArray[i])
+                {
+                    buttonIndex = i;
+                    disconnect(axisButton[buttonIndex],SIGNAL(clicked()),this,SLOT(indexChanged()));
+                    disconnect(axisButton[buttonIndex],SIGNAL(released()),this, SLOT(hideAxis()));
+                }
+            disconnect(ui->checkBox,SIGNAL(toggled(bool)),this,SLOT(showAllCurves()));
+            disconnect(ui->pushButton_6,SIGNAL(clicked()),this,SLOT(increaseMagnifyFactor()));
+            disconnect(ui->pushButton_5,SIGNAL(clicked()),this,SLOT(decreaseMagnifyFactor()));
+    //        QObject::disconnect(report, SIGNAL(setValue(int&, QString&, QVariant&, int)),
+    //                         this, SLOT(setValue(int&, QString&, QVariant&, int)));
+            disconnect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
     free(X);// X;
 //    for(int i =0; i < varCounter; i++)
     free(Y);
-//    newLogProc->tmpFile.close();
+    free(powOnTimeArray);
+    free(timeFract);
+    free(dateChangedArr);
+    newLogProc->tmpFile.close();
 //    this->deleteLater();
     delete newLogProc;
-
+    delete timeScale;
 //    delete curve2;
 //    delete curve1;
-//    delete timeArray;
-//    delete thermoPlotMaxs;
-//    delete newTmiInterp;
-//    delete flagMarker;
+    delete timeArray;
+    delete thermoPlotMaxs;
+    delete mapTimeScale;
+    delete timeScale;
+    delete flagMarker;
+    delete newTmiInterp;
 //    for (int i =0; i < 24; i++)
 //        flagArray[i]=0;
 

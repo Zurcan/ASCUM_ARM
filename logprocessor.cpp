@@ -204,5 +204,6 @@ unsigned long logProcessor::CRC32updater(char *buf, int length, unsigned long cr
 
 logProcessor::~logProcessor()
 {
+//    delete logProcessor::logProcessor();
     tmpFile.close();
 }
