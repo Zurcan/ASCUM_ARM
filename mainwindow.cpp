@@ -1194,7 +1194,8 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
        {
            plotRectBasicWidth = ui->widget->pos().x()+ui->widget->width();
        }
-           if(ui->qwtPlot_2->visibleRegion().rectCount()<3)
+           //if(ui->qwtPlot_2->visibleRegion().rectCount()<3) Ktulhu is here!!!
+            if((ui->qwtPlot_2->visibleRegion().rectCount()<3)&&(ui->qwtPlot_2->visibleRegion().rectCount()>1))
            {
 //               qDebug() << ui->qwtPlot_2->visibleRegion().rects()[0].width();
 //               qDebug() << ui->qwtPlot_2->visibleRegion().rects()[1].width();
@@ -1215,7 +1216,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                }
                // rectQty = ui->qwtPlot_2->visibleRegion().rectCount();
            }
-           else //if(ui->qwtPlot_2->visibleRegion().rectCount()==3)
+           else if(ui->qwtPlot_2->visibleRegion().rectCount()==3)//and here Ktulhu too
            {
 
                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[2].width()-ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
@@ -1613,24 +1614,24 @@ void MainWindow::setGlobalArrays()
 //qDebug() << flagCounter;
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    event->ignore();
-////    closeLog();
-////    closeLog();
+//void MainWindow::closeEvent(QCloseEvent *event)
+//{
+////    event->ignore();
+//////    closeLog();
+//////    closeLog();
+//////    this->deleteLater();
+////    //QCoreApplication::quit();
+////    if(isOpened)
+////    {
+
+
+////        this->closeLog();
+////    }
+////    QApplication::quit();
+////    openNewMainWindow();
 ////    this->deleteLater();
-//    //QCoreApplication::quit();
-    if(isOpened)
-    {
-
-
-        this->closeLog();
-    }
-    QApplication::quit();
-//    openNewMainWindow();
-//    this->deleteLater();
-//    event->ignore();
-}
+////    event->ignore();
+//}
 
 void MainWindow::on_actionOpen_triggered()
 {
@@ -1662,13 +1663,13 @@ void MainWindow::on_actionOpen_triggered()
 //        qApp->quit();
 
 
-//        this->close();
-        closeLog();
+
+//        closeLog();
         openNewMainWindow();
-
+         this->close();
 //        this->close();
 
-        this->deleteLater();
+//        this->deleteLater();
 
 //        this->hide();
 //        QApplication::quit();
