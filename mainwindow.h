@@ -202,8 +202,10 @@ private:
     QwtPlotPicker *plotPointer;
     QwtSymbol errorSym;
     QVector <int> ErrXCoords;
-    QVector <long> ErrCode;
-    QVector <QPointF> ErrCoords;
+//    QVector <long> ErrCode;
+//    QVector <QPointF> ErrCoords;
+    int *ErrCoords;
+    long *ErrCode;
     int globalCursorMove;
     int globalCursorFirstPressPos;
     int plotRectBasicWidth;
@@ -320,7 +322,7 @@ private:
     bool checkFileHeaderCRC();
     void initiatePlotMarkers();
     void readHeadTableData();
-    void readDataFromLog();
+    bool readDataFromLog();
     void globalInits(int arrayIndexSize);
     bool initiateTimeAxis(QDateTime startPoint, time_t *times, int length);
     void initGloabalArrays(int values);
