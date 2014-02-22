@@ -2,7 +2,7 @@
 #define __ints
 
 #include <stdint.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 
 #define   uint8   unsigned char
 #define   int8    signed char

@@ -141,8 +141,9 @@ void MainWindow::initiatePlotMarkers()
      //int tmpCounter=0;
 
 //    for(int i = 0; i < varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+    for(int i = 0; i < varCounter; i++)
     {
 
         qDebug() << parLabel[i];
@@ -920,10 +921,11 @@ void MainWindow::initiateCurves()
     AxisLabelDate = firstDateTime;
 
      //srand(double(NULL));
-//    for (int i =0; i<varCounter; i++)
+
 //        if(!invisibleVarsMask[i])
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+    for (int i =0; i<varCounter; i++)
            {
             curve1[i] = new QwtPlotCurve;
 //            this->chi
@@ -1297,9 +1299,10 @@ void MainWindow::moveMapMarker(long int globalPosition)
     double magnifiedVal = upPlotMagnifier(globalMagnifyFactor);
 
     int tmpCounter=0;
-//    for(int i =0; i <varCounter; i++ )
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+    for(int i =0; i <varCounter; i++ )
     {
         if(!flagArray[i])
         {
@@ -1316,9 +1319,10 @@ void MainWindow::moveMapMarker(long int globalPosition)
 
     pf->SetMapMarkerPosition(timeArray[position]);
 
-//    for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+        for(int i = 0; i<varCounter; i++)
     {
         QVariant tmp;
         if(!flagArray[i])
@@ -1366,9 +1370,9 @@ void MainWindow::initiateThermos()
 {
     QPalette thermoPalette;
 
-//    for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i<varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
 //        if(!i)
 //        {
@@ -1446,9 +1450,9 @@ void MainWindow::hideAxis()
    // //qDebug() << QObject::sender();
 
     QObject * tmp = sender();
-//    for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i<varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
         if(tmp==axisButton[i])index=i;
     }
@@ -1573,16 +1577,16 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)
 {
     int index;
     int hiddenCounter=0;
-//    for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i<varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
         if(isAxisHidden[i])hiddenCounter++;
         if(hiddenCounter>=notHiddenIndex)isAxisHidden[i]=true;
     }
-//    for( index =0; index< varCounter;index++)
-    for(int index = 0 ; index < invisibleVarsMask.size(); index++)
-        if(!invisibleVarsMask[index])
+    for( index =0; index< varCounter;index++)
+//    for(int index = 0 ; index < invisibleVarsMask.size(); index++)
+//        if(!invisibleVarsMask[index])
     {
         if(isAxisHidden[index])
         {
@@ -1619,27 +1623,27 @@ void MainWindow::setGlobalArrays()
 //    tmpMinFloat = newTmiInterp->TInterpItemArray[i].min/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
 //    tmpMaxFloat = newTmiInterp->TInterpItemArray[i].max/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
 //    newTmiInterp->TInterpItemArray[i]
-//    for(int i = 0; i < varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i < varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
         thermoPlotMins[i] = 0;
        //float  tmpMinFloat = newTmiInterp->TInterpItemArray[i+1].min/pow(10,newTmiInterp->TInterpItemArray[i+1].mask_);
        // thermoPlotMins[i] = (int)tmpMinFloat;
       //  //qDebug() << thermoPlotMins[i];
     }
-//    for(int i = 0; i < varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i < varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
 //        float tmpMaxFloat = newTmiInterp->TInterpItemArray[i+2].max/pow(10,newTmiInterp->TInterpItemArray[i+2].mask_);
 //        thermoPlotMaxs[i] = (int)tmpMaxFloat;
         if(thermoPlotMaxs[i]<1)thermoPlotMaxs[i]=1;
       //  //qDebug() << thermoPlotMaxs[i];
     }
-//    for(int i = 0; i < varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i < varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
         if(i<axisCount)
             isAxisHidden[i] = false;
@@ -1647,9 +1651,9 @@ void MainWindow::setGlobalArrays()
             isAxisHidden[i] = true;
     }
 
-//    for(int i = 0; i < varCounter;i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i < varCounter;i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
       //  parLabel[i] = new QString;
         if(newTmiInterp->TInterpItemArray[i+2].typ==8)
@@ -1863,9 +1867,9 @@ void MainWindow::openLog()
 }
 void MainWindow::initiateRadios()
 {
-//    for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0; i<varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
         if(flagArray[i])
         {
@@ -2008,9 +2012,9 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
             paramValue = tmpParamValue;
 
         }
-//        for (int i = 0; i < varCounter; i++)
-        for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-            if(!invisibleVarsMask[i])
+        for (int i = 0; i < varCounter; i++)
+//        for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//            if(!invisibleVarsMask[i])
         {
 
             if(flagArray[i])
@@ -2094,9 +2098,9 @@ double MainWindow::upPlotMagnifier(int factor)
     if(magVal<0)magVal = 0;
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
     int tmpCounter=0;
-//    for(int i =0; i < varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i =0; i < varCounter; i++)
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
     {
         if(flagArray[i])
         {
@@ -2191,9 +2195,9 @@ void MainWindow::showAllCurves()
 //        if(isAxisHidden[i])hiddenCounter++;
 //        if(hiddenCounter>=notHiddenIndex)isAxisHidden[i]=true;
 //    }
-//    for( index =0; index< varCounter;index++)
-    for(int index = 0 ; index < invisibleVarsMask.size(); index++)
-        if(!invisibleVarsMask[index])
+    for( index =0; index< varCounter;index++)
+//    for(int index = 0 ; index < invisibleVarsMask.size(); index++)
+//        if(!invisibleVarsMask[index])
     {
          if(ui->checkBox->checkState())
          {
