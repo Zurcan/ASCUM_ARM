@@ -26,9 +26,11 @@ int logProcessor::selectLogFile(QString filename)
 
 bool logProcessor::readSegment(char *buf, int size)
 {
-    tmpFile.seek(logDataPointer);
-    tmpFile.read(buf,size);
-    return true;
+
+    if(tmpFile.seek(logDataPointer))
+        if(tmpFile.read(buf,size))
+            return true;
+    return false;
 }
 
 bool logProcessor::readRecord(int recCount, int Size, int savedDataPointer)   //it seems to me that I shouldn't use bytesAvailable,
@@ -77,7 +79,7 @@ bool logProcessor::readFileHeader(void)
 
 long logProcessor::setTmpID()
 {
-    char tmpIDarr[4];
+    char tmpIDarr[5];
     long *tmpID;
     long tmpDataPointer = logDataPointer;
     tmpFile.seek(logDataPointer);

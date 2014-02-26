@@ -112,15 +112,16 @@ void MainWindow::globalInits(int arrayIndexSize)// here's the place to create ve
         Y[i]=Y[i-1]+sizeOfArray;
     }
     qDebug() << arrayIndexSize << "is arrayIndexSize";
-    powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
+/*    powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
     timeFract = (char*)malloc(sizeOfArray*sizeof(char));
     dateChangedArr = (bool*)malloc((sizeOfArray*sizeof(bool)));
     ErrCoords = (int*)malloc(sizeOfArray*sizeof(int));
     ErrCode = (long*)malloc(sizeOfArray*sizeof(long));
+
     for(int i = 0; i < sizeOfArray; i++)
     {
         dateChangedArr[i] = false;
-    }
+    }*/
  //   QPushButton *myButton = new QPushButton;
     ui->qwtPlot_2->setContentsMargins(0,0,-1,0);
     ui->qwtPlot_2->replot();
@@ -189,7 +190,7 @@ bool MainWindow::checkFileHeaderCRC()
     tmpFHPtr[39]=0;
     CRCtmpFH = newLogProc->CRC32updater(tmpFHPtr,40,0xffffffff);
     CRCtmpFH = CRCtmpFH^0xffffffff;
-    for(int segCount = 0; segCount < 4; segCount++)
+    for(int segCount = 0; segCount < 5; segCount++)
     {
         long tmpID = newLogProc->setTmpID();
         newLogProc->selectSegment(tmpID);
@@ -203,14 +204,14 @@ bool MainWindow::checkFileHeaderCRC()
         newMessage.setWindowTitle("Ошибка!");
         newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
         newMessage.exec();
-//        qDebug() << "error here!";
-//        qDebug() << CRCtmpFH;
-//        qDebug() << newLogProc->fileHeader.CRC32;
-       return true;
+        qDebug() << "error here!";
+        qDebug() << CRCtmpFH;
+        qDebug() << newLogProc->fileHeader.CRC32;
+       return false;
     }
 //    qDebug() << CRCtmpFH;
 //    qDebug() << newLogProc->fileHeader.CRC32;
-    return false;
+    return true;
    // else //qDebug()<<CRCtmpFH;
 }
 
@@ -229,10 +230,10 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
     newLogProc->logDataPointer = 40; // jump through file header
     newLogProc->tmpFile.seek(40);
     buffArr = (char*)malloc(newLogProc->segmentHeader.size);
-    for(int segCount = 0; segCount < 4; segCount++)
+    for(int segCount = 0; segCount < 5; segCount++)
             {
                 cycleID = newLogProc->setTmpID();
-                if(cycleID==smallTableID)
+                if(cycleID==localizationTableID)
                 {
                     tmpID = cycleID;
                     tmpLogDataPointer =newLogProc->logDataPointer;
@@ -241,140 +242,188 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                 newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
             }
     newLogProc->logDataPointer = tmpLogDataPointer;
-    if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header
-                                        also segment with ID begins from 0x8 - is only data interpreter */
-     {
-
-      /*
-       *At this point we have calculated CRC of head table segment interpretator, and datapointer
-       *pointed to the interpreter, but not to its header, so we can get from interpreter names of head
-       */
-            newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
-            newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
-            for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
-            {
-                if(newTmiInterp->TInterpItemArray[i].level!=0)
+    if(checkSegmentCRC(tmpID))
+    {
+        newLogProc->logDataPointer = 40;
+        tmpID = 0;
+        tmpLogDataPointer = 40;
+        for(int segCount = 0; segCount < 5; segCount++)
                 {
-                    verticalHeaderName =QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
-                    ui->tableWidget->verticalHeaderItem(i-1)->setText(verticalHeaderName);
-                }
-
-            }
-           /*
-            *from here we start to processing data from small table
-            */
-            newLogProc->logDataPointer = 40;
-            tmpID = 0;
-            tmpLogDataPointer = 40;
-            for(int segCount = 0; segCount < 4; segCount++)
+                    cycleID = newLogProc->setTmpID();
+                    if(cycleID==smallTableID)
                     {
-                        cycleID = newLogProc->setTmpID();
-                        if(cycleID==(int)(smallTableID&0x7fffffff))
+                        tmpID = cycleID;
+                        tmpLogDataPointer =newLogProc->logDataPointer;
+                    }
+                    newLogProc->selectSegment(cycleID);
+                    newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
+                }
+        newLogProc->logDataPointer = tmpLogDataPointer;
+        if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
+         {
+
+          /*
+           *At this point we have calculated CRC of head table segment interpretator, and datapointer
+           *pointed to the interpreter, but not to its header, so we can get from interpreter names of head
+           */
+                newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
+                newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
+                for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
+                {
+    //                qDebug()<< newTmiInterp->interpreterRecordsCount;
+                    if(newTmiInterp->TInterpItemArray[i].level!=0)
+                    {
+    //                    qDebug() << i-1;
+    //                    qDebug() << ui->tableWidget->verticalHeader()->count();
+
+                        if(ui->tableWidget->verticalHeader()->count()==i-1)
                         {
-                            tmpID = cycleID;
-                            tmpLogDataPointer =newLogProc->logDataPointer;
+                            i=newTmiInterp->interpreterRecordsCount;
+    //                        ui->tableWidget->insertRow(i);
                         }
-                        newLogProc->selectSegment(cycleID);
-                        newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
+                        else
+                        {
+                            verticalHeaderName = /*QString::fromLocal8Bit(&i);*/(char)i;//newTmiInterp->TInterpItemArray[i].name);
+                            ui->tableWidget->verticalHeaderItem(i-1)->setText(verticalHeaderName);
+                        }
                     }
 
-              newLogProc->logDataPointer = tmpLogDataPointer;
-                if(checkSegmentCRC(tmpID))
-                    {
-                        //qDebug() << newLogProc->logDataPointer;
-                        QString tmpField = " ";
-                        int tmpRecI = 0;
-                        QVariant recFloat;
-                        newLogProc->readRecord(newLogProc->segmentHeader.recordSize, newLogProc->segmentHeader.size, newLogProc->logDataPointer);
-                        for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
+                }
+               /*
+                *from here we start to processing data from small table
+                */
+                newLogProc->logDataPointer = 40;
+                tmpID = 0;
+                tmpLogDataPointer = 40;
+                for(int segCount = 0; segCount < 5; segCount++)
                         {
-                            tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
-                            if(newTmiInterp->TInterpItemArray[i].level)
+                            cycleID = newLogProc->setTmpID();
+                            if(cycleID==(int)(smallTableID&0x7fffffff))
                             {
-                                switch(newTmiInterp->TInterpItemArray[i].typ)
-                                {
-
-                                        case 7 :
-                                        {
-                                            float tmpFloat, tmpMinFloat, tmpMaxFloat;
-                                            int tmpIntFloat;
-                                            tmpFloat = newTmiInterp->fieldFloat(&newLogProc->record[tmpRecI]);
-                                            //qDebug() << tmpFloat;
-                                            if(tmpFloat==tmpFloat)
-                                            {
-                                            tmpMinFloat = newTmiInterp->TInterpItemArray[i].min/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
-                                            tmpMaxFloat = newTmiInterp->TInterpItemArray[i].max/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
-                                            if((tmpMinFloat==0)&&(tmpMaxFloat==0));
-                                            else
-                                            {
-                                                if(tmpFloat!=tmpMinFloat)
-                                                {
-                                                if(tmpFloat<tmpMinFloat)tmpFloat = tmpMinFloat;
-                                                if(tmpFloat>=tmpMaxFloat)tmpFloat = tmpMaxFloat;
-                                                }
-                                            }
-                                            tmpFloat = tmpFloat*pow(10,newTmiInterp->TInterpItemArray[i].mask_);
-                                            tmpIntFloat =(int)tmpFloat;
-                                            if(tmpFloat>0)
-                                            {
-                                                if(tmpIntFloat!=0)
-                                                {
-                                                    if((tmpFloat-tmpIntFloat)!=0)
-                                                    {
-                                                    if((tmpFloat-tmpIntFloat)>0.5)tmpIntFloat++;
-                                                    }
-                                                }
-                                            }
-                                            if(tmpFloat<0)
-                                            {
-                                                if(tmpIntFloat!=0)
-                                                {
-                                                    if((tmpFloat-tmpIntFloat)!=0)
-                                                    {
-                                                    if(abs(tmpFloat-tmpIntFloat)>0.5)tmpIntFloat--;
-                                                    }
-                                                }
-                                            }
-                                            tmpFloat = (float)(tmpIntFloat/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
-
-                                            recFloat = tmpFloat;
-                                            tmpField = recFloat.toByteArray();
-                                            }
-                                            else
-                                                tmpField = "Неиспр.";
-                                            break;
-                                        }
-
-                                           default:
-                                        {
-                                            tmpField.append("Недоступно");
-                                            break;
-                                        }
-                                }
-                                QTableWidgetItem *tmpItem;
-                                tmpItem = new QTableWidgetItem;
-                                tmpItem->setText(QString::fromStdString(tmpField.toStdString()));
-                                ui->tableWidget->setItem(i-2, 1, tmpItem );
+                                tmpID = cycleID;
+                                tmpLogDataPointer =newLogProc->logDataPointer;
                             }
-                            //else; //if we
+                            newLogProc->selectSegment(cycleID);
+                            newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
                         }
-                    }
-                else
-                {
-//                    newLogProc->tmpFile.close();
-                    isOpened=false;
-                    openNewMainWindow();
-                    this->close();
-                }
 
-      }
+                  newLogProc->logDataPointer = tmpLogDataPointer;
+                    if(checkSegmentCRC(tmpID))
+                        {
+                            //qDebug() << newLogProc->logDataPointer;
+                            QString tmpField = " ";
+                            int tmpRecI = 0;
+                            QVariant recFloat;
+                            newLogProc->readRecord(newLogProc->segmentHeader.recordSize, newLogProc->segmentHeader.size, newLogProc->logDataPointer);
+                            for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
+                            {
+                                tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
+                                if(newTmiInterp->TInterpItemArray[i].level)
+                                {
+                                    switch(newTmiInterp->TInterpItemArray[i].typ)
+                                    {
+
+                                            case 34 :
+                                            {
+                                                float tmpFloat, tmpMinFloat, tmpMaxFloat;
+                                                int tmpIntFloat;
+                                                tmpFloat = newTmiInterp->fieldFloat(&newLogProc->record[tmpRecI]);
+                                                //qDebug() << tmpFloat;
+                                                if(tmpFloat==tmpFloat)
+                                                {
+                                                tmpMinFloat = newTmiInterp->TInterpItemArray[i].min/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
+                                                tmpMaxFloat = newTmiInterp->TInterpItemArray[i].max/pow(10,newTmiInterp->TInterpItemArray[i].mask_);
+                                                if((tmpMinFloat==0)&&(tmpMaxFloat==0));
+                                                else
+                                                {
+                                                    if(tmpFloat!=tmpMinFloat)
+                                                    {
+                                                    if(tmpFloat<tmpMinFloat)tmpFloat = tmpMinFloat;
+                                                    if(tmpFloat>=tmpMaxFloat)tmpFloat = tmpMaxFloat;
+                                                    }
+                                                }
+                                                tmpFloat = tmpFloat*pow(10,newTmiInterp->TInterpItemArray[i].mask_);
+                                                tmpIntFloat =(int)tmpFloat;
+                                                if(tmpFloat>0)
+                                                {
+                                                    if(tmpIntFloat!=0)
+                                                    {
+                                                        if((tmpFloat-tmpIntFloat)!=0)
+                                                        {
+                                                        if((tmpFloat-tmpIntFloat)>0.5)tmpIntFloat++;
+                                                        }
+                                                    }
+                                                }
+                                                if(tmpFloat<0)
+                                                {
+                                                    if(tmpIntFloat!=0)
+                                                    {
+                                                        if((tmpFloat-tmpIntFloat)!=0)
+                                                        {
+                                                        if(abs(tmpFloat-tmpIntFloat)>0.5)tmpIntFloat--;
+                                                        }
+                                                    }
+                                                }
+                                                tmpFloat = (float)(tmpIntFloat/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
+
+                                                recFloat = tmpFloat;
+                                                tmpField = recFloat.toByteArray();
+                                                }
+                                                else
+                                                    tmpField = "Неиспр.";
+                                                break;
+                                            }
+
+                                               default:
+                                            {
+                                                tmpField.append("Недоступно");
+                                                break;
+                                            }
+                                    }
+                                    QTableWidgetItem *tmpItem;
+                                    tmpItem = new QTableWidgetItem;
+                                    tmpItem->setText(QString::fromStdString(tmpField.toStdString()));
+                                    ui->tableWidget->setItem(i-2, 1, tmpItem );
+                                }
+                                //else; //if we
+                            }
+                        }
+                    else
+                    {
+    //                    newLogProc->tmpFile.close();
+                        newMessage.setWindowTitle("Ошибка!");
+                        newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
+                        newMessage.exec();
+                        qDebug() << "error in data section of small table";
+                        isOpened=false;
+                        openNewMainWindow();
+                        this->close();
+                    }
+
+          }
+        else
+        {
+    //        newLogProc->tmpFile.close();
+            newMessage.setWindowTitle("Ошибка!");
+            newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
+            newMessage.exec();
+            qDebug() << "error in interpretation section of small table";
+            isOpened=false;
+            openNewMainWindow();
+            this->close();
+        }
+    }
     else
     {
-//        newLogProc->tmpFile.close();
+        newMessage.setWindowTitle("Ошибка!");
+        newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
+        newMessage.exec();
+        qDebug() << "error in linguo section";
         isOpened=false;
         openNewMainWindow();
         this->close();
     }
+
 }
 
 bool MainWindow::readDataFromLog()//and now we're reading all the data from our log
@@ -388,7 +437,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
     newLogProc->tmpFile.seek(40);
     //buffArr = (char*)malloc(newLogProc->segmentHeader.size);
-    for(int segCount = 0; segCount < 4; segCount++)
+    for(int segCount = 0; segCount < 5; segCount++)
             {
                 cycleID = newLogProc->setTmpID();
                 if(cycleID==bigTableID)
@@ -399,16 +448,16 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 newLogProc->selectSegment(cycleID);
                 newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
             }
+
     int dateTimeChangedIndex=0;
 //    for(int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
 
 //    for(int i = 0; i < sizeOfArray; i++)
 //        if(newTmiInterp->TInterpItemArray[dateTimeChangedIndex].)
     newLogProc->logDataPointer = tmpLogDataPointer;
-    if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header
-                                        also segment with ID begins from 0x8 - is only data interpreter */
-     {
-
+    if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
+      {
+        qDebug()<< "big TABLE HEAD is read";
       /*
        *At this point we have calculated CRC of head table segment interpretator, and datapointer
        *pointed to the interpreter, but not to its header, so we can get it from interpreter names of head
@@ -422,12 +471,12 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
             for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
                 qDebug() << newTmiInterp->TInterpItemArray[i].name;
-                qDebug() << newTmiInterp->TInterpItemArray[i].typ;
+                qDebug() << (newTmiInterp->TInterpItemArray[i].typ&0xffff);
 //                invisibleVarsMask.resize(i+1);
                 invisibleVarsMask.append(false);
 //                invisibleVarsMask.squeeze();
 
-                if((newTmiInterp->TInterpItemArray[i].typ>40)|(newTmiInterp->TInterpItemArray[i].typ==4)|(newTmiInterp->TInterpItemArray[i].typ==27))
+                if(newTmiInterp->TInterpItemArray[i].typ&0xffff>40)//|(newTmiInterp->TInterpItemArray[i].typ==4)|(newTmiInterp->TInterpItemArray[i].typ==27))
                 {
 
 
@@ -476,7 +525,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
             newLogProc->logDataPointer = 40;
             tmpID = 0;
             tmpLogDataPointer = 40;
-            for(int segCount = 0; segCount < 4; segCount++)
+            for(int segCount = 0; segCount < 5; segCount++)
                     {
                         cycleID = newLogProc->setTmpID();
                         if(cycleID==(int)(bigTableID&0x7fffffff))
@@ -491,11 +540,13 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
               newLogProc->logDataPointer = tmpLogDataPointer;
                 if(checkSegmentCRC(tmpID))
                     {
+                        qDebug() << "big TABLE BODY is read";
 
                         time_t recTime;
                         time_t lastTime;
                         int tmpRecordCount = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                         sizeOfArray = tmpRecordCount;
+                        qDebug() << " record count: " << tmpRecordCount;
                         //varCounter-=invisibleVarCounter;
 //                        globalInits(varCounter);
                         globalInits(invisibleVarsMask.size());
@@ -522,7 +573,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                             newLogProc->readRecord(tmpRecordCount,newLogProc->segmentHeader.recordSize, recPositionCompareVal);
                                  tmpRecI =0;
                                  int tmpInvisibleVarDecrease=0;
-                                 qDebug() << "recCount is " << newTmiInterp->interpreterRecordsCount;
+//                                 qDebug() << "recCount is " << newTmiInterp->interpreterRecordsCount;
                                     for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)//0 - it's some text, 1 - it's time, others are data
                                     {
                                         if(index<3)
@@ -536,7 +587,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                         if(newTmiInterp->TInterpItemArray[i].level)
                                         {
 
-                                            switch(newTmiInterp->TInterpItemArray[i].typ)
+                                            switch(newTmiInterp->TInterpItemArray[i].typ&0xffff)
                                             {
 
                                             case 7 :
@@ -811,20 +862,36 @@ bool MainWindow::checkSegmentCRC(long segmentID)
     tmpHeadArr[14]=0;
     tmpHeadArr[15]=0;
      //buffArr[newLogProc->segmentHeader.size];
-     newLogProc->readSegment(buffArr,newLogProc->segmentHeader.size);
-     unsigned long CRCtmp = newLogProc->CRC32updater(tmpHeadArr,208,0xffffffff);
-     CRCtmp = newLogProc->CRC32updater(buffArr,newLogProc->segmentHeader.size, CRCtmp);
-     CRCtmp = newLogProc->CRC32updater((char*)&newLogProc->segmentHeader.size,4, CRCtmp);
-     CRCtmp=CRCtmp^0xffffffff;
-
-     if(CRCtmp!=newLogProc->segmentHeader.CRC32)
+     if(newLogProc->readSegment(buffArr,newLogProc->segmentHeader.size))
+     {
+         unsigned long CRCtmp = newLogProc->CRC32updater(tmpHeadArr,208,0xffffffff);
+         CRCtmp = newLogProc->CRC32updater(buffArr,newLogProc->segmentHeader.size, CRCtmp);
+         CRCtmp = newLogProc->CRC32updater((char*)&newLogProc->segmentHeader.size,4, CRCtmp);
+         CRCtmp=CRCtmp^0xffffffff;
+//         qDebug() << newLogProc->segmentHeader.ID;
+//         qDebug()<< newLogProc->segmentHeader.CRC32;
+//         qDebug() << CRCtmp;
+         if(CRCtmp!=newLogProc->segmentHeader.CRC32)
+         {
+             qDebug() << "error here! ";
+             qDebug()<< newLogProc->segmentHeader.ID;
+             qDebug()<< newLogProc->segmentHeader.size;
+             qDebug()<< newLogProc->segmentHeader.CRC32;
+             qDebug() << CRCtmp;
+             newMessage.setWindowTitle("Ошибка!");
+             newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
+             newMessage.exec();
+             return false;
+         }
+         return true;
+     }
+     else
      {
          newMessage.setWindowTitle("Ошибка!");
-         newMessage.setText("Ошибка контрольной суммы. Файл журнала регистратора поврежден.");
+         newMessage.setText("Ошибка чего-то. Файл журнала регистратора поврежден.");
          newMessage.exec();
          return false;
      }
-     return true;
 }
 
 bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
@@ -835,6 +902,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //    {
         for(int i = 1; i < sizeOfArray; i++)
         {
+//            qDebug() << QDateTime::fromTime_t(times[i]);
             if(!dateChangedArr[i])
             {                                                       //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
                 pointsAmount += (int)times[i]-(int)times[i-1];      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
@@ -1663,6 +1731,7 @@ void MainWindow::setGlobalArrays()
         }
         else flagArray[i] = 0;
         parLabel[i] = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i+2].name);// = QString::fromLocal8Bit();
+        if(parLabel[i]=="Ошибка");
         parLabel[i].replace("[","(");
         parLabel[i].replace("]",")");
       //  //qDebug()<< parLabel[i];
@@ -1829,7 +1898,7 @@ void MainWindow::openLog()
                                        ui->pushButton_3->setEnabled(true);
                                            ui->pushButton_4->setEnabled(true);
 
-    if(checkFileHeaderCRC())
+    if(!checkFileHeaderCRC())
     {
         newLogProc->tmpFile.close();
         isOpened=false;
@@ -1838,9 +1907,9 @@ void MainWindow::openLog()
      }
     else
     {
-
+        qDebug() << "we're here!";
     readHeadTableData();
-
+    qDebug() << "headTableIsREAD";
     if(readDataFromLog())
         {
             setGlobalArrays();

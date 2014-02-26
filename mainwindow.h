@@ -261,7 +261,7 @@ private:
     TMIinterpretator *newTmiInterp;
     #define smallTableID 0x80000012
     #define bigTableID 0x80000011
-    #define localizationTableID 0x80000001
+    #define localizationTableID 0x00000001
     MainWindow *newWin = 0;
     QtRPT *report;
     double *X;
