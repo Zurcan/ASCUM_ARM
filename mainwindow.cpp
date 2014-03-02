@@ -179,8 +179,8 @@ bool MainWindow::checkFileHeaderCRC()
     newLogProc->readFileHeader();
     unsigned long CRCtmpFH = 0;
     newLogProc->tmpFile.seek(0);
-    newLogProc->tmpFile.read(tmpFHPtr,40);
-    tmpFHPtr[32]=40;
+    newLogProc->tmpFile.read(tmpFHPtr,SIZE_OF_FILEHEADER);
+    tmpFHPtr[32]=SIZE_OF_FILEHEADER;
     tmpFHPtr[33]=0;
     tmpFHPtr[34]=0;
     tmpFHPtr[35]=0;
@@ -188,9 +188,9 @@ bool MainWindow::checkFileHeaderCRC()
     tmpFHPtr[37]=0;
     tmpFHPtr[38]=0;
     tmpFHPtr[39]=0;
-    CRCtmpFH = newLogProc->CRC32updater(tmpFHPtr,40,0xffffffff);
+    CRCtmpFH = newLogProc->CRC32updater(tmpFHPtr,SIZE_OF_FILEHEADER,0xffffffff);
     CRCtmpFH = CRCtmpFH^0xffffffff;
-    for(int segCount = 0; segCount < 5; segCount++)
+    for(int segCount = 0; segCount < SEG_QTY; segCount++)
     {
         long tmpID = newLogProc->setTmpID();
         newLogProc->selectSegment(tmpID);
@@ -227,10 +227,11 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
         newMessage.setText("Файл журнала регистратора поврежден.");
         newMessage.exec();
     }
-    newLogProc->logDataPointer = 40; // jump through file header
-    newLogProc->tmpFile.seek(40);
+//    newLogProc->setValueLDPtr( SIZE_OF_FILEHEADER; // jump through file header
+    newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
+    newLogProc->tmpFile.seek(SIZE_OF_FILEHEADER);
     buffArr = (char*)malloc(newLogProc->segmentHeader.size);
-    for(int segCount = 0; segCount < 5; segCount++)
+    for(int segCount = 0; segCount < SEG_QTY; segCount++)
             {
                 cycleID = newLogProc->setTmpID();
                 if(cycleID==localizationTableID)
@@ -241,13 +242,13 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                 newLogProc->selectSegment(cycleID);
                 newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
             }
-    newLogProc->logDataPointer = tmpLogDataPointer;
+    newLogProc->setValueLDPtr(tmpLogDataPointer);
     if(checkSegmentCRC(tmpID))
     {
-        newLogProc->logDataPointer = 40;
+        newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
         tmpID = 0;
-        tmpLogDataPointer = 40;
-        for(int segCount = 0; segCount < 5; segCount++)
+        tmpLogDataPointer = SIZE_OF_FILEHEADER;
+        for(int segCount = 0; segCount < SEG_QTY; segCount++)
                 {
                     cycleID = newLogProc->setTmpID();
                     if(cycleID==smallTableID)
@@ -258,7 +259,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                     newLogProc->selectSegment(cycleID);
                     newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
                 }
-        newLogProc->logDataPointer = tmpLogDataPointer;
+        newLogProc->setValueLDPtr(tmpLogDataPointer);
         if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
          {
 
@@ -292,10 +293,10 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                /*
                 *from here we start to processing data from small table
                 */
-                newLogProc->logDataPointer = 40;
+                newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
                 tmpID = 0;
-                tmpLogDataPointer = 40;
-                for(int segCount = 0; segCount < 5; segCount++)
+                tmpLogDataPointer = SIZE_OF_FILEHEADER;
+                for(int segCount = 0; segCount < SEG_QTY; segCount++)
                         {
                             cycleID = newLogProc->setTmpID();
                             if(cycleID==(int)(smallTableID&0x7fffffff))
@@ -307,7 +308,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                             newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
                         }
 
-                  newLogProc->logDataPointer = tmpLogDataPointer;
+                  newLogProc->setValueLDPtr(tmpLogDataPointer);
                     if(checkSegmentCRC(tmpID))
                         {
                             //qDebug() << newLogProc->logDataPointer;
@@ -433,11 +434,11 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
      double flagOffset=0;
     int cycleID = 0;
     int tmpLogDataPointer =0;
-    newLogProc->logDataPointer = 40; // jump through file header
+    newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER); // jump through file header
 
-    newLogProc->tmpFile.seek(40);
+    newLogProc->tmpFile.seek(SIZE_OF_FILEHEADER);
     //buffArr = (char*)malloc(newLogProc->segmentHeader.size);
-    for(int segCount = 0; segCount < 5; segCount++)
+    for(int segCount = 0; segCount < SEG_QTY; segCount++)
             {
                 cycleID = newLogProc->setTmpID();
                 if(cycleID==bigTableID)
@@ -454,7 +455,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
 //    for(int i = 0; i < sizeOfArray; i++)
 //        if(newTmiInterp->TInterpItemArray[dateTimeChangedIndex].)
-    newLogProc->logDataPointer = tmpLogDataPointer;
+    newLogProc->setValueLDPtr(tmpLogDataPointer);
     if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
       {
         qDebug()<< "big TABLE HEAD is read";
@@ -476,7 +477,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 invisibleVarsMask.append(false);
 //                invisibleVarsMask.squeeze();
 
-                if(newTmiInterp->TInterpItemArray[i].typ&0xffff>40)//|(newTmiInterp->TInterpItemArray[i].typ==4)|(newTmiInterp->TInterpItemArray[i].typ==27))
+                if(newTmiInterp->TInterpItemArray[i].typ&0xffff>SIZE_OF_FILEHEADER)//|(newTmiInterp->TInterpItemArray[i].typ==4)|(newTmiInterp->TInterpItemArray[i].typ==27))
                 {
 
 
@@ -522,10 +523,10 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
            /*
             *from here we start to processing data from small table
             */
-            newLogProc->logDataPointer = 40;
+            newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
             tmpID = 0;
-            tmpLogDataPointer = 40;
-            for(int segCount = 0; segCount < 5; segCount++)
+            tmpLogDataPointer = SIZE_OF_FILEHEADER;
+            for(int segCount = 0; segCount < SEG_QTY; segCount++)
                     {
                         cycleID = newLogProc->setTmpID();
                         if(cycleID==(int)(bigTableID&0x7fffffff))
@@ -537,7 +538,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
                     }
 
-              newLogProc->logDataPointer = tmpLogDataPointer;
+              newLogProc->setValueLDPtr(tmpLogDataPointer);
                 if(checkSegmentCRC(tmpID))
                     {
                         qDebug() << "big TABLE BODY is read";
@@ -847,12 +848,12 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
 bool MainWindow::checkSegmentCRC(long segmentID)
 {
-   //newLogProc->logDataPointer = 40;
+   //newLogProc->setValueLDPtr( SIZE_OF_FILEHEADER;
    //qDebug()<< newLogProc->logDataPointer;
     newLogProc->selectSegment(segmentID);//selecting head table interpretator segment
     //qDebug()<< newLogProc->logDataPointer;
-    newLogProc->tmpFile.seek(newLogProc->logDataPointer-208);
-    newLogProc->tmpFile.read(tmpHeadArr,208);
+    newLogProc->tmpFile.seek(newLogProc->logDataPointer-SIZE_OF_SEGMENTHEADER);
+    newLogProc->tmpFile.read(tmpHeadArr,SIZE_OF_SEGMENTHEADER);
     tmpHeadArr[4]=0;
     tmpHeadArr[5]=0;
     tmpHeadArr[6]=0;
@@ -864,7 +865,7 @@ bool MainWindow::checkSegmentCRC(long segmentID)
      //buffArr[newLogProc->segmentHeader.size];
      if(newLogProc->readSegment(buffArr,newLogProc->segmentHeader.size))
      {
-         unsigned long CRCtmp = newLogProc->CRC32updater(tmpHeadArr,208,0xffffffff);
+         unsigned long CRCtmp = newLogProc->CRC32updater(tmpHeadArr,SIZE_OF_SEGMENTHEADER,0xffffffff);
          CRCtmp = newLogProc->CRC32updater(buffArr,newLogProc->segmentHeader.size, CRCtmp);
          CRCtmp = newLogProc->CRC32updater((char*)&newLogProc->segmentHeader.size,4, CRCtmp);
          CRCtmp=CRCtmp^0xffffffff;

@@ -33,6 +33,33 @@ bool logProcessor::readSegment(char *buf, int size)
     return false;
 }
 
+bool logProcessor::moveBackLDPtr()
+{
+    if(tmpFile.isOpen())
+    {
+        logDataPointer = 0;
+        if(logDataPointer==0)
+            return true;
+        else
+            return false;
+    }
+    else return false;
+}
+
+bool logProcessor::setValueLDPtr(qint64 val)
+{
+    if(tmpFile.isOpen())
+    {
+    if(val<=tmpFile.size())
+        {
+            logDataPointer = val;
+            return true;
+        }
+    return false;
+    }
+    return false;
+}
+
 bool logProcessor::readRecord(int recCount, int Size, int savedDataPointer)   //it seems to me that I shouldn't use bytesAvailable,
 {                                                                             //but it should be size of segment... or something like this
     int tmp1,tmp2;
@@ -66,30 +93,30 @@ bool logProcessor::readTMIInterpreter(char* buf)
 
 bool logProcessor::readFileHeader(void)
 {
-   char tmparr[40];  // I didn't used sizeof(fileHeader_t) because it returns not "correct" value, including struct size and malloc and calloc size
+   char tmparr[SIZE_OF_FILEHEADER];  // I didn't used sizeof(fileHeader_t) because it returns not "correct" value, including struct size and malloc and calloc size
 //   int i=0;
    fileHeaderPointer = &fileHeader;
    tmpFile.seek(0);
-   tmpFile.read(tmparr, 40);
+   tmpFile.read(tmparr, SIZE_OF_FILEHEADER);
    fileHeaderPointer = (fileHeader_t*)tmparr;
    fileHeader = *fileHeaderPointer;
-   logDataPointer = 40;
+   logDataPointer = SIZE_OF_FILEHEADER;
    return true;
 }
 
 long logProcessor::setTmpID()
 {
-    char tmpIDarr[5];
+    char tmpIDarr[SEG_QTY];
     long *tmpID;
     long tmpDataPointer = logDataPointer;
     tmpFile.seek(logDataPointer);
     int tmp1 = tmpFile.bytesAvailable();
     while(tmp1+tmpDataPointer>logDataPointer)
     {
-    tmpFile.seek(logDataPointer);
-    tmpFile.read(tmpIDarr,sizeof(tmpIDarr));
-    tmpID = (long*)&tmpIDarr[0];
-    return *tmpID;
+        tmpFile.seek(logDataPointer);
+        tmpFile.read(tmpIDarr,sizeof(tmpIDarr));
+        tmpID = (long*)&tmpIDarr[0];
+        return *tmpID;
     }
     return 0;
 }
@@ -98,7 +125,7 @@ bool logProcessor::selectSegment(long ID)//first of all we need to find segment,
                                                          //the next step is to get selected segment's Header and set pointer to it's first record;
 {
 //    long *p;
-    char tmparr[208];
+    char tmparr[SIZE_OF_SEGMENTHEADER];
     long tmpDataPointer;
 //    int i=0;
     if(ID==0)return false;
