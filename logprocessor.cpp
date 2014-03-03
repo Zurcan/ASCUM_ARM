@@ -60,6 +60,14 @@ bool logProcessor::setValueLDPtr(qint64 val)
     return false;
 }
 
+bool logProcessor::pointFileValAtLDPtr(long ptrVal)
+{
+    if(setValueLDPtr(ptrVal))
+        return tmpFile.seek(ptrVal);
+    else
+        return false;
+}
+
 bool logProcessor::readRecord(int recCount, int Size, int savedDataPointer)   //it seems to me that I shouldn't use bytesAvailable,
 {                                                                             //but it should be size of segment... or something like this
     int tmp1,tmp2;
@@ -106,7 +114,7 @@ bool logProcessor::readFileHeader(void)
 
 long logProcessor::setTmpID()
 {
-    char tmpIDarr[SEG_QTY];
+    char tmpIDarr[4];
     long *tmpID;
     long tmpDataPointer = logDataPointer;
     tmpFile.seek(logDataPointer);
@@ -121,39 +129,85 @@ long logProcessor::setTmpID()
     return 0;
 }
 
-bool logProcessor::selectSegment(long ID)//first of all we need to find segment, we're searching for by it's ID;
+long logProcessor::readTmpID(long pointer)
+{
+    char tmpIDarr[4];
+    long *tmpID;
+    if(tmpFile.seek(pointer))
+    {
+        tmpFile.read(tmpIDarr,sizeof(tmpIDarr));
+        tmpID = (long*)&tmpIDarr[0];
+        return *tmpID;
+    }
+    else return -1;//incorrect seek
+}
+
+long logProcessor::readSegmentSize(long pointer)
+{
+    char tmpArr[4];
+    long *tmpSize;
+    if(tmpFile.seek(pointer+4))
+    {
+        tmpFile.read(tmpArr,sizeof(tmpArr));
+        tmpSize = (long*)&tmpArr[0];
+        return *tmpSize;
+    }
+    else return -1;//incorrect seek
+}
+
+int logProcessor::selectSegment(long ID)//first of all we need to find segment, we're searching for by it's ID;
                                                          //the next step is to get selected segment's Header and set pointer to it's first record;
 {
-//    long *p;
-    char tmparr[SIZE_OF_SEGMENTHEADER];
+    char tmparr[SIZE_OF_SEGMENTHEADER]; // need to make select,check CRC, move logDataPointer, return smth
     long tmpDataPointer;
-//    int i=0;
-    if(ID==0)return false;
+    if(ID==0)return -1;//wrong ID
     segmentHeaderPointer = &segmentHeader;
-   // segmentHeaderPointer = &segmenHeaderCRC;
     tmpFile.seek(logDataPointer);
     tmpDataPointer = logDataPointer;
     int tmp1 = tmpFile.bytesAvailable();
-    while(tmp1+tmpDataPointer>logDataPointer)
-    {
-    //    qDebug() << logDataPointer;
-    tmpFile.seek(logDataPointer);
-    tmpFile.read(tmparr,sizeof(tmparr));
-    //tmpFile.read(buf,sizeof(tmparr));
-    segmentHeaderPointer = (segmentHeader_t*)&tmparr;
-    segmentHeader = *segmentHeaderPointer;
-  //  segmenHeaderCRC = *segmentHeaderPointer;
-    //buf = &tmparr[0];
-    logDataPointer+=sizeof(tmparr);
-    if(ID==segmentHeader.ID)
-        return true;
-    else
-        logDataPointer+=segmentHeader.size;
-    }
-
-
-    return false;
+    while(tmp1+tmpDataPointer>logDataPointer) //untill logDataPointer is lesser than file size
+        {
+        //    qDebug() << logDataPointer;
+        tmpFile.seek(logDataPointer);
+        tmpFile.read(tmparr,sizeof(tmparr));
+        segmentHeaderPointer = (segmentHeader_t*)&tmparr;
+        segmentHeader = *segmentHeaderPointer;
+        logDataPointer+=sizeof(tmparr);
+        if(ID==segmentHeader.ID)
+            return 0;
+        else
+            logDataPointer+=segmentHeader.size;
+        }
+    return -2;//something wrong with segment size
 }
+
+int logProcessor::checkSegmentsExistance()
+{
+//    char tmparr[SIZE_OF_SEGMENTHEADER];
+    setValueLDPtr(SIZE_OF_FILEHEADER);
+    segIDs<<QVector <long>();
+//    char tmpIDarr[4];
+    if(tmpFile.size()>SIZE_OF_FILEHEADER)
+    {
+        int i =0;
+        pointFileValAtLDPtr(SIZE_OF_FILEHEADER);
+        int tmpPointer = SIZE_OF_FILEHEADER;
+        while(tmpFile.size() > logDataPointer)
+        {
+            if(!segIDs.size())
+                segIDs.append(0);
+            segIDs[i]= readTmpID(tmpPointer);
+            long tmpLength = readSegmentSize(tmpPointer);
+            if(tmpLength!=-1)
+            tmpPointer+=tmpLength;
+            tmpPointer+=SIZE_OF_SEGMENTHEADER;
+            i++;
+        }
+        return 0; // file is finished
+    }
+    return -1;// file is too small
+}
+
 
 char* logProcessor::generateFileHeader()
 {

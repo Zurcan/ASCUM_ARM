@@ -256,7 +256,9 @@ private:
     QString openedFileName;
     char tmpHeadArr[208];
     char tmpFHPtr[40];
-    char *buffArr;
+//    char *buffArr;
+//    char *buffArr2;
+//    char *buffArr3;
     QString verticalHeaderName;
     TMIinterpretator *newTmiInterp;
     #define smallTableID 0x80000012

@@ -6,7 +6,7 @@
 //#include <stdlib.h>
 //#include <stdio.h>
 //#include <string.h>
-
+#include <QVector>
 class logProcessor
 {
    // Q_OBJECT
@@ -43,8 +43,10 @@ public:
     QFile tmpFile;
     logProcessor();
     qint64 logDataPointer;
+    QVector <long> segIDs;
     int selectLogFile(QString filename);
-    bool selectSegment(long ID);              //ID = typedCode||interpFlg;
+    int selectSegment(long ID);              //ID = typedCode||interpFlg;
+    int checkSegmentsExistance();
     bool readSegment(char *buf,int size);
     bool seekRecord(long ID, int recCount);
     bool readRecord(int recCount, int Size, int savedDataPointer);
@@ -55,9 +57,11 @@ public:
     bool readTMIInterpreter(char *buf);
     char* generateFileHeader();
     char* generateSegmentHeader(char* buf);
+    long readTmpID(long pointer);
+    long readSegmentSize(long pointer);//reads size of segment
     bool moveBackLDPtr(); // moves value to beginning of block if true, else not moves
     bool setValueLDPtr(qint64); // sets value to logDataPointer
-
+    bool pointFileValAtLDPtr(long);//points value to l
     long setTmpID();
 //#pragma pack (push,1)
   struct segmentHeader_t{

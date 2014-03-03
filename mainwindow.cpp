@@ -220,6 +220,11 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
     int tmpID= 0;
     int cycleID = 0;
     int tmpLogDataPointer =0;
+    newLogProc->checkSegmentsExistance();
+    for(int i = 0; i < newLogProc->segIDs.size(); i++)
+    {
+        qDebug() << newLogProc->segIDs[i];
+    }
     newLogProc->tmpFile.seek(0);
     if(newLogProc->fileHeader.fileSize != newLogProc->tmpFile.bytesAvailable())//check file size
     {
@@ -230,7 +235,8 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
 //    newLogProc->setValueLDPtr( SIZE_OF_FILEHEADER; // jump through file header
     newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
     newLogProc->tmpFile.seek(SIZE_OF_FILEHEADER);
-    buffArr = (char*)malloc(newLogProc->segmentHeader.size);
+//    char *buffArr1 = new char;
+//    buffArr1 = (char*)malloc(newLogProc->segmentHeader.size);
     for(int segCount = 0; segCount < SEG_QTY; segCount++)
             {
                 cycleID = newLogProc->setTmpID();
@@ -248,6 +254,8 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
         newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
         tmpID = 0;
         tmpLogDataPointer = SIZE_OF_FILEHEADER;
+        char *buffArr1 = (char*)malloc(newLogProc->segmentHeader.size);
+        newLogProc->tmpFile.seek(0);
         for(int segCount = 0; segCount < SEG_QTY; segCount++)
                 {
                     cycleID = newLogProc->setTmpID();
@@ -268,7 +276,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
            *pointed to the interpreter, but not to its header, so we can get from interpreter names of head
            */
                 newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
-                newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
+                newTmiInterp->setInterpretationTable(buffArr1,newTmiInterp->interpreterRecordsCount);
                 for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
                 {
     //                qDebug()<< newTmiInterp->interpreterRecordsCount;
@@ -429,6 +437,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
 
 bool MainWindow::readDataFromLog()//and now we're reading all the data from our log
 {
+//    free(buffArr);
 
     int tmpID= 0;
      double flagOffset=0;
@@ -456,6 +465,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //    for(int i = 0; i < sizeOfArray; i++)
 //        if(newTmiInterp->TInterpItemArray[dateTimeChangedIndex].)
     newLogProc->setValueLDPtr(tmpLogDataPointer);
+    qDebug() << tmpID;
     if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
       {
         qDebug()<< "big TABLE HEAD is read";
@@ -463,7 +473,9 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
        *At this point we have calculated CRC of head table segment interpretator, and datapointer
        *pointed to the interpreter, but not to its header, so we can get it from interpreter names of head
        */
-
+        qDebug() << newLogProc->segmentHeader.size;
+        char *buffArr = new char;
+        buffArr = (char *)malloc(newLogProc->segmentHeader.size);
             newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
             newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
 //            sizeOfArray = newTmiInterp->interpreterRecordsCount;
@@ -812,7 +824,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                          qDebug() << "error??";
                         if(!initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount))
                         {
-
+                            free(buffArr);
 //                            newLogProc->tmpFile.close();
 //                            closeLog();
                             isOpened=false;
@@ -825,6 +837,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 }
                 else
                 {
+                    free(buffArr);
 
 //                    newLogProc->tmpFile.close();
                     isOpened=false;
@@ -851,6 +864,7 @@ bool MainWindow::checkSegmentCRC(long segmentID)
    //newLogProc->setValueLDPtr( SIZE_OF_FILEHEADER;
    //qDebug()<< newLogProc->logDataPointer;
     newLogProc->selectSegment(segmentID);//selecting head table interpretator segment
+    qDebug() << newLogProc->segmentHeader.size;
     //qDebug()<< newLogProc->logDataPointer;
     newLogProc->tmpFile.seek(newLogProc->logDataPointer-SIZE_OF_SEGMENTHEADER);
     newLogProc->tmpFile.read(tmpHeadArr,SIZE_OF_SEGMENTHEADER);
@@ -863,12 +877,16 @@ bool MainWindow::checkSegmentCRC(long segmentID)
     tmpHeadArr[14]=0;
     tmpHeadArr[15]=0;
      //buffArr[newLogProc->segmentHeader.size];
-     if(newLogProc->readSegment(buffArr,newLogProc->segmentHeader.size))
+    char *tmpBuffArr = new char;
+    tmpBuffArr = (char*)malloc(newLogProc->segmentHeader.size);
+
+     if(newLogProc->readSegment(tmpBuffArr,newLogProc->segmentHeader.size))
      {
          unsigned long CRCtmp = newLogProc->CRC32updater(tmpHeadArr,SIZE_OF_SEGMENTHEADER,0xffffffff);
-         CRCtmp = newLogProc->CRC32updater(buffArr,newLogProc->segmentHeader.size, CRCtmp);
+         CRCtmp = newLogProc->CRC32updater(tmpBuffArr,newLogProc->segmentHeader.size, CRCtmp);
          CRCtmp = newLogProc->CRC32updater((char*)&newLogProc->segmentHeader.size,4, CRCtmp);
          CRCtmp=CRCtmp^0xffffffff;
+         free(tmpBuffArr);
 //         qDebug() << newLogProc->segmentHeader.ID;
 //         qDebug()<< newLogProc->segmentHeader.CRC32;
 //         qDebug() << CRCtmp;
@@ -1908,7 +1926,7 @@ void MainWindow::openLog()
      }
     else
     {
-        qDebug() << "we're here!";
+    qDebug() << "we're here!";
     readHeadTableData();
     qDebug() << "headTableIsREAD";
     if(readDataFromLog())
