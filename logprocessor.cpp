@@ -17,6 +17,7 @@ int logProcessor::selectLogFile(QString filename)
 {
 
     int bytesToRead=0;
+    globalVectIterator = 0;
     tmpFile.setFileName(filename);
     tmpFile.open(QIODevice::ReadOnly);
     bytesToRead = tmpFile.bytesAvailable();
@@ -46,7 +47,7 @@ bool logProcessor::moveBackLDPtr()
     else return false;
 }
 
-bool logProcessor::setValueLDPtr(qint64 val)
+bool logProcessor::setValueLDPtr(qint64 val)// set logDataPointer to some value
 {
     if(tmpFile.isOpen())
     {
@@ -60,7 +61,7 @@ bool logProcessor::setValueLDPtr(qint64 val)
     return false;
 }
 
-bool logProcessor::pointFileValAtLDPtr(long ptrVal)
+bool logProcessor::pointFileValAtLDPtr(long ptrVal) //set logDataPointer to some value and search it in file
 {
     if(setValueLDPtr(ptrVal))
         return tmpFile.seek(ptrVal);
@@ -114,7 +115,7 @@ bool logProcessor::readFileHeader(void)
 
 long logProcessor::setTmpID()
 {
-    char tmpIDarr[4];
+/*    char tmpIDarr[4];
     long *tmpID;
     long tmpDataPointer = logDataPointer;
     tmpFile.seek(logDataPointer);
@@ -127,6 +128,17 @@ long logProcessor::setTmpID()
         return *tmpID;
     }
     return 0;
+  */
+    long retVal;
+    if(segIDs.isEmpty())
+        return -1;
+    else
+    {
+        retVal = segIDs[globalVectIterator];
+        if(segIDs.size()<globalVectIterator++)
+            globalVectIterator=0;
+        return retVal;
+    }
 }
 
 long logProcessor::readTmpID(long pointer)
@@ -155,30 +167,77 @@ long logProcessor::readSegmentSize(long pointer)
     else return -1;//incorrect seek
 }
 
-int logProcessor::selectSegment(long ID)//first of all we need to find segment, we're searching for by it's ID;
+long logProcessor::selectSegment(long ID)//first of all we need to find segment, we're searching for by it's ID;
                                                          //the next step is to get selected segment's Header and set pointer to it's first record;
 {
     char tmparr[SIZE_OF_SEGMENTHEADER]; // need to make select,check CRC, move logDataPointer, return smth
+    setValueLDPtr(SIZE_OF_FILEHEADER);
     long tmpDataPointer;
     if(ID==0)return -1;//wrong ID
-    segmentHeaderPointer = &segmentHeader;
-    tmpFile.seek(logDataPointer);
     tmpDataPointer = logDataPointer;
-    int tmp1 = tmpFile.bytesAvailable();
-    while(tmp1+tmpDataPointer>logDataPointer) //untill logDataPointer is lesser than file size
+    pointFileValAtLDPtr(tmpDataPointer);
+        while(tmpFile.size() > tmpDataPointer) //untill logDataPointer is lesser than file size
         {
-        //    qDebug() << logDataPointer;
         tmpFile.seek(logDataPointer);
         tmpFile.read(tmparr,sizeof(tmparr));
-        segmentHeaderPointer = (segmentHeader_t*)&tmparr;
+        segmentHeaderPointer = (segmentHeader_t*)&tmparr;//get head of segment
         segmentHeader = *segmentHeaderPointer;
-        logDataPointer+=sizeof(tmparr);
+        tmpDataPointer+=sizeof(tmparr);
+        pointFileValAtLDPtr(tmpDataPointer);
         if(ID==segmentHeader.ID)
-            return 0;
+            return ID;
         else
-            logDataPointer+=segmentHeader.size;
+            {
+                tmpDataPointer+=segmentHeader.size;
+                pointFileValAtLDPtr(tmpDataPointer);
+            }
         }
     return -2;//something wrong with segment size
+}
+
+int logProcessor::checkSegmentCRC32(long ID)
+{
+    int retval=-2;
+    if(segIDs.empty())
+        return -1;// there is still no such vector
+    for(int i = 0; i < segIDs.size(); i++ )
+    {
+        if(ID==segIDs[i])
+            retval = 0;
+
+    }
+    if(retval==-2)
+        return retval;// there is no such segment alas
+    /*now we need to check CRC32*/
+//    selectSegment(ID);
+    char tmpArr[SIZE_OF_SEGMENTHEADER];
+    selectSegment(ID);//selecting head table interpretator segment
+    //qDebug() << newLogProc->segmentHeader.size;
+    tmpFile.seek(logDataPointer-SIZE_OF_SEGMENTHEADER);
+    tmpFile.read(tmpArr,SIZE_OF_SEGMENTHEADER);
+    tmpArr[4]=0;
+    tmpArr[5]=0;
+    tmpArr[6]=0;
+    tmpArr[7]=0;
+    tmpArr[12]=0;
+    tmpArr[13]=0;
+    tmpArr[14]=0;
+    tmpArr[15]=0;
+
+    //char *tmpBuffArr = new char;
+    char tmpBuffArr[segmentHeader.size];//(char*)malloc(segmentHeader.size);
+
+     if(readSegment(tmpBuffArr,segmentHeader.size))
+     {
+         unsigned long CRCtmp = CRC32updater(tmpArr,SIZE_OF_SEGMENTHEADER,0xffffffff);
+         CRCtmp = CRC32updater(tmpBuffArr,segmentHeader.size, CRCtmp);
+         CRCtmp = CRC32updater((char*)&segmentHeader.size,4, CRCtmp);
+         CRCtmp=CRCtmp^0xffffffff;
+         //free(tmpBuffArr);
+         if(CRCtmp!=segmentHeader.CRC32)
+             return retval-1;// incorrect CRC check
+     }
+     return 0;
 }
 
 int logProcessor::checkSegmentsExistance()
@@ -192,10 +251,10 @@ int logProcessor::checkSegmentsExistance()
         int i =0;
         pointFileValAtLDPtr(SIZE_OF_FILEHEADER);
         int tmpPointer = SIZE_OF_FILEHEADER;
-        while(tmpFile.size() > logDataPointer)
+        while(tmpFile.size() > tmpPointer)
         {
-            if(!segIDs.size())
-                segIDs.append(0);
+            //if(!segIDs.size())
+            segIDs.append(0);
             segIDs[i]= readTmpID(tmpPointer);
             long tmpLength = readSegmentSize(tmpPointer);
             if(tmpLength!=-1)

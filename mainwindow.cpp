@@ -176,6 +176,7 @@ bool MainWindow::checkFileHeaderCRC()
 {
 
     newLogProc->selectLogFile(filename);
+    newLogProc->checkSegmentsExistance();
     newLogProc->readFileHeader();
     unsigned long CRCtmpFH = 0;
     newLogProc->tmpFile.seek(0);
@@ -193,6 +194,7 @@ bool MainWindow::checkFileHeaderCRC()
     for(int segCount = 0; segCount < SEG_QTY; segCount++)
     {
         long tmpID = newLogProc->setTmpID();
+        qDebug() << tmpID;
         newLogProc->selectSegment(tmpID);
 //        qDebug() << tmpID;
         newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
@@ -220,12 +222,15 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
     int tmpID= 0;
     int cycleID = 0;
     int tmpLogDataPointer =0;
-    newLogProc->checkSegmentsExistance();
+  //  newLogProc->checkSegmentsExistance();
+
     for(int i = 0; i < newLogProc->segIDs.size(); i++)
     {
         qDebug() << newLogProc->segIDs[i];
     }
-    newLogProc->tmpFile.seek(0);
+//    qDebug() << newLogProc->selectSegment(smallTableID);
+//    qDebug() << newLogProc->checkSegmentCRC32(smallTableID);
+//    newLogProc->tmpFile.seek(0);
     if(newLogProc->fileHeader.fileSize != newLogProc->tmpFile.bytesAvailable())//check file size
     {
         newMessage.setWindowTitle("Ошибка!");
@@ -233,11 +238,11 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
         newMessage.exec();
     }
 //    newLogProc->setValueLDPtr( SIZE_OF_FILEHEADER; // jump through file header
-    newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
-    newLogProc->tmpFile.seek(SIZE_OF_FILEHEADER);
+//    newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
+//    newLogProc->tmpFile.seek(SIZE_OF_FILEHEADER);
 //    char *buffArr1 = new char;
 //    buffArr1 = (char*)malloc(newLogProc->segmentHeader.size);
-    for(int segCount = 0; segCount < SEG_QTY; segCount++)
+/*    for(int segCount = 0; segCount < SEG_QTY; segCount++)
             {
                 cycleID = newLogProc->setTmpID();
                 if(cycleID==localizationTableID)
@@ -248,13 +253,22 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                 newLogProc->selectSegment(cycleID);
                 newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
             }
-    newLogProc->setValueLDPtr(tmpLogDataPointer);
-    if(checkSegmentCRC(tmpID))
+*/
+    int tmpErr = newLogProc->selectSegment(localizationTableID);
+    if(tmpErr!=0)
+    {
+
+        newMessage.setWindowTitle("Ошибка!");
+        newMessage.setText("Файл журнала регистратора поврежден."+QString(tmpErr));
+        newMessage.exec();
+    }
+ //   newLogProc->setValueLDPtr(tmpLogDataPointer);
+    if(newLogProc->selectSegment(smallTableID))
     {
         newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
         tmpID = 0;
         tmpLogDataPointer = SIZE_OF_FILEHEADER;
-        char *buffArr1 = (char*)malloc(newLogProc->segmentHeader.size);
+/*        char *buffArr1 = (char*)malloc(newLogProc->segmentHeader.size);
         newLogProc->tmpFile.seek(0);
         for(int segCount = 0; segCount < SEG_QTY; segCount++)
                 {
@@ -267,7 +281,8 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                     newLogProc->selectSegment(cycleID);
                     newLogProc->logDataPointer+=newLogProc->segmentHeader.size;
                 }
-        newLogProc->setValueLDPtr(tmpLogDataPointer);
+*/
+//        newLogProc->setValueLDPtr(tmpLogDataPointer);
         if(checkSegmentCRC(tmpID))/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
          {
 
@@ -444,7 +459,6 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
     int cycleID = 0;
     int tmpLogDataPointer =0;
     newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER); // jump through file header
-
     newLogProc->tmpFile.seek(SIZE_OF_FILEHEADER);
     //buffArr = (char*)malloc(newLogProc->segmentHeader.size);
     for(int segCount = 0; segCount < SEG_QTY; segCount++)
@@ -861,11 +875,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
 bool MainWindow::checkSegmentCRC(long segmentID)
 {
-   //newLogProc->setValueLDPtr( SIZE_OF_FILEHEADER;
-   //qDebug()<< newLogProc->logDataPointer;
     newLogProc->selectSegment(segmentID);//selecting head table interpretator segment
     qDebug() << newLogProc->segmentHeader.size;
-    //qDebug()<< newLogProc->logDataPointer;
     newLogProc->tmpFile.seek(newLogProc->logDataPointer-SIZE_OF_SEGMENTHEADER);
     newLogProc->tmpFile.read(tmpHeadArr,SIZE_OF_SEGMENTHEADER);
     tmpHeadArr[4]=0;
@@ -876,9 +887,8 @@ bool MainWindow::checkSegmentCRC(long segmentID)
     tmpHeadArr[13]=0;
     tmpHeadArr[14]=0;
     tmpHeadArr[15]=0;
-     //buffArr[newLogProc->segmentHeader.size];
-    char *tmpBuffArr = new char;
-    tmpBuffArr = (char*)malloc(newLogProc->segmentHeader.size);
+   // char *tmpBuffArr = new char;
+    char* tmpBuffArr = (char*)malloc(newLogProc->segmentHeader.size);
 
      if(newLogProc->readSegment(tmpBuffArr,newLogProc->segmentHeader.size))
      {
@@ -887,9 +897,6 @@ bool MainWindow::checkSegmentCRC(long segmentID)
          CRCtmp = newLogProc->CRC32updater((char*)&newLogProc->segmentHeader.size,4, CRCtmp);
          CRCtmp=CRCtmp^0xffffffff;
          free(tmpBuffArr);
-//         qDebug() << newLogProc->segmentHeader.ID;
-//         qDebug()<< newLogProc->segmentHeader.CRC32;
-//         qDebug() << CRCtmp;
          if(CRCtmp!=newLogProc->segmentHeader.CRC32)
          {
              qDebug() << "error here! ";

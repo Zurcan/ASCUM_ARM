@@ -39,19 +39,21 @@ private:
      */
 
     QString FileName;
+    int globalVectIterator;
 public:
     QFile tmpFile;
     logProcessor();
     qint64 logDataPointer;
     QVector <long> segIDs;
     int selectLogFile(QString filename);
-    int selectSegment(long ID);              //ID = typedCode||interpFlg;
+    long selectSegment(long ID);              //ID = typedCode||interpFlg;
     int checkSegmentsExistance();
     bool readSegment(char *buf,int size);
     bool seekRecord(long ID, int recCount);
     bool readRecord(int recCount, int Size, int savedDataPointer);
     bool CRC32checker(char *buf, int CRC, int length);
     int CRC32calculator(char *buf, long length);
+    int checkSegmentCRC32(long ID);
     unsigned long CRC32updater(char *buf, int length, unsigned long crc);
     bool readFileHeader();
     bool readTMIInterpreter(char *buf);
