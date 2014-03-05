@@ -16,7 +16,7 @@ void TMIinterpretator::setInterpretationTable(char *p, int recCount)
 
     //TInterpItem_t *TmpPointer = TInterpItemArray;
     //TmpPointer->level = *p;
-    PointerTInterpItemArray = &TInterpItemArray[0];
+//    PointerTInterpItemArray = &TInterpItemArray[0];
     PointerTInterpItemArray = (TInterpItem_t*)p;
     for(int i = 0; i<recCount; i++)
         TInterpItemArray[i]=*PointerTInterpItemArray++;

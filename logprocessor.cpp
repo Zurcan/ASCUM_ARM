@@ -185,7 +185,7 @@ long logProcessor::selectSegment(long ID)//first of all we need to find segment,
         tmpDataPointer+=sizeof(tmparr);
         pointFileValAtLDPtr(tmpDataPointer);
         if(ID==segmentHeader.ID)
-            return ID;
+            return logDataPointer;
         else
             {
                 tmpDataPointer+=segmentHeader.size;
