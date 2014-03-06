@@ -268,7 +268,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
     tmpErr = newLogProc->selectSegment(smallTableID);
     if(tmpErr==0)
     {
-        newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
+//        newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
 //        tmpID = 0;
 //        tmpLogDataPointer = SIZE_OF_FILEHEADER;
 /*        char *buffArr1 = (char*)malloc(newLogProc->segmentHeader.size);
@@ -298,6 +298,8 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                 newLogProc->readSegment(buffArr1, newLogProc->segmentHeader.size );
                 newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                 newTmiInterp->setInterpretationTable(buffArr1,newTmiInterp->interpreterRecordsCount);
+                for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
+                    qDebug() << newTmiInterp->TInterpItemArray[i].name;
                 for(int i =0; i < 6; i++)
                 {
     //                qDebug()<< newTmiInterp->interpreterRecordsCount;
@@ -503,7 +505,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
         qDebug() << newLogProc->segmentHeader.size;
 //        char *buffArr = new char;
 //        buffArr = (char *)malloc(newLogProc->segmentHeader.size);
-        char buffArr[newLogProc->segmentHeader.size];
+        char* buffArr = (char*)malloc(newLogProc->segmentHeader.size);
         newLogProc->readSegment(buffArr, newLogProc->segmentHeader.size );
             newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
             newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
@@ -583,10 +585,10 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //              newLogProc->setValueLDPtr(tmpLogDataPointer);
             long tmpErr1 = newLogProc->selectSegment(bigTableID&0x7fffffff);
             qDebug() << tmpErr1;
-            char buffArr3[newLogProc->segmentHeader.size];
-            newLogProc->readSegment(buffArr3, newLogProc->segmentHeader.size );
-                newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
-                newTmiInterp->setInterpretationTable(buffArr3,newTmiInterp->interpreterRecordsCount);
+//            char buffArr3[newLogProc->segmentHeader.size];
+//            newLogProc->readSegment(buffArr3, newLogProc->segmentHeader.size );
+//                newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
+//                newTmiInterp->setInterpretationTable(buffArr3,newTmiInterp->interpreterRecordsCount);
 
                 if(!tmpErr1)
                     {
@@ -639,8 +641,16 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                                             switch(newTmiInterp->TInterpItemArray[i].typ&0xffff)
                                             {
+                                            case 0:
+                                            {
+                                                if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
+                                                {
 
-                                            case 7 :
+                                                    timeFractExistFlag = true;
+                                                    timeFract[backIndex] = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+                                                }
+                                            }
+                                            case 34 :
                                             {
                                                 float tmpFloat, tmpMinFloat, tmpMaxFloat;
                                                 int tmpIntFloat;
@@ -662,42 +672,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 int tmpMask = newTmiInterp->TInterpItemArray[i].mask_;
                                                 tmpFloat = tmpFloat*pow(10,tmpMask);
                                                 tmpIntFloat = tmpFloat;
-                                               // tmpFloat = round(tmpDblFloat);
-                                            /*    if(newTmiInterp->TInterpItemArray[i].mask_)
-                                                {
-                                                    int drop = tmpIntFloat%(int)pow(10,newTmiInterp->TInterpItemArray[i].mask_);
-                                                    if(drop!=0)tmpIntFloat = tmpIntFloat - drop;
-                                                }*/
-                                                //tmpIntFloat =(short int)(round((double)tmpFloat));
-//                                                if(tmpFloat>0)
-//                                                {
-//                                                    if(tmpIntFloat!=0)
-//                                                    {
-//                                                        if((tmpFloat-tmpIntFloat)!=0)
-//                                                        {
-//                                                        if((tmpFloat-tmpIntFloat)>0.5)tmpIntFloat++;
-//                                                        }
-//                                                    }
-//                                                }
-//                                                if(tmpFloat<0)
-//                                                {
-//                                                    if(tmpIntFloat!=0)
-//                                                    {
-//                                                        if((tmpFloat-tmpIntFloat)!=0)
-//                                                        {
-//                                                        if(abs(tmpFloat-tmpIntFloat)>0.5)tmpIntFloat--;
-//                                                        }
-//                                                    }
-//                                                }
                                                 tmpFloat = tmpIntFloat/pow(10,tmpMask);
-                                               // if(tmpMask)//qDebug()<<(double)tmpFloat;
-                                                //if(i-2)
-                                                //int tmpInt = (int)(tmpFloat*pow(10,newTmiInterp->TInterpItemArray[i].mask_));
-                                               // tmpFloat = tmpInt;
-                                               // tmpInt = ceil(tmpInt);
-                                                //tmpFloat=(float)(tmpInt/pow(10,newTmiInterp->TInterpItemArray[i].mask_));
                                                 Y[i-2-tmpInvisibleVarDecrease][backIndex] =  tmpFloat; //round((double)tmpFloat);
-
                                                 }
                                                 else
                                                 {
@@ -732,14 +708,26 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                  }
                                                 else
                                                 {
-
-                                                    //Y[i-2][backIndex] = (int)recTime;//c
-                                                    //qDebug() << newTmiInterp->TInterpItemArray[i].level;
                                                     qDebug() << newTmiInterp->TInterpItemArray[i].name;
                                                 }
                                                       //  //qDebug() << QDateTime::fromTime_t(recTime);
                                                         break;
                                             }
+//                                            case 4:
+//                                            {
+//                                                if(newTmiInterp->TInterpItemArray[i].name=="PowOnTime")
+//                                                {
+//                                                    powOnTimeArrayExistFlag = true;
+//                                                    recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+//                                                    recTime = mktime(gmtime(&recTime));
+
+
+//                                                    powOnTimeArray[backIndex] = recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
+//                                                    qDebug() << powOnTimeArray[backIndex];
+////                                                    qDebug()  << "powOnTimeArray";
+
+//                                                }
+//                                            }
                                             case 8 :
                                             {
                                                 //tmpRecI=newTmiInterp.TInterpItemArray[l].offset;
@@ -748,17 +736,36 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                  //   flagCounter++;
                                                 //    qDebug()<<flagCounter;
                                                 //}
+                                                if(newTmiInterp->TInterpItemArray[i].name=="DateChg")
+                                                   {
+                                                            dateChangedArrExistFlag = true;
 
-                                                if(newTmiInterp->fieldFlag(&newLogProc->record[tmpRecI], &newTmiInterp->TInterpItemArray[i].mask_))
-                                                {
-                                                    Y[i-2-tmpInvisibleVarDecrease][backIndex]= 1+flagOffset; //here we forming the Y-array of flags
-                                                }
+                                                            //dateTimeChangeIndex = i;
+
+                                                            if(newTmiInterp->fieldFlag(&newLogProc->record[tmpRecI], &newTmiInterp->TInterpItemArray[i].mask_))
+                                                            {
+                                                                dateChangedArr[backIndex]= 1+flagOffset; //here we forming the Y-array of flags
+                                                            }
+                                                            else
+                                                            {
+                                                                dateChangedArr[backIndex]= 0+flagOffset;
+                                                            }
+                                                            thermoPlotMaxs[i-2-tmpInvisibleVarDecrease]=1;
+                                                            flagOffset+=2;
+                                                    }
                                                 else
-                                                {
-                                                    Y[i-2-tmpInvisibleVarDecrease][backIndex]= 0+flagOffset;
-                                                }
-                                                thermoPlotMaxs[i-2-tmpInvisibleVarDecrease]=1;
-                                                flagOffset+=2;
+                                                    {
+                                                            if(newTmiInterp->fieldFlag(&newLogProc->record[tmpRecI], &newTmiInterp->TInterpItemArray[i].mask_))
+                                                            {
+                                                                Y[i-2-tmpInvisibleVarDecrease][backIndex]= 1+flagOffset; //here we forming the Y-array of flags
+                                                            }
+                                                            else
+                                                            {
+                                                                Y[i-2-tmpInvisibleVarDecrease][backIndex]= 0+flagOffset;
+                                                            }
+                                                            thermoPlotMaxs[i-2-tmpInvisibleVarDecrease]=1;
+                                                            flagOffset+=2;
+                                                     }
                                                 break;
                                             }
                                             case 27:
@@ -799,42 +806,10 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                                                        default:
                                                     {
-                                                            if(newTmiInterp->TInterpItemArray[i].name=="PowOnTime")
-                                                            {
-                                                                powOnTimeArrayExistFlag = true;
-                                                                recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
-                                                                recTime = mktime(gmtime(&recTime));
 
-
-                                                                powOnTimeArray[backIndex] = recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
-                                                                qDebug() << powOnTimeArray[backIndex];
-            //                                                    qDebug()  << "powOnTimeArray";
-
-                                                            }
 //                                                            if()
-                                                            if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
-                                                            {
 
-                                                                timeFractExistFlag = true;
-                                                                timeFract[backIndex] = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
-                                                            }
-                                                            if(newTmiInterp->TInterpItemArray[i].name=="DateChg")
-                                                               {
-                                                                        dateChangedArrExistFlag = true;
 
-                                                                        //dateTimeChangeIndex = i;
-
-                                                                        if(newTmiInterp->fieldFlag(&newLogProc->record[tmpRecI], &newTmiInterp->TInterpItemArray[i].mask_))
-                                                                        {
-                                                                            dateChangedArr[backIndex]= 1+flagOffset; //here we forming the Y-array of flags
-                                                                        }
-                                                                        else
-                                                                        {
-                                                                            dateChangedArr[backIndex]= 0+flagOffset;
-                                                                        }
-                                                                        thermoPlotMaxs[i-2-tmpInvisibleVarDecrease]=1;
-                                                                        flagOffset+=2;
-                                                                }
                                                        // tmpField.append("Недоступно");
                                                         //qDebug() << "warning! something goes wrong!";
                                                         break;
@@ -952,13 +927,17 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
         for(int i = 1; i < sizeOfArray; i++)
         {
 //            qDebug() << QDateTime::fromTime_t(times[i]);
-            if(!dateChangedArr[i])
-            {                                                       //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
-                pointsAmount += (int)times[i]-(int)times[i-1];      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
-                qDebug() << dateChangedArr[i] << " date Changed";
+            if(dateChangedArrExistFlag)
+            {
+                if(!dateChangedArr[i])
+                {                                                       //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
+                    pointsAmount += (int)times[i]-(int)times[i-1];      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
+                    qDebug() << dateChangedArr[i] << " date Changed";
 
+                }
+                else pointsAmount++;                                    //of times[i]-times[i-1]
             }
-            else pointsAmount++;                                    //of times[i]-times[i-1]
+            else pointsAmount += (int)times[i]-(int)times[i-1];
         }
 //    }
     if(times[sizeOfArray-1]<times[0])
