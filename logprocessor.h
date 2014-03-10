@@ -64,6 +64,7 @@ public:
     bool moveBackLDPtr(); // moves value to beginning of block if true, else not moves
     bool setValueLDPtr(qint64); // sets value to logDataPointer
     bool pointFileValAtLDPtr(long);//points value to l
+    bool clearBuff();
     long setTmpID();
 //#pragma pack (push,1)
   struct segmentHeader_t{

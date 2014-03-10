@@ -69,8 +69,16 @@ bool logProcessor::pointFileValAtLDPtr(long ptrVal) //set logDataPointer to some
         return false;
 }
 
+bool logProcessor::clearBuff()
+{
+    for(int i = 0; i < sizeof(record); i++)
+        record[i]=0;
+        return true;
+}
+
 bool logProcessor::readRecord(int recCount, int Size, int savedDataPointer)   //it seems to me that I shouldn't use bytesAvailable,
 {                                                                             //but it should be size of segment... or something like this
+    clearBuff();
     int tmp1,tmp2;
     logRecordPointer = logDataPointer;
     tmpFile.seek(logDataPointer);

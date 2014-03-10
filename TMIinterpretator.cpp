@@ -43,7 +43,19 @@ long TMIinterpretator::getTMITyp(char *name)
     return 0;
 }
 
+char TMIinterpretator::fieldChar(char *fieldData)
+{
+    char *retVal;
+    retVal = ((char*)fieldData);
+    return *retVal;
+}
 
+short int TMIinterpretator::fieldShort(char *fieldData)
+{
+    short int *retVal;
+    retVal = ((short int*)fieldData);
+    return *retVal;
+}
 long TMIinterpretator::fieldInt(char *fieldData)
 {
     unsigned int *retVal;

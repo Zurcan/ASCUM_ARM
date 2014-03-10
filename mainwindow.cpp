@@ -112,8 +112,9 @@ void MainWindow::globalInits(int arrayIndexSize)// here's the place to create ve
         Y[i]=Y[i-1]+sizeOfArray;
     }
     qDebug() << arrayIndexSize << "is arrayIndexSize";
-/*    powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
-    timeFract = (char*)malloc(sizeOfArray*sizeof(char));
+    powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
+//    char timeFract[sizeOfArray];
+    timeFract = new char[sizeOfArray];
     dateChangedArr = (bool*)malloc((sizeOfArray*sizeof(bool)));
     ErrCoords = (int*)malloc(sizeOfArray*sizeof(int));
     ErrCode = (long*)malloc(sizeOfArray*sizeof(long));
@@ -121,10 +122,12 @@ void MainWindow::globalInits(int arrayIndexSize)// here's the place to create ve
     for(int i = 0; i < sizeOfArray; i++)
     {
         dateChangedArr[i] = false;
-    }*/
+    }
+
  //   QPushButton *myButton = new QPushButton;
     ui->qwtPlot_2->setContentsMargins(0,0,-1,0);
     ui->qwtPlot_2->replot();
+
 }
 
 void MainWindow::initiatePlotMarkers()
@@ -603,6 +606,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //                        globalInits(varCounter);
                         globalInits(invisibleVarsMask.size());
                       //  newTmiInterp->TInterpItemArray[0].
+
                         timeArray = (time_t*)malloc((tmpRecordCount)*sizeof(time_t));
                         int recCounter=0;
                         int recPosition=newLogProc->logDataPointer;
@@ -641,17 +645,22 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                                             switch(newTmiInterp->TInterpItemArray[i].typ&0xffff)
                                             {
+
                                             case 0:
                                             {
-                                                if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
-                                                {
+                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
+//                                                if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
+//                                                {
 
+                                                    QVariant tmpVar = backIndex;
                                                     timeFractExistFlag = true;
-                                                    timeFract[backIndex] = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
-                                                }
+                                                    timeFract[backIndex] = newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]);
+//                                                    qDebug() << newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]) << tmpVar.toString();
+//                                                }
                                             }
                                             case 34 :
                                             {
+                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
                                                 float tmpFloat, tmpMinFloat, tmpMaxFloat;
                                                 int tmpIntFloat;
                                                 tmpFloat = newTmiInterp->fieldFloat(&newLogProc->record[tmpRecI]);
@@ -689,7 +698,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             }
                                             case 10 :
                                             {
-
+                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                 recTime = mktime(gmtime(&recTime));
                                                 if(newTmiInterp->TInterpItemArray[i].name!="PowOnTime")
@@ -715,13 +724,12 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             }
 //                                            case 4:
 //                                            {
+//                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
 //                                                if(newTmiInterp->TInterpItemArray[i].name=="PowOnTime")
 //                                                {
 //                                                    powOnTimeArrayExistFlag = true;
 //                                                    recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
 //                                                    recTime = mktime(gmtime(&recTime));
-
-
 //                                                    powOnTimeArray[backIndex] = recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
 //                                                    qDebug() << powOnTimeArray[backIndex];
 ////                                                    qDebug()  << "powOnTimeArray";
@@ -736,6 +744,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                  //   flagCounter++;
                                                 //    qDebug()<<flagCounter;
                                                 //}
+                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
                                                 if(newTmiInterp->TInterpItemArray[i].name=="DateChg")
                                                    {
                                                             dateChangedArrExistFlag = true;
@@ -770,6 +779,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             }
                                             case 27:
                                             {
+//                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
                                                  tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                  bool successScanFlag=false;
 //                                                if(tmpErrVal!=tmpErrLastVal)
@@ -806,7 +816,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
                                                        default:
                                                     {
-
+                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
 //                                                            if()
 
 

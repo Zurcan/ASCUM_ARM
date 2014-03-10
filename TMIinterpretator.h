@@ -48,9 +48,10 @@ private:
     void setData(char *p);
     long fieldInt(char *fieldData);
     float fieldFloat(char *fieldData);
-
+    char fieldChar(char *fieldData);
     bool fieldFlag(char *fieldData, char *mask);
     char* fieldString(char *name);
+    short int fieldShort(char *fieldData);
     QString fieldDropDown(char *fieldData, QString name);
     //fieldTime()
     long getTMITyp(char *name);
