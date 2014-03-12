@@ -70,13 +70,13 @@
               <property name="minimumSize">
                <size>
                 <width>265</width>
-                <height>181</height>
+                <height>281</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>265</width>
-                <height>181</height>
+                <height>281</height>
                </size>
               </property>
               <property name="verticalScrollBarPolicy">
