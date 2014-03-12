@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //       WelcomeDialog wd;
 //        wd.exec();
     // initiateVideoScreens();
-     ui->setupUi(this);
+     ui->setupUi(this);//
 
     // upPlot = this->ui->qwtPlot_2;
      //this->layout()->addWidget(upPlot);
