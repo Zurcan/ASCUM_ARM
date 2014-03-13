@@ -52,6 +52,7 @@ private:
     bool fieldFlag(char *fieldData, char *mask);
     char* fieldString(char *name);
     short int fieldShort(char *fieldData);
+    double fieldDouble(char *fieldData);
     QString fieldDropDown(char *fieldData, QString name);
     //fieldTime()
     long getTMITyp(char *name);

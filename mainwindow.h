@@ -211,7 +211,7 @@ private:
     int plotRectBasicWidth;
     bool mapPlotUsed = false;
     bool rightButtonPressed = false;
-#define MAX_POINTS 100000
+#define MAX_POINTS 1000000
     bool dateChangedArrExistFlag;
     bool timeFractExistFlag;
     bool powOnTimeArrayExistFlag;

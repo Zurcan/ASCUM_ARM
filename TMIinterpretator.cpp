@@ -108,6 +108,13 @@ float TMIinterpretator::fieldFloat(char *fieldData)
 //    return null;
 }
 
+double TMIinterpretator::fieldDouble(char *fieldData)
+{
+    double *retVal;
+    retVal = ((double*)fieldData);
+    return *retVal;
+}
+
 bool TMIinterpretator::fieldFlag(char *fieldData, char *mask)
 {
     char retVal;
