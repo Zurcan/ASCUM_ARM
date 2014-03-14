@@ -277,6 +277,10 @@ private:
     int pointsQuantity;
     int lastTimeVal;
     int flagArray[24];
+    int pointerToEng1Spd=0;
+    int pointerToEng2Spd=0;
+    int pointerToSpd=0;
+    int pointerToDateChg=0;
     double thermoPlotMins[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0,0};
     double thermoPlotMaxs[24];// = {10, 100, 80, 90, 200, 210, 1500, 130, 1, 1, 1, 1,1}; //
     bool isAxisHidden[24];// ={false, false, false, false, false, false, false, false, false, false, false, false, false};
@@ -301,7 +305,7 @@ private:
     QWidget *videoScreen2;
     QMessageBox newMessage;
     NcFramelessHelper *fh1,*fh2;
-    QColor colors[23] = {Qt::darkGreen, Qt::blue, Qt::lightGray, Qt::darkGray, Qt::green, Qt::darkCyan, Qt::magenta, QColor(204,255,102,255), Qt::darkRed, Qt::darkMagenta, QColor(255,0,0,127), QColor(255,204,255,255), QColor(0,102,255,127), QColor(255,204,255,255),QColor(160,102,0,255), QColor(255,160,255,255), QColor(202,255,0,255), QColor(255,0,0,127), Qt::darkYellow, Qt::cyan, QColor(202,202,255,255), QColor(102,0,160,255), QColor(255,160,50,255)};
+    QColor colors[23] = { QColor(0,102,255,127), QColor(255,204,255,255), Qt::lightGray, Qt::darkGray, Qt::green, Qt::darkCyan,  QColor(204,255,102,255), Qt::darkRed, Qt::darkMagenta, QColor(255,0,0,127), QColor(255,204,255,255),Qt::darkGreen, Qt::magenta, Qt::blue, QColor(160,102,0,255), QColor(255,160,255,255), QColor(202,255,0,255), QColor(255,0,0,127), Qt::darkYellow, Qt::cyan, QColor(202,202,255,255), QColor(102,0,160,255), QColor(255,160,50,255)};
     QDateTime firstDateTime;
     int printLeftTimeIndex=0, printRightTimeIndex=0;
     QwtPlotCurve *errorCurve;
