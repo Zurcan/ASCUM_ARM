@@ -149,7 +149,7 @@ void MainWindow::initiatePlotMarkers()//we have to init all usable markers in th
         flagMarker[i] = new QwtPlotMarker;
         if(flagArray[i])
         {
-//            qDebug() << parLabel[i];
+            qDebug() << parLabel[i];
             flagMarker[i]->setLabel(parLabel[i]);
             flagMarker[i]->setLineStyle(QwtPlotMarker::NoLine);
             flagMarker[i]->setValue(80,getOffsetValue(i));
@@ -471,7 +471,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                     invisibleVarsMask[i] = true;
                     invisibleVarCounter++;
                 }
-                if((char)(newTmiInterp->TInterpItemArray[i].typ)==34)
+                if(((char)(newTmiInterp->TInterpItemArray[i].typ)==34)|((char)(newTmiInterp->TInterpItemArray[i].typ)==8))
                 {
                     QString tmpString,cuttenStr;
                     QVariant tmp = newTmiInterp->TInterpItemArray[i].name;
@@ -491,26 +491,30 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                             pointerToEng1Spd = i;
                         if(cuttenStr=="LAR_Engine2Speed")
                             pointerToEng2Spd = i;
-                        if(cuttenStr=="DateChg")
-                            pointerToDateChg = i;
+//                        if(cuttenStr=="DateChg")
+//                        {
+//                            qDebug() << "datechg";
+//                            pointerToDateChg = i;
+//                        }
                 }
 
             }
             varCounter = newTmiInterp->interpreterRecordsCount-2;//-invisibleVarCounter;
             ////qDebug << varCounter;
 //            initGloabalArrays(varCounter);
-            for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//            for(int i = 0 ; i < invisibleVarsMask.size(); i++)
                 //qDebug << invisibleVarsMask[i];
             for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
+                qDebug() << "interpreter records" << i;
+//                if((newTmiInterp->TInterpItemArray[i].level!=0)&&(!invisibleVarsMask.at(i)))
+//                {
 
-                if((newTmiInterp->TInterpItemArray[i].level!=0)&&(!invisibleVarsMask.at(i)))
-                {
+//                    tmpStr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+                    if((char)newTmiInterp->TInterpItemArray[i].typ==8)
+                        flagCounter++;
 
-                    tmpStr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
-                    if(newTmiInterp->TInterpItemArray[i].typ==8)flagCounter++;
-
-                }
+//                }
 
             }
 
@@ -616,6 +620,11 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 double tmpDbl;
                                                 tmpDbl = newTmiInterp->fieldDouble(&newLogProc->record[tmpRecI]);
                                                         Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = (double)tmpDbl;
+                                                        if(!index)
+                                                            thermoPlotMaxs[i/*-tmpInvisibleVarDecrease*/]=(double)tmpDbl;
+                                                        else
+                                                        if((double)tmpDbl>thermoPlotMaxs[i/*-tmpInvisibleVarDecrease*/])
+                                                            thermoPlotMaxs[i/*-tmpInvisibleVarDecrease*/]=(double)tmpDbl;
 //                                                //qDebug << tmpDbl;
                                                 break;
 /*
@@ -708,7 +717,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                  //   flagCounter++;
                                                 //    //qDebug<<flagCounter;
                                                 //}
-                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
+//                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
 
                                                 if(pointerToDateChg==i)
                                                    {
@@ -745,6 +754,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                      }
 
                                                 qDebug() << thermoPlotMaxs[i];
+//                                                qDebug() << flagOffset;
                                                 break;
                                             }
                                             case 27:
@@ -1048,13 +1058,13 @@ void MainWindow::initiateCurves()
                         else curve2[i]->setBaseline(Y[i][0]);
                         curve2[i]->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
                         curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                        curve2[i]->setAxes(QwtPlot::xBottom,12);//this one
-                        ui->qwtPlot_2->enableAxis(12,false);//and enable it
+                        curve2[i]->setAxes(QwtPlot::xBottom,0);//this one
+                        ui->qwtPlot_2->enableAxis(0,false);//and enable it
                         QPalette myPalette;
                         myPalette.setColor(QPalette::Foreground,Qt::black);
                         myPalette.setColor(QPalette::Text,Qt::black);
-                        ui->qwtPlot_2->setAxisScaleDraw(12,verticalFlagScale);
-                        ui->qwtPlot_2->setAxisScale(12, 0, flagCounter*2-1, 1);
+                        ui->qwtPlot_2->setAxisScaleDraw(0,verticalFlagScale);
+                        ui->qwtPlot_2->setAxisScale(0, 0, flagCounter*2-1, 1);
                         QwtText tmpTitle = firstDateTime.date().toString("dd.MM.yyyy");
                         QFont tmpFont;
                         tmpFont.setBold(false);
@@ -2025,14 +2035,29 @@ void MainWindow::on_pushButton_3_clicked()
     mapTimer->stop();
 }
 
-double MainWindow::getOffsetValue(int flagIndex)
+double MainWindow::getOffsetValue(int flagIndex)//this all is used to make correctly shown texts on flag curves
 {
 
     double tmpOffset;
+    int greatestFlagIndex=0;
+    int flagOffsetMax=0;
+//    qDebug() << flagIndex;
+    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+                if(!invisibleVarsMask[i])
+                {
+                    if(flagArray[i])
+                    {
+                        flagOffsetMax+=2;
+                        greatestFlagIndex = i;
+                    }
+                }
+    qDebug() << flagOffsetMax;
+    thermoPlotMaxs[0] = flagOffsetMax;
     tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
     double tmpGain;
      double tmpMax;
      double tmpMin=0;
+//     qDebug() << thermoPlotMaxs[0];
      if(thermoPlotMaxs[0]<10)
      {
          if(thermoPlotMaxs[0]<=1)
@@ -2051,7 +2076,10 @@ double MainWindow::getOffsetValue(int flagIndex)
             }
         else tmpMax = thermoPlotMaxs[0];
     }
-    tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2 -1);
+     qDebug() << tmpMin;
+     qDebug() << tmpMax;
+     qDebug() << flagCounter;
+    tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2+1);
     flagMarkerIncStep = tmpGain*2;
     tmpOffset = tmpGain/2 + tmpMin;
     flagMarkerOffsetBase = tmpOffset;
@@ -2062,6 +2090,7 @@ double MainWindow::getOffsetValue(int flagIndex)
             tmpOffset+=flagMarkerIncStep;
         }
     }
+    qDebug() << tmpOffset;
     return tmpOffset;
 }
 
