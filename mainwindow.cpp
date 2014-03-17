@@ -149,7 +149,7 @@ void MainWindow::initiatePlotMarkers()//we have to init all usable markers in th
         flagMarker[i] = new QwtPlotMarker;
         if(flagArray[i])
         {
-            qDebug() << parLabel[i];
+//            qDebug() << parLabel[i];
             flagMarker[i]->setLabel(parLabel[i]);
             flagMarker[i]->setLineStyle(QwtPlotMarker::NoLine);
             flagMarker[i]->setValue(80,getOffsetValue(i));
@@ -246,7 +246,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                     //qDebug << newTmiInterp->TInterpItemArray[i].name;
                 //qDebug << "this is size of table " << ui->tableWidget->verticalHeader()->count();
                 //qDebug << "this is size of table " << newTmiInterp->interpreterRecordsCount;
-                for(int i =1; i <7; i++)
+                for(int i =0; i <newTmiInterp->interpreterRecordsCount; i++)
                 {
                     //qDebug<< ui->tableWidget->verticalHeader()->count();
 //                    if(ui->tableWidget->verticalHeader()->count()==newTmiInterp->interpreterRecordsCount)
@@ -268,13 +268,14 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
 //                        }
                     }
 
+
                 }
                /*
                 *from here we start to processing data from small table
                 */
-                newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
-                tmpID = 0;
-                tmpLogDataPointer = SIZE_OF_FILEHEADER;
+//                newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
+//                tmpID = 0;
+//                tmpLogDataPointer = SIZE_OF_FILEHEADER;
                   if(newLogProc->selectSegment(smallTableID&0x7fffffff))
                   {
                       QVariant tmpVal = tmpErr;
@@ -282,13 +283,16 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                       newMessage.setText("Файл журнала регистратора поврежден. " + tmpVal.toString());
                       newMessage.exec();
                   }
-                  newLogProc->setValueLDPtr(tmpLogDataPointer);
+//                  newLogProc->setValueLDPtr(tmpLogDataPointer);
+//                  qDebug() << tmpLogDataPointer;
+//                  qDebug() << newLogProc->logDataPointer;
 //                    if(checkSegmentCRC(tmpID))
 //                        {
                             ////qDebug << newLogProc->logDataPointer;
                             QString tmpField = " ";
                             int tmpRecI = 0;
                             QVariant recFloat;
+
                             newLogProc->readRecord(newLogProc->segmentHeader.recordSize, newLogProc->segmentHeader.size, newLogProc->logDataPointer);
                             for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
                             {
@@ -302,6 +306,8 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                                             {
                                                 double tmpDbl;
                                                 tmpDbl = newTmiInterp->fieldDouble(&newLogProc->record[tmpRecI]);
+                                                qDebug() << newTmiInterp->TInterpItemArray[i].name;
+                                                qDebug() << tmpDbl;
                                                 QVariant tmpVal = tmpDbl;
                                                 tmpField = tmpVal.toByteArray();
                                                 //qDebug << tmpDbl;
@@ -364,7 +370,7 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                                     QTableWidgetItem *tmpItem;
                                     tmpItem = new QTableWidgetItem;
                                     tmpItem->setText(QString::fromStdString(tmpField.toStdString()));
-                                    ui->tableWidget->setItem(i, 1, tmpItem );
+                                    ui->tableWidget->setItem(i-2, 1, tmpItem );
                                 }
                                 //else; //if we
                             }
@@ -506,7 +512,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 //qDebug << invisibleVarsMask[i];
             for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
-                qDebug() << "interpreter records" << i;
+//                qDebug() << "interpreter records" << i;
 //                if((newTmiInterp->TInterpItemArray[i].level!=0)&&(!invisibleVarsMask.at(i)))
 //                {
 
@@ -554,7 +560,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         time_t lastTime;
                         int tmpRecordCount = newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                         sizeOfArray = tmpRecordCount;
-                        //qDebug << " record count: " << tmpRecordCount;
+
+                        qDebug() << " record count: " << tmpRecordCount;
                         //varCounter-=invisibleVarCounter;
 //                        globalInits(varCounter);
                         globalInits(invisibleVarsMask.size());
@@ -753,7 +760,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                             flagOffset+=2;
                                                      }
 
-                                                qDebug() << thermoPlotMaxs[i];
+//                                                qDebug() << thermoPlotMaxs[i];
 //                                                qDebug() << flagOffset;
                                                 break;
                                             }
@@ -858,6 +865,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
         this->close();
         return false;
     }
+//    qDebug() << pointsQuantity;
     return true;
 }
 
@@ -937,7 +945,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
         newMessage.exec();
         return false;
     }
-    //qDebug << QDateTime::fromTime_t(times[sizeOfArray-1]) << "begin time" << QDateTime::fromTime_t(times[0])<< "end time";
+    qDebug() << QDateTime::fromTime_t(times[sizeOfArray-1]) << "begin time" << QDateTime::fromTime_t(times[0])<< "end time";
     if(pointsAmount > MAX_POINTS)
     {
         newMessage.setWindowTitle("Ошибка!");
@@ -1014,7 +1022,7 @@ void MainWindow::initiateCurves()
     for (int i =0; i<invisibleVarsMask.size(); i++)
         if(!invisibleVarsMask[i])
            {
-            qDebug() << newTmiInterp->TInterpItemArray[i].typ;
+//            qDebug() << newTmiInterp->TInterpItemArray[i].typ;
             curve1[i] = new QwtPlotCurve;
             curve1[i]->setPen(QPen(colors[i]));
             curve1[i]->setStyle(QwtPlotCurve::Steps);
@@ -1409,8 +1417,8 @@ void MainWindow::moveMapMarker(long int globalPosition)
         }
         else
         {
-            checkBox[i]->setChecked((int)Y[i][position]%2);
-            flagMarker[i]->setValue(0.8*magnifiedVal +position,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
+            checkBox[i]->setChecked((int)Y[i][globalPosition]%2);
+            flagMarker[i]->setValue(0.8*magnifiedVal +globalPosition,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
             tmpCounter++;
         }
 
@@ -1749,7 +1757,7 @@ void MainWindow::setGlobalArrays()
             else
                 isAxisHidden[i] = true;
 
-            qDebug() << isAxisHidden[i];
+//            qDebug() << isAxisHidden[i];
     }
 
 //    for(int i = 0; i < varCounter;i++)
@@ -2051,7 +2059,7 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
                         greatestFlagIndex = i;
                     }
                 }
-    qDebug() << flagOffsetMax;
+//    qDebug() << flagOffsetMax;
     thermoPlotMaxs[0] = flagOffsetMax;
     tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
     double tmpGain;
@@ -2076,9 +2084,9 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
             }
         else tmpMax = thermoPlotMaxs[0];
     }
-     qDebug() << tmpMin;
-     qDebug() << tmpMax;
-     qDebug() << flagCounter;
+//     qDebug() << tmpMin;
+//     qDebug() << tmpMax;
+//     qDebug() << flagCounter;
     tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2+1);
     flagMarkerIncStep = tmpGain*2;
     tmpOffset = tmpGain/2 + tmpMin;
@@ -2090,7 +2098,7 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
             tmpOffset+=flagMarkerIncStep;
         }
     }
-    qDebug() << tmpOffset;
+//    qDebug() << tmpOffset;
     return tmpOffset;
 }
 
@@ -2422,14 +2430,15 @@ void MainWindow::getPointsQuantity(time_t firstTime, time_t lastTime)
 
 int MainWindow::getClosestToPositionIndex(int pos)
 {
-//    //qDebug << pos;
+//    qDebug() << pos;
 //    //qDebug << (int)endOfLogTime;
 //     //qDebug << (int) timeArray[0];
 //      //qDebug << (int)timeArray[sizeOfArray-2];
-    for (int i = 0; i < sizeOfArray; i++) //pointsQuantity - is a variable that discribes how many points should be on plot
+    for (int i = 0; i < pointsQuantity; i++) //pointsQuantity - is a variable that discribes how many points should be on plot
     {
         //qDebug << (int)((int)endOfLogTime - (int)timeArray[i]);
         if((int)timeArray[i]-(int)timeArray[0] >pos)
+
         return i-1;
 
 

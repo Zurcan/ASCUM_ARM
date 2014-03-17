@@ -70,13 +70,13 @@
               <property name="minimumSize">
                <size>
                 <width>265</width>
-                <height>281</height>
+                <height>244</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>265</width>
-                <height>281</height>
+                <height>244</height>
                </size>
               </property>
               <property name="verticalScrollBarPolicy">
@@ -85,37 +85,50 @@
               <property name="horizontalScrollBarPolicy">
                <enum>Qt::ScrollBarAlwaysOff</enum>
               </property>
+              <property name="rowCount">
+               <number>8</number>
+              </property>
               <attribute name="horizontalHeaderVisible">
                <bool>false</bool>
               </attribute>
               <row>
                <property name="text">
-                <string>Номер машины</string>
+                <string>1</string>
                </property>
               </row>
               <row>
                <property name="text">
-                <string>Время работы системы, мч</string>
+                <string>2</string>
                </property>
               </row>
               <row>
                <property name="text">
-                <string>Время работы двигателя 1, мч</string>
+                <string>3</string>
                </property>
               </row>
               <row>
                <property name="text">
-                <string>Время работы двигателя 2, мч</string>
+                <string>4</string>
                </property>
               </row>
               <row>
                <property name="text">
-                <string>Общий пробег, км</string>
+                <string>5</string>
                </property>
               </row>
               <row>
                <property name="text">
-                <string>Суточный пробег, км</string>
+                <string>6</string>
+               </property>
+              </row>
+              <row>
+               <property name="text">
+                <string>7</string>
+               </property>
+              </row>
+              <row>
+               <property name="text">
+                <string>8</string>
                </property>
               </row>
               <column>
