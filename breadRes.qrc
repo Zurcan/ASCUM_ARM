@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/new/p">
+        <file alias="openDB">res/Fasticon-Database-Data-folder.ico</file>
+        <file alias="openLog">res/Nandostudio-Rubber-Documents-folder.ico</file>
+        <file alias="Video">res/movies.png</file>
+        <file alias="print">res/Print.ico</file>
+        <file alias="closeLog">res/Nandostudio-Rubber-Folder-closed.ico</file>
+        <file alias="formIcon">res/monitor.ico</file>
+        <file alias="zoomin">res/zoomin_2752.ico</file>
+        <file alias="zoomout">res/zoomout_4510.ico</file>
+        <file alias="hp">res/hideLeftPannel_.png</file>
+        <file alias="sp">res/showLeftPannel.png</file>
+    </qresource>
+</RCC>
