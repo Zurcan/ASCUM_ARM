@@ -5,7 +5,8 @@ PowON
 PowOFF
 PowOnTime
 DateChg
-*/
+ */
+//
 QRect tmpRect;
 int errorPicker::getClosestToPosIndex(int pos) const
 {
