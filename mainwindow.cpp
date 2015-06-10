@@ -656,10 +656,11 @@ void MainWindow::initiatePlotMarkers()//we have to init all usable markers in th
     {
 
 //            //qDebug() << parLabel[i];
-        flagMarker[i] = new QwtPlotMarker;
+
         if(cArrayDetailedPlot[i].cType==MainWindow::flag)
         {
 //            //qDebug() << parLabel[i];
+            flagMarker[i] = new QwtPlotMarker;
             flagMarker[i]->setLabel(parLabel[i]);
             flagMarker[i]->setLineStyle(QwtPlotMarker::NoLine);
             flagMarker[i]->setValue(80,getOffsetValue(i));
@@ -1950,7 +1951,7 @@ void MainWindow::initCurves()
                 {
                     newCurve.cType=MainWindow::flag;
                 }
-                else cArrayDetailedPlot[i].cType = (curvetypes)0;
+                else newCurve.cType = (curvetypes)0;
         //        cArrayDetailedPlot[i].cType==
                 parLabel[i] = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);// = QString::fromLocal8Bit();
                 if(parLabel[i]=="Ошибка");
@@ -2780,7 +2781,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
     {
         index = cArrayDetailedPlot[i].axis;
-        if(cArrayDetailedPlot[index].isCurveHidden)
+        if(cArrayDetailedPlot[i].isCurveHidden)
         {
             cArrayDetailedPlot[i].curve->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
             int tmpIndex = 11;
@@ -2789,6 +2790,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
                 tmpIndex = index;
                 if(index!=20)
                 {
+
                     cArrayDetailedPlot[i].curve->setAxes(1,tmpIndex);//this one
                     ui->qwtPlot_2->enableAxis(tmpIndex,false);//and enable it
                 }
@@ -2801,7 +2803,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             ui->qwtPlot_2->replot();
             axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
          }
-        else
+        else if(cArrayDetailedPlot[i].cType==1)
         {
             cArrayDetailedPlot[i].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
             int tmpIndex = 11;
@@ -2825,7 +2827,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
         }
     }
 //    else
-//            ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[index].axis,false);
+//            ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,false);
 
 }
 
@@ -3063,8 +3065,9 @@ void MainWindow::initiateRadios()
 {
     int index;
 //    for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+    for(int i = 0; i < cArrayDetailedPlot.size(); i++)
     {
         if(cArrayDetailedPlot[i].cType==1)
         {
@@ -3140,8 +3143,9 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
     int greatestFlagIndex=0;
     int flagOffsetMax=0;
 //    //qDebug() << flagIndex;
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-                if(!invisibleVarsMask[i])
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//                if(!invisibleVarsMask[i])
+    for(int i =0; i < cArrayDetailedPlot.size(); i++)
                 {
                     if(cArrayDetailedPlot[i].cType==1)
                     {
