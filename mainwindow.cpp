@@ -651,7 +651,7 @@ void MainWindow::initiatePlotMarkers()//we have to init all usable markers in th
     verticalMapMarker->setLinePen(QPen(Qt::red,2,Qt::SolidLine));
     currentTimeMarker->setValue(0,0);
     verticalMapMarker->setValue(0,0);
-//    for(int i = 0 ; i < invisibleVarsMask.size(); i++) //here is the place where we're setting flag markers
+//    for(int i = 0 ; i < ssMask.size(); i++) //here is the place where we're setting flag markers
 //        if(!invisibleVarsMask[i])
     for(int i =0; i < cArrayDetailedPlot.size();i++)
     {
@@ -1936,6 +1936,7 @@ void MainWindow::initCurves()
         if(!invisibleVarsMask[i])
            {
             curves newCurve;
+            int lastIndex=0;
             newCurve.curve = new QwtPlotCurve;
             for(int a  = 0; a < sizeOfArray; a++)
                 newCurve.cData.append(Y[i][a]);
@@ -1950,7 +1951,7 @@ void MainWindow::initCurves()
             newCurve.isCurveHidden = true;
             if((char)newTmiInterp->TInterpItemArray[i].typ==8)
                 {
-                    newCurve.cType=MainWindow::flag;
+                    newCurve.cType=(curvetypes)1;
                 }
                 else newCurve.cType = (curvetypes)0;
         //        cArrayDetailedPlot[i].cType==
@@ -1961,6 +1962,7 @@ void MainWindow::initCurves()
                     if(newCurve.cType==MainWindow::data)//adding not flags curves
                     {
                         qDebug() << "added curve2" << i;
+
                         if((i==pointerToSpd)||(i==pointerToEng1Spd)) // adding curves to global map plot
                         {
                             newCurve.isCurveHidden = false;
@@ -1973,42 +1975,44 @@ void MainWindow::initCurves()
                         }
                         QPalette myPalette;
                         cArrayDetailedPlot.append(newCurve);
-                        cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
+                        lastIndex =cArrayDetailedPlot.size()-1;
+                        cArrayDetailedPlot[lastIndex].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
                          if(i==20)
                          {
-                            cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis-3);//this one
-                            ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis-3,true);//and enable it
-                            myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cColor);
-                            myPalette.setColor(QPalette::Text,cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cColor);
-                            ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis-3)->setPalette(myPalette);
+                            cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis-3);//this one
+                            ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis-3,true);//and enable it
+                            myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[lastIndex].cColor);
+                            myPalette.setColor(QPalette::Text,cArrayDetailedPlot[lastIndex].cColor);
+                            ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis-3)->setPalette(myPalette);
                             ui->qwtPlot_2->replot();
                          }
                          else
                          {
-                             cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis);//this one
-                             ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis,true);//and enable it
-                             myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cColor);
-                             myPalette.setColor(QPalette::Text,cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cColor);
-                             ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis)->setPalette(myPalette);
+                             cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
+                             ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis,true);//and enable it
+                             myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[lastIndex].cColor);
+                             myPalette.setColor(QPalette::Text,cArrayDetailedPlot[lastIndex].cColor);
+                             ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis)->setPalette(myPalette);
                              ui->qwtPlot_2->replot();
                          }
                     }
-                    else
+                    else if(newCurve.cType==1)
                     {
                         lastFlag = i;
                         newCurve.cType = (curvetypes)1;
                         tmpFlagCounter++;
                         cArrayDetailedPlot.append(newCurve);
-                        if((int)cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cData.at(0)%2)
-                            cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->setBaseline(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cData.at(0)-1);
+                        lastIndex =cArrayDetailedPlot.size()-1;
+                        if((int)cArrayDetailedPlot[lastIndex].cData.at(0)%2)
+                            cArrayDetailedPlot[lastIndex].curve->setBaseline(cArrayDetailedPlot[lastIndex].cData.at(0)-1);
                         else
-                            cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->setBaseline(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cData.at(0));
+                            cArrayDetailedPlot[lastIndex].curve->setBaseline(cArrayDetailedPlot[lastIndex].cData.at(0));
                         QString tmpstr;
                         tmpstr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                         tmpstr.remove(6,26);
-                        cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
-                        cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                        cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->setAxes(QwtPlot::xBottom,0);//this one
+                        cArrayDetailedPlot[lastIndex].curve->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
+                        cArrayDetailedPlot[lastIndex].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
+                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,0);//this one
                         ui->qwtPlot_2->enableAxis(0,false);//and enable it
                         QPalette myPalette;
                         myPalette.setColor(QPalette::Foreground,Qt::black);
@@ -2020,7 +2024,7 @@ void MainWindow::initCurves()
                         tmpFont.setBold(false);
                         tmpTitle.setFont(tmpFont);
                         ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, tmpTitle);
-                        ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].axis)->setPalette(myPalette);
+                        ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis)->setPalette(myPalette);
                         if(tmpstr == "PowOFF")
                         {
                             powOffIndex =i;
@@ -2486,8 +2490,9 @@ void MainWindow::moveMapMarker(long int globalPosition)
 
     int tmpCounter=0;
 //    for(int i =0; i <varCounter; i++ )
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+    for(int i =0; i < cArrayDetailedPlot.size();i++)
     {
         if(cArrayDetailedPlot[i].cType==(curvetypes)0)
         {
@@ -2505,8 +2510,9 @@ void MainWindow::moveMapMarker(long int globalPosition)
     pf->SetMapMarkerPosition(timeArray[position]);
 
 //        for(int i = 0; i<varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
+//        if(!invisibleVarsMask[i])
+    for(int i = 0; i < cArrayDetailedPlot.size(); i++)
     {
         QVariant tmp;
         if(cArrayDetailedPlot[i].cType==0)
@@ -2790,8 +2796,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             {
                 tmpIndex = index;
                 if(index!=20)
-                {
-
+               {
                     cArrayDetailedPlot[i].curve->setAxes(1,tmpIndex);//this one
                     ui->qwtPlot_2->enableAxis(tmpIndex,false);//and enable it
                 }
@@ -2802,9 +2807,9 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
                 }
             }
             ui->qwtPlot_2->replot();
-            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+            axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
          }
-        else if(cArrayDetailedPlot[i].cType==1)
+        else
         {
             cArrayDetailedPlot[i].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
             int tmpIndex = 11;
@@ -2824,7 +2829,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
 
             }
             ui->qwtPlot_2->replot();
-            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+            axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
         }
     }
 //    else
@@ -3035,20 +3040,13 @@ int MainWindow::openLog()
                     ui->actionOpen->setIcon(*tmpIcon);
                     ui->actionOpen->setToolTip("Закрыть файл журнала регистратора");
                     pf->setBaseTime(timeArray[0],firstDateTime);
-                //         installEventFilter(this);
-                //        ui->qwtPlot->setMouseTracking(true);
-                //        ui->qwtPlot_2->setMouseTracking(true);
-                //        ui->qwtPlot->canvas()->setMouseTracking(true);
-                //        ui->qwtPlot_2->canvas()->setMouseTracking(true);
-//                    if(ui->qwtPlot_2->visibleRegion().rectCount()!=0)
-//                        plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
-                       ui->qwtPlot->installEventFilter(this);
-                       ui->qwtPlot_2->installEventFilter(this);
-                       moveMapMarker(0);
-                       newLogProc->tmpFile.close();
-                       this->resize(1025,725); //to fix size of scroll area and qwt plots we need to do this
+                    ui->qwtPlot->installEventFilter(this);
+                    ui->qwtPlot_2->installEventFilter(this);
+                    moveMapMarker(0);
+                    newLogProc->tmpFile.close();
+                    this->resize(1025,725); //to fix size of scroll area and qwt plots we need to do this
                 }
-                for(int i =0; i < invisibleVarsMask.size();i++)
+                for(int i =0; i < cArrayDetailedPlot.size();i++)
                 {
                     qDebug() << "invisible var counter" << i << invisibleVarsMask.at(i);
                     qDebug() << parLabel[i];
@@ -3321,9 +3319,9 @@ double MainWindow::upPlotMagnifier(int factor)
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
     int tmpCounter=0;
 //    for(int i =0; i < varCounter; i++)
-    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
+    for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
     {
+//        int index = cArrayDetailedPlot[i].axis;
         if(cArrayDetailedPlot[i].cType==1)
         {
             flagMarker[i]->setValue(0.8*magVal +currentTimeMarker->value().x(),flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
@@ -3442,7 +3440,7 @@ void MainWindow::showAllCurves()
     //                     //qDebug << thermoPlotMaxs[0];
                      }
                 ui->qwtPlot_2->replot();
-                axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+                axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
                 cArrayDetailedPlot[i].isCurveHidden = false;
             }
          }
@@ -3471,7 +3469,7 @@ void MainWindow::showAllCurves()
                 else flagMarker[index]->detach();
 
                 ui->qwtPlot_2->replot();
-                axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
+                axisButton[i]->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
                 cArrayDetailedPlot[i].isCurveHidden  =true;
             }
          }
