@@ -274,11 +274,33 @@ private:
         QVector <double> cData;           //vasts of data
         bool cAttachable;                 //is this curve used on plot or not
         bool isCurveHidden;
+        QwtPlotMarker *flagMarker;
+        QString cName;
     }curves;                              //each struct means a curve
+    typedef struct
+    {
+        QPushButton *axisButton;
+        QCheckBox   *checkBox;
+        QwtThermo   *thermo;
+        QHBoxLayout *thermoLayout;
+        QHBoxLayout *labelLayout;
+        QLabel      *valueLabel;
+        QString     parLabel;
+        bool flagOrData;
 
+    }curveWidgets;
     QVector <curves> cArrayDetailedPlot;
     QVector <curves> cArrayGlobalMapPlot;
+    QVector <curveWidgets> cArrayCurveWidgets;
     int powOffIndex;
+//    QVector <QwtPlotMarker*> flagMarker;
+    QwtThermo *thermo[24];
+    QCheckBox *checkBox[24];
+//    QVector <QPushButton*> axisButton;
+//    QVector <QHBoxLayout*> thermoLayout;
+//    QVector <QHBoxLayout*> labelLayout;//we have to add this layout to print value of the thermo near to the label1
+//    QLabel *valueLabel[24];// here we will print value of the thermo
+//    QString parLabel[24];// = {"Скорость, км/ч", "Скорость двиг. 1, км/ч", "Скорость двиг. 2, км/ч", "Давление торм. маг. бар", "Давление торм. цил. бар", "highWayPres","Потребление топлива, л", "Флаг вперед", "Флаг назад", "ErrorHide", "ErrorRaise","parampampam","parampampampam"};
 //    QVector <long> ErrCode;
 //    QVector <QPointF> ErrCoords;
     double *ErrCoords;
@@ -372,7 +394,7 @@ private:
     double thermoPlotMins[24] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0,0};
     double thermoPlotMaxs[24];// = {10, 100, 80, 90, 200, 210, 1500, 130, 1, 1, 1, 1,1}; //
     bool isAxisHidden[24];//QVector <bool> isAxisHidden;// ={false, false, false, false, false, false, false, false, false, false, false, false, false};
-    QString parLabel[24];// = {"Скорость, км/ч", "Скорость двиг. 1, км/ч", "Скорость двиг. 2, км/ч", "Давление торм. маг. бар", "Давление торм. цил. бар", "highWayPres","Потребление топлива, л", "Флаг вперед", "Флаг назад", "ErrorHide", "ErrorRaise","parampampam","parampampampam"};
+
     //QString parLabelNew[];
     QMovie *movie;
     QPrinter *printer;
@@ -381,17 +403,13 @@ private:
 
  //   QVideoWidget *myVideo;
 //    QRadioButton *radio[24];
-    QwtThermo *thermo[24];
-    QCheckBox *checkBox[24];
-    QPushButton *axisButton[24];
+
    // QwtThermo *Thermo1,*Thermo2,*Thermo3,*Thermo4,*Thermo5,*Thermo6,*Thermo7,*Thermo8,*Thermo9,*Thermo10,*Thermo11,*Thermo12,*Thermo13;
     QMediaPlayer *videoPlayer1,*videoPlayer2;
     QHBoxLayout *videoLayout1, *videoLayout2;
     QMediaPlaylist *playlist;
     QwtPlotCanvas *canvas;
-    QVector <QHBoxLayout*> thermoLayout;
-    QVector <QHBoxLayout*> labelLayout;//we have to add this layout to print value of the thermo near to the label1
-    QLabel *valueLabel[24];// here we will print value of the thermo
+
     QWidget  *videoScreen1;
     QWidget *videoScreen2;
     QMessageBox newMessage;
@@ -402,7 +420,7 @@ private:
 //    QwtPlotCurve *errorCurve;
     QwtPlotCurve *curve1[24];
     QwtPlotCurve *curve2[24];
-    QwtPlotMarker *flagMarker[24];
+
     QwtPlotMarker *errorMarker;
     QwtPlotCurve *ErrCurve;
     double flagMarkerOffsetBase = 1.25;
