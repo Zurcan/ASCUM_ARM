@@ -57,6 +57,8 @@
 #include <QVector>
 #include <msgSys.h>
 #include <QTableWidgetItem>
+//#include <qxml.h>
+#include <QXmlStreamReader>
 //#include "secondslinearscale.h"
 //#include <qwt_a
 namespace Ui {
@@ -100,8 +102,9 @@ class MainWindow;
             else
                 currentErr = errDesc[currentpos].errors;//errorsArr[currentpos];
             hex.setNum(currentErr,16);
-            if(((errDesc[currentpos].errAddress - 4)!=0)&((errDesc[currentpos].errCoord-1<=ypos)&(errDesc[currentpos].errCoord+1>=ypos)))
-                text.setText("( установлена ошибка: "+errorDecoder(currentErr)/*hex*/+")");
+            if((errDesc[currentpos].errors!=0)&(/*(errDesc[currentpos].errCoord==ypos-1)||(errDesc[currentpos].errCoord==ypos+1)||*/(errDesc[currentpos].errCoord==ypos)))
+                text.setText(/*"( установлена ошибка: "+*/errorDecoder(currentErr)/*hex*//*+")"*/);
+            qDebug() << currentpos<<errDesc[currentpos].errCoord<<errDesc[currentpos].errors<<ypos;
 //            qDebug() << errorDecoder(currentErr) << parentWidget()->thread() << this;
 //            text.setText("bla");
             return text;
@@ -255,7 +258,12 @@ private:
     QwtPlotDirectPainter *rtPainter;
     QwtSymbol errorSym;
     QVector <double> ErrXCoords;
-    QVector <double> ErrCoordVector;
+    typedef struct
+    {
+        int code;
+        int coord;
+    }errCoordStruct;
+    QVector <errCoordStruct> ErrCoordVector;
     typedef enum
     {
         data=0,
@@ -286,12 +294,13 @@ private:
         QHBoxLayout *labelLayout;
         QLabel      *valueLabel;
         QString     parLabel;
-        bool flagOrData;
+        int widgetType; // same as curvetypes
 
     }curveWidgets;
     QVector <curves> cArrayDetailedPlot;
     QVector <curves> cArrayGlobalMapPlot;
     QVector <curveWidgets> cArrayCurveWidgets;
+    curves errorCurve;
     int powOffIndex;
 //    QVector <QwtPlotMarker*> flagMarker;
     QwtThermo *thermo[24];
