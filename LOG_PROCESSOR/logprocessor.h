@@ -22,7 +22,7 @@ private:
                                                       | /E / __ __ __ __ __    /
                                                       | /G /   record1            /   -------> segment consists of records, and there could be a plenty of records
                                                       | /M /__ __ __ __ __     /
-                  and file from segments <----| /E /   record2             /
+                          and file from segments <----| /E /   record2             /
                                                       | /N /__ __ __ __ __     /
                                                       | /T   .........                 /
                                                       | /1                           /
