@@ -904,6 +904,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //    int dateTimeChangedIndex=0;
     QString tmpMsgText;
     QString tmpMsgHint;
+    QVector <int> zeros;
+    int zeroiterator = 0;
     char *tmpType;
     if(myMsgSys->findMessage(0x88)==0x88)
         if(myMsgSys->findMessage(0x88,tmpType,&tmpMsgText, &tmpMsgHint))
@@ -944,48 +946,59 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
         char* buffArr = (char*)malloc(newLogProc->segmentHeader.size);
         newLogProc->readSegment(buffArr, newLogProc->segmentHeader.size );
             newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
+            qDebug() <<"records count!" << newTmiInterp->interpreterRecordsCount;
             newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
             for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)// creating invisibleVarsMask vector here
             {
                 invisibleVarsMask.append(false);
+                qDebug()<<"typ names"<<QString::number(newTmiInterp->TInterpItemArray[i].typ&0xffff) <<i<<newTmiInterp->TInterpItemArray[i].level<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                 if(newTmiInterp->TInterpItemArray[i].level!=0)
                 {
-                    qDebug()<<"typ names"<<QString::number(newTmiInterp->TInterpItemArray[i].typ) <<i<<newTmiInterp->TInterpItemArray[i].level<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+
                     if(newTmiInterp->TInterpItemArray[i].typ&0xffff>40)//|(newTmiInterp->TInterpItemArray[i].typ==4)|(newTmiInterp->TInterpItemArray[i].typ==27))
                     {
-
                         invisibleVarsMask[i]=true;
                         invisibleVarCounter++;
                     }
-                    if((char)(newTmiInterp->TInterpItemArray[i].typ)==4)
+                    /*else */if((char)(newTmiInterp->TInterpItemArray[i].typ)==4)
                     {
     //                        //qDebug << "+1";
                         invisibleVarsMask[i] = false;
                         invisibleVarCounter++;
-                        qDebug()<<"typ 4 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+//                        qDebug()<<"typ 4 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                     }
-                    if((char)(newTmiInterp->TInterpItemArray[i].typ)==3)//
+                    /*else */if((char)(newTmiInterp->TInterpItemArray[i].typ)==3)//
                     {
                         invisibleVarsMask[i] = false;
                         invisibleVarCounter++;
-                        qDebug()<<"typ 3 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+//                        qDebug()<<"typ 3 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                     }
-                    if((char)(newTmiInterp->TInterpItemArray[i].typ)==0)
+                    /*else */if((char)(newTmiInterp->TInterpItemArray[i].typ)==0)
                     {
     //                    //qDebug << "+2";
                         invisibleVarsMask[i] = false;
                         invisibleVarCounter++;
-                        qDebug()<<"typ 0 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+//                        qDebug()<<"typ 0 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                     }
-                    if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==10)
+                    /*else */if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==10)
                     {
     //                    //qDebug << "+2";
+
                         invisibleVarsMask[i] = true;
-                        qDebug() << "Time"<<i;
+//                        qDebug() << "Time"<<i;
                         invisibleVarCounter++;
-                        qDebug()<<"typ 10 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+//                        qDebug()<<"typ 10 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+                        int zeroCounter=0;
+                        for(int a = 0; a < sizeof(newTmiInterp->TInterpItemArray[i].name); a++)
+                        {
+                            if(newTmiInterp->TInterpItemArray[i].name[a]==0)
+                                zeroCounter++;
+                        }
+                        zeros.append(zeroCounter);
+                        invisibleVarsMask[i] = true;
+                        invisibleVarCounter++;
                     }
-                    if(((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==7))
+                    /*else */if(((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==7))
                     {
                         if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Скорость [км/ч]")
                         {
@@ -995,11 +1008,11 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         {
                             pointerToEng1Spd = i;
                         }
-                        qDebug()<<"typ 7 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+//                        qDebug()<<"typ 7 names"<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                         invisibleVarsMask[i] = false;
                         invisibleVarCounter++;
                     }
-                    if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==34)
+                    /*else */if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==34)
                     {
                         double tmpDbl;
                         if(pointerToSpd==0)
@@ -1019,7 +1032,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                          invisibleVarsMask[i] = false;
                          invisibleVarCounter++;
                     }
-                    if(/*((char)(newTmiInterp->TInterpItemArray[i].typ)==34)|*/((char)(newTmiInterp->TInterpItemArray[i].typ)==8))
+                    /*else */if(/*((char)(newTmiInterp->TInterpItemArray[i].typ)==34)|*/((char)(newTmiInterp->TInterpItemArray[i].typ)==8))
                     {
                         QString tmpString,cuttenStr;
                         QVariant tmp = newTmiInterp->TInterpItemArray[i].name;
@@ -1038,7 +1051,19 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                 pointerToEng1Spd = i;
                             if(cuttenStr=="LAR_Engine2Speed")
                                 pointerToEng2Spd = i;
+                            invisibleVarsMask[i]=false;
+                            invisibleVarCounter++;
                     }
+//                    else
+//                    {
+//                        invisibleVarsMask[i]=true;
+//                        invisibleVarCounter++;
+//                    }
+                }
+                else
+                {
+                    invisibleVarsMask[i]=true;
+                    invisibleVarCounter++;
                 }
             }
             varCounter = newTmiInterp->interpreterRecordsCount-2;//-invisibleVarCounter;
@@ -1088,6 +1113,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //            newLogProc->readSegment(buffArr3, newLogProc->segmentHeader.size );
 //                newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
 //                newTmiInterp->setInterpretationTable(buffArr3,newTmiInterp->interpreterRecordsCount);
+//            for(int b = 0; b < zeros.size(); b++)
+//                qDebug() <<"some zeros"<< zeros.at(b);
 
                 if(!tmpErr1)
                     {
@@ -1133,6 +1160,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                  tmpRecI =0;
                                  int tmpInvisibleVarDecrease=0;
 //                                 qDebug() << "recCount is " << newTmiInterp->interpreterRecordsCount;
+                                 zeroiterator = 0;
                                     for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
                                     {
                                         tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
@@ -1143,8 +1171,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             case 0:
                                             {
                                                 //qDebug << newTmiInterp->TInterpItemArray[i].name;
-//                                                if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
-//                                                {
+                                                if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
+                                                {
 
                                                     QVariant tmpVar = backIndex;
                                                     timeFractExistFlag = true;
@@ -1152,7 +1180,12 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //                                                    qDebug("%u", timeFract[backIndex]);
 //                                                    //qDebug << newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]) << tmpVar.toString();
                                                     break;
-//                                                }
+                                                }
+                                                else
+                                                {
+                                                    Y[i/*-tmpInvisibleVarDecrease*/][backIndex] =  newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]);
+                                                    break;
+                                                }
                                             }
                                             case 34 ://it's double
                                             {
@@ -1212,38 +1245,49 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 recTime = (time_t)newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                // recTime = mktime(gmtime(&recTime));
 //                                                qDebug() << QDateTime::fromTime_t(recTime);
-                                                if((newTmiInterp->TInterpItemArray[i].name!="PowOnTime")||(newTmiInterp->TInterpItemArray[i].name!="Дата/время выключения"))
+                                                if((newTmiInterp->TInterpItemArray[i].name!="PowOnTime"))
                                                 {
-                                                    qDebug() << QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
-                                                    QString tmpname;
-                                                    tmpname = newTmiInterp->TInterpItemArray[i].name;
-                                                    qDebug() << tmpname.toLocal8Bit()<< "sizeof str" << sizeof(newTmiInterp->TInterpItemArray[i].name);
-//                                                    qDebug() << QString::fromRawData((QChar*)newTmiInterp->TInterpItemArray[i].name,sizeof(newTmiInterp->TInterpItemArray[i].name));
-                                                        if(index==0)
-                                                        {
+                                                    if(zeros.at(zeroiterator)!=11)
+                                                    {
+                                                        qDebug() << QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+                                                        QString tmpname;
+                                                        tmpname = newTmiInterp->TInterpItemArray[i].name;
+                                                        qDebug() << tmpname.toLocal8Bit()<< "sizeof str" << sizeof(newTmiInterp->TInterpItemArray[i].name);
+    //                                                    for(int a = 0; a <sizeof(newTmiInterp->TInterpItemArray[i].name);a++ )
+    //                                                        qDebug() << newTmiInterp->TInterpItemArray[i].name[a]+0x20;
+    //                                                    qDebug() << QString::fromRawData((QChar*)newTmiInterp->TInterpItemArray[i].name,sizeof(newTmiInterp->TInterpItemArray[i].name));
+                                                            if(index==0)
+                                                            {
 
-                                                            lastTime = (int)recTime;
-                                                            endOfLogTime = lastTime;
-                                                        }
-                                                        if(invertedTime)
-                                                        {
-                                                            if(index==tmpRecordCount-1)
-                                                                 firstDateTime = QDateTime::fromTime_t(recTime);
-                                                        }
-                                                        else
-                                                        {
-                                                            if(index==1)
-                                                                 firstDateTime = QDateTime::fromTime_t(recTime);
-                                                        }
-
+                                                                lastTime = (int)recTime;
+                                                                endOfLogTime = lastTime;
+                                                            }
+                                                            if(invertedTime)
+                                                            {
+                                                                if(index==tmpRecordCount-1)
+                                                                     firstDateTime = QDateTime::fromTime_t(recTime);
+                                                            }
+                                                            else
+                                                            {
+                                                                if(index==1)
+                                                                     firstDateTime = QDateTime::fromTime_t(recTime);
+                                                            }
+                                                        qDebug() << QDateTime::fromTime_t(recTime);
+                                                    }
+                                                    else qDebug() << QDateTime::fromTime_t(recTime);
 //                                                        X[index] = (int)lastTime - (int)recTime;
 //                                                        qDebug() <<"some time"<< i <<recTime;
-                                                        timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
+                                                    zeroiterator++;
+                                                    if(zeroiterator>zeros.size())
+                                                        zeroiterator=0;
+                                                    timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
+
                                                  }
                                                 else
                                                 {
 //                                                    if(newTmiInterp->TInterpItemArray[i].name=="Дата/время")
                                                         timeArray[backIndex] =recTime; //qDebug << newTmiInterp->TInterpItemArray[i].name;
+
                                                 }
                                                       //  ////qDebug << QDateTime::fromTime_t(recTime);
                                                         break;
@@ -1314,6 +1358,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                             case 3:
                                             {
                                                  Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+                                                 break;
                                             }
                                             case 8 :
                                             {
@@ -1343,7 +1388,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     {
                                                     QString tmpname;
                                                     tmpname = newTmiInterp->TInterpItemArray[i].name;
-                                                    qDebug() << tmpname;
+//                                                    qDebug() << tmpname;
 
 
 //                                                    {
