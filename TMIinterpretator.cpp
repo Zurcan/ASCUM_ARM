@@ -85,6 +85,13 @@ long TMIinterpretator::fieldInt(char *fieldData)
 //    return 0xffff;
 }
 
+short int TMIinterpretator::fieldInt16(char *fieldData)
+{
+    short int *retVal;
+    retVal = ((short int*)fieldData);
+    return *retVal;
+}
+
 float TMIinterpretator::fieldFloat(char *fieldData)
 {
     float *retVal;

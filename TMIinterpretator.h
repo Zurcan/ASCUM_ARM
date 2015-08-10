@@ -47,6 +47,7 @@ private:
     void setInterpretationTable(char *p, int recCount);
     void setData(char *p);
     long fieldInt(char *fieldData);
+    short int fieldInt16(char *fieldData);
     float fieldFloat(char *fieldData);
     char fieldChar(char *fieldData);
     bool fieldFlag(char *fieldData, char *mask);
