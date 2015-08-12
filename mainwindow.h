@@ -57,10 +57,7 @@
 #include <QVector>
 #include <msgSys.h>
 #include <QTableWidgetItem>
-//#include <qxml.h>
 #include <QXmlStreamReader>
-//#include "secondslinearscale.h"
-//#include <qwt_a
 namespace Ui {
 class MainWindow;
 }
@@ -105,8 +102,6 @@ class MainWindow;
             if((errDesc[currentpos].errors!=0)&(/*(errDesc[currentpos].errCoord==ypos-1)||(errDesc[currentpos].errCoord==ypos+1)||*/(errDesc[currentpos].errCoord==ypos)))
                 text.setText(/*"( установлена ошибка: "+*/errorDecoder(currentErr)/*hex*//*+")"*/);
             qDebug() << currentpos<<errDesc[currentpos].errCoord<<errDesc[currentpos].errors<<ypos;
-//            qDebug() << errorDecoder(currentErr) << parentWidget()->thread() << this;
-//            text.setText("bla");
             return text;
         }
         void cleanBeforeClose();
@@ -165,36 +160,24 @@ public:
     time_t *timeArr;
     virtual QwtText label(double v) const
     {
-        QwtText retVal;
+       QwtText retVal;
        QDateTime upTime = QDateTime::fromTime_t(timeArr[(int)v]);
-
-
-    //QDateTime t = QDateTime::fromTime_t((int)v);
-    //return t.toString(format);
        if(v==0)
        {
-           //label.setColor(Qt::yellow);
-          // label(QwtText::setRenderFlags(Qt::AlignRight));
            retVal = upTime.toString("dd.MM.yyyy hh:mm:ss");
-           //retVal.setRenderFlags(Qt::AlignRight);
-          // retVal.setRenderFlags(Qt::AlignTrailing);
            return retVal;
        }
        else return upTime.toString(format);
     }
-
-
     private:
     const QString format;
-    //const QString firstFormat="dd MM hh:mm:ss yy";
     };
 
     class VerticalFlagScaleDraw: public QwtScaleDraw
     {
     public:
         VerticalFlagScaleDraw(int count) :  countSet(count) { }
-    //time_t *timeArr;
-    // int count;
+
     virtual QwtText label(double v) const
     {
          if(countSet < (int)v)
@@ -208,32 +191,6 @@ public:
     const int countSet;
     };
 
-//    class ShiftData: public QwtPointSeriesData
-//    {
-//    public:
-//        ShiftData( const QVector<QPointF> &samples ):
-//            //QwtPointSeriesData( samples ):
-//            m_offset( 10.0 )
-//        {
-//        }
-//        void setOffset( double off )
-//        {
-//            m_offset = off;
-//        }
-
-//        virtual QPointF sample( size_t index ) const
-//        {
-//            QPointF point = QwtPointSeriesData::sample( index );
-//            return QPointF( point.x(), point.y() + m_offset );
-//        }
-
-//        virtual QRectF boundingRect() const
-//        {
-//            return QwtPointSeriesData::boundingRect().translated( 0.0, m_offset );
-//        }
-//    private:
-//        double m_offset;
-//    };
 
 class MyPlotCurve: public QwtPlotCurve
 {
@@ -242,19 +199,12 @@ public:
 private:
     void shiftDown( QRect &rect, int offset ) const
     {
-//        QwtPlotCurve.boundingRect()
         MyPlotCurve::boundingRect().translate( 0, 2);
     }
-//   virtual void QwtPlotCurve::applyOffset(const double *xData, const double *yData, int size )
-//        {
-//            delete d_series;
-//            d_series = new QwtPointArrayData( xData, yData, size );
-//            itemChanged();
-//        }
+
 private:
     const double setOffset;
 };
-   // QwtPlot
     QwtPlotDirectPainter *rtPainter;
     QwtSymbol errorSym;
     QVector <double> ErrXCoords;
@@ -297,24 +247,21 @@ private:
         int widgetType; // same as curvetypes
 
     }curveWidgets;
+    typedef struct
+    {
+        bool invisibility;
+        int interpIndex;
+    }invisibleInterpItems; //this struct is middle layer between interitems and curves themselves
+    QVector <invisibleInterpItems> invisIntItems;
     QVector <curves> cArrayDetailedPlot;
     QVector <curves> cArrayGlobalMapPlot;
     QVector <curveWidgets> cArrayCurveWidgets;
     curves errorCurve;
     int powOffIndex;
-//    QVector <QwtPlotMarker*> flagMarker;
     QwtThermo *thermo[24];
     QCheckBox *checkBox[24];
-//    QVector <QPushButton*> axisButton;
-//    QVector <QHBoxLayout*> thermoLayout;
-//    QVector <QHBoxLayout*> labelLayout;//we have to add this layout to print value of the thermo near to the label1
-//    QLabel *valueLabel[24];// here we will print value of the thermo
-//    QString parLabel[24];// = {"Скорость, км/ч", "Скорость двиг. 1, км/ч", "Скорость двиг. 2, км/ч", "Давление торм. маг. бар", "Давление торм. цил. бар", "highWayPres","Потребление топлива, л", "Флаг вперед", "Флаг назад", "ErrorHide", "ErrorRaise","parampampam","parampampampam"};
-//    QVector <long> ErrCode;
-//    QVector <QPointF> ErrCoords;
     double *ErrCoords;
     int *ErrCode;
-//    int *ErrCodeFromErrAddArray;
     int maxErrCoord;
     int globalAddErrFlagBaseLine;
     int errCodeIndex;
@@ -326,12 +273,10 @@ private:
     bool rightButtonPressed = false;
     QString lastOpenedFileName;
     QVector <QString> errorCodes ;
-//    QVector <QString> errorCodes;
 #define MAX_POINTS 1000000
     bool dateChangedArrExistFlag;
     bool timeFractExistFlag;
     bool powOnTimeArrayExistFlag;
-//    QwtPlot upPlot;// = new QwtPlot()
     bool isOpened=false;
     bool leftButtonPressed=false;
     bool leftButtonReleased=false;
@@ -366,17 +311,12 @@ private:
    PrintForm *pf;
     QwtPlotMarker *verticalMapMarker;
     QwtPlotMarker *currentTimeMarker;
-//    QwtPlotPicker *picker;
-//    QwtPlotPicker *picker;
     errorPicker *errpicker;
     unsigned int sizeOfArray=1000;
     QString filename;
     QString openedFileName;
     char tmpHeadArr[208];
     char tmpFHPtr[40];
-//    char *buffArr;
-//    char *buffArr2;
-//    char *buffArr3;
     QString verticalHeaderName;
     TMIinterpretator *newTmiInterp;
     #define smallTableID 0x80000012
@@ -404,16 +344,11 @@ private:
     double thermoPlotMaxs[24];// = {10, 100, 80, 90, 200, 210, 1500, 130, 1, 1, 1, 1,1}; //
     bool isAxisHidden[24];//QVector <bool> isAxisHidden;// ={false, false, false, false, false, false, false, false, false, false, false, false, false};
 
-    //QString parLabelNew[];
     QMovie *movie;
     QPrinter *printer;
     logProcessor *newLogProc;
     msgSys *myMsgSys;
 
- //   QVideoWidget *myVideo;
-//    QRadioButton *radio[24];
-
-   // QwtThermo *Thermo1,*Thermo2,*Thermo3,*Thermo4,*Thermo5,*Thermo6,*Thermo7,*Thermo8,*Thermo9,*Thermo10,*Thermo11,*Thermo12,*Thermo13;
     QMediaPlayer *videoPlayer1,*videoPlayer2;
     QHBoxLayout *videoLayout1, *videoLayout2;
     QMediaPlaylist *playlist;
@@ -426,7 +361,6 @@ private:
     QColor colors[23] = { QColor(0,102,255,127), QColor(255,204,255,255), Qt::lightGray, Qt::darkGray, Qt::green, Qt::darkCyan,  QColor(204,255,102,255), Qt::darkRed, Qt::darkMagenta, QColor(255,0,0,127), QColor(255,204,255,255),Qt::darkGreen, Qt::magenta, Qt::blue, QColor(160,102,0,255), QColor(255,160,255,255), QColor(202,255,0,255), QColor(255,0,0,127), Qt::darkYellow, Qt::cyan, QColor(202,202,255,255), QColor(102,0,160,255), QColor(255,160,50,255)};
     QDateTime firstDateTime;
     int printLeftTimeIndex=0, printRightTimeIndex=0;
-//    QwtPlotCurve *errorCurve;
     QwtPlotCurve *curve1[24];
     QwtPlotCurve *curve2[24];
 
@@ -468,12 +402,10 @@ private:
     int setFilledPowerOffTime(double *X);
     int createErrCoordsCurve(double *X);
 
-    //void upPlotMoveCursor(int);
     int createErrCoordsArray();
     int openLog();
     int createErrCodeFromErrAddArray(double *X);
     int closeLog();\
-//    void terminateAll();
     int checkLogToBeClosed(QString nameOfOpenedFile); //check if new opening file is really new, if file is duplicated with old, just do nothing, if file is not exist show an error
     void resizeEvent(QResizeEvent *);
     int getClosestToPositionIndex(int);
@@ -481,18 +413,14 @@ private:
     bool isCursorPositionOnUpPlot();
     bool isCursorPositionOnDownPlot();
     int calculateCursorPlotOffset();
+    void initFlagScale();
     void getPointsQuantity(time_t firstTime,time_t lastTime);
     ~MainWindow();
 public slots:
     bool eventFilter(QObject *, QEvent *);
-//    void closeEvent(QCloseEvent *);
-   // void ::mouseMoveEvent(QMouseEvent *);
 private slots:
 
     void hideAxis();
-//    void mousePressEvent(QMouseEvent *);
-//    void mouseReleaseEvent(QMouseEvent *);
-//    void mouseMoveEvent(QMouseEvent *);
     void moveMagnifyWidget();
     void increaseMagnifyFactor();
     void decreaseMagnifyFactor();
@@ -500,7 +428,6 @@ private slots:
     void on_pushButton_clicked();
     void on_pushButton_2_clicked();
     void indexChanged();
-    //void collapseAllCurves();
     void showAllCurves();
     void on_actionOpen_triggered();
     void incrementMarkerPosition();
