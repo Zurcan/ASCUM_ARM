@@ -1976,7 +1976,8 @@ void MainWindow::initCurves()
 //                         else
 //                         {
                              cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
-                             ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis,true);//and enable it
+                             if(newCurve.cAttachable)
+                                ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis,true);//and enable it
                              myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[lastIndex].cColor);
                              myPalette.setColor(QPalette::Text,cArrayDetailedPlot[lastIndex].cColor);
                              ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis)->setPalette(myPalette);
@@ -2730,7 +2731,7 @@ void MainWindow::hideAxis()
 //        if(cArrayDetailedPlot[i].axis==index)
             indexOfCArr = index;
 //    }
-    if(cArrayDetailedPlot[index].isCurveHidden)
+    if((cArrayDetailedPlot[index].isCurveHidden)&(cArrayDetailedPlot[index].cAttachable))
     {
         cArrayDetailedPlot[index].curve->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
 //        cArrayGlobalMapPlot[index].curve->detach();
@@ -2766,6 +2767,7 @@ void MainWindow::hideAxis()
 //        cArrayGlobalMapPlot[index].curve->detach();
         int tmpIndex = 11;
         if((cArrayDetailedPlot[index].cType==0)|(cArrayDetailedPlot[index].cType==2))
+        if(cArrayDetailedPlot[index].cAttachable)
         {
 //            if(index!=20)
 //            {
@@ -2908,7 +2910,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
 
     for(int i =0; i < cArrayDetailedPlot.size(); i++)
     {
-        if(cArrayDetailedPlot[i].cType==0)
+        if((cArrayDetailedPlot[i].cType==0)&(cArrayDetailedPlot[i].cAttachable))
         {
             if(notHiddenCounter==0)
             {
@@ -2950,7 +2952,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             if(cArrayDetailedPlot[i].cAttachable)
                 cArrayDetailedPlot[i].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
             int tmpIndex = 11;
-            if(cArrayDetailedPlot[i].cType==0)
+            if((cArrayDetailedPlot[i].cType==0)&(cArrayDetailedPlot[i].cAttachable))
             {
 //                tmpIndex = i;
 //                if(i!=20)
@@ -3684,7 +3686,7 @@ void MainWindow::showAllCurves()
                     {
                         if(cArrayDetailedPlot[i].cAttachable)
                             cArrayDetailedPlot[i].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                        if((cArrayDetailedPlot[i].cType==0)||(cArrayDetailedPlot[index].cType==2))
+                        if(((cArrayDetailedPlot[i].cType==0)||(cArrayDetailedPlot[index].cType==2))&cArrayDetailedPlot[index].cAttachable)
                         {
                              if(index!=20)
                              {
