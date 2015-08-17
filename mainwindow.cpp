@@ -2574,6 +2574,7 @@ void MainWindow::moveMapMarker(long int globalPosition)
 //    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
 //        if(!invisibleVarsMask[i])
     for(int i =0; i < cArrayDetailedPlot.size();i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
 
         if(cArrayDetailedPlot[i].cType==(curvetypes)0)
@@ -2612,6 +2613,7 @@ void MainWindow::moveMapMarker(long int globalPosition)
 //    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
 //        if(!invisibleVarsMask[i])
     for(int i = 0; i < cArrayDetailedPlot.size(); i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
         QVariant tmp;
         if(cArrayDetailedPlot[i].cType==0)
@@ -2715,6 +2717,7 @@ void MainWindow::hideAxis()
     int indexOfCArr;
     QObject * tmp = sender();
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
 //        if(cArrayCurveWidgets[i].valueLabel->text()!="")
 //        {
@@ -2899,8 +2902,13 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
 //        }
     }
   qDebug() << "hiding axes again";
-    cArrayCurveWidgets[0].axisButton->click();
-    cArrayCurveWidgets[0].axisButton->click();
+  for(int i =0; i < cArrayCurveWidgets.size();i++)
+      if(cArrayCurveWidgets[i].widgetType!=-1)
+      {
+        cArrayCurveWidgets[1].axisButton->click();
+        cArrayCurveWidgets[1].axisButton->click();
+        break;
+      }
 
     for(int i =0; i < ui->qwtPlot_2->axisCnt;i++)
     {
@@ -2909,6 +2917,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
     }
 
     for(int i =0; i < cArrayDetailedPlot.size(); i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
         if((cArrayDetailedPlot[i].cType==0)&(cArrayDetailedPlot[i].cAttachable))
         {
@@ -2924,6 +2933,7 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
 
 //    qDebug() << "layout position"<<ui->verticalLayout_7->indexOf(qobject_cast<QWidget*>cArrayCurveWidgets[0].thermoLayout);
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
 //        index = cArrayDetailedPlot[i].axis;
         if(cArrayDetailedPlot[i].isCurveHidden)
@@ -3211,6 +3221,7 @@ int MainWindow::openLog()
                     this->resize(1025,725); //to fix size of scroll area and qwt plots we need to do this
                 }
                 for(int i =0; i < cArrayDetailedPlot.size();i++)
+                    if(cArrayDetailedPlot[i].cAttachable)
                 {
                     qDebug() << "invisible var counter" << i << invisIntItems[i].invisibility;//invisibleVarsMask.at(i);
                     qDebug() << cArrayCurveWidgets[i].parLabel;
@@ -3227,9 +3238,16 @@ int MainWindow::openLog()
 void MainWindow::initiateRadios()
 {
     QPalette thermoPalette;
-    int index=0, index_=0;
+    int index=0, index_=0,attachableCount=0;
     curveWidgets cWidgets;
-    for(int i = 0; i < cArrayDetailedPlot.size(); i++)
+    attachableCount = cArrayDetailedPlot.size();
+    for(int i = 0; i <cArrayDetailedPlot.size();i++ )
+        if(!cArrayDetailedPlot[i].cAttachable)
+            attachableCount--;
+//    for(int i = 0; i < attachableCount; i++)
+//        if(cArrayDetailedPlot[i].cAttachable)
+    for(int i = 0; i <cArrayDetailedPlot.size();i++ )
+        if(cArrayDetailedPlot[i].cAttachable)
     {
         cWidgets.parLabel= cArrayDetailedPlot[i].cName;// = QString::fromLocal8Bit();
         cWidgets.axisButton = new QPushButton(this);
@@ -3337,7 +3355,7 @@ void MainWindow::initiateRadios()
             {
                 cWidgets.thermo = 0;
                 cWidgets.checkBox = 0;
-                cWidgets.widgetType = 2;//means flag
+                cWidgets.widgetType = 2;//means error
                 cWidgets.valueLabel = new QLabel(this);//no flag just value
 
                 QHBoxLayout *tmplayout = new QHBoxLayout;
@@ -3369,6 +3387,15 @@ void MainWindow::initiateRadios()
                 cArrayCurveWidgets[i].thermoLayout->setSpacing(0);
             }
     }
+    else
+        {
+            cWidgets.axisButton = 0;
+            cWidgets.thermo = 0;
+            cWidgets.checkBox = 0;
+            cWidgets.widgetType = -1;//means flag
+            cWidgets.valueLabel = 0;//no value just flag
+            cArrayCurveWidgets.append(cWidgets);
+        }
     ui->checkBox->setEnabled(true);
     connect(ui->checkBox,SIGNAL(toggled(bool)),this,SLOT(showAllCurves()));
     connect(ui->pushButton_6,SIGNAL(clicked()),this,SLOT(increaseMagnifyFactor()));
@@ -3402,6 +3429,7 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
 //    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
 //                if(!invisibleVarsMask[i])
     for(int i =0; i < cArrayDetailedPlot.size(); i++)
+        if(cArrayDetailedPlot[i].cAttachable)
                 {
 //
 //                    if((char)newTmiInterp->TInterpItemArray[i].typ==8)
@@ -3501,8 +3529,7 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
 
         }
         for (int i = 0; i < cArrayDetailedPlot.size(); i++)
-//        for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-//            if(!invisibleVarsMask[i])
+        if(cArrayDetailedPlot[i].cAttachable)
         {
 
             if(cArrayDetailedPlot[i].cType==1)
@@ -3588,6 +3615,7 @@ double MainWindow::upPlotMagnifier(int factor)
 //        if(cArrayDetailedPlot[i].cType==1)
 //        {
     for(int i =0; i < cArrayDetailedPlot.size();i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
         if(cArrayDetailedPlot[i].cType==1)
         {
@@ -3678,6 +3706,7 @@ void MainWindow::showAllCurves()
 {
     int index=0;
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
+        if(cArrayDetailedPlot[i].cAttachable)
     {
         index = cArrayDetailedPlot[i].axis;
              if(ui->checkBox->checkState())

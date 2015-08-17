@@ -219,7 +219,8 @@ private:
         data=0,
         flag=1,
         error = 2,
-        fill = 3
+        fill = 3 ,
+        notavailable = -1
 
     }curvetypes;
 
