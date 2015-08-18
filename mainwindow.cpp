@@ -1259,7 +1259,17 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 }
                                                 case 3:
                                                 {
-                                                     Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
+                                                    QString tmpname;
+                                                    tmpname = newTmiInterp->TInterpItemArray[i].name;
+                                                    if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name,8)=="Субвремя")
+                                                    {
+                                                        QVariant tmpVar = backIndex;
+                                                        timeFractExistFlag = true;
+                                                        timeFract[backIndex] = newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]);
+                                                        break;
+                                                    }
+                                                    else
+                                                        Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
                                                      break;
                                                 }
                                                 case 8 :
