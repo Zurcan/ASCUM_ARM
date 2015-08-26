@@ -309,6 +309,7 @@ private:
     int globalCursorPos;
     int beforeMovePosition;
     int globalMoveFlag=false;
+    int firstFlagIndex=0;
     QPoint globalCursorPoint;
     QIcon *tmpIcon;
     QDateTime AxisLabelDate;
@@ -381,7 +382,7 @@ private:
     double flagMarkerOffsetBase = 1.25;
     double flagMarkerIncStep = 0;
     int flagCounter = 0;
-    bool invertedTime = true;
+    bool invertedTime = false;
     bool HideLeftArea;
     bool NoFileWasOpened;
    /*here are the stats of the machine*/

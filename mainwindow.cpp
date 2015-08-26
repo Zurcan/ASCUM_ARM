@@ -1045,6 +1045,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                     {
                         QString tmpString,cuttenStr;
                         QVariant tmp = newTmiInterp->TInterpItemArray[i].name;
+                        if(firstFlagIndex==0)
+                            firstFlagIndex = i;
                         tmpString = tmp.toString();
                         for(int a = 0; a < tmpString.size(); a++)
                             if((QChar)(tmpString.at(a))!=32)// searching for gaps in tmpString, if symbol isn't gap appending it to cuttenStr
@@ -1073,6 +1075,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 }
                 invisIntItems.append(invii);
             }
+
             for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
                     if((char)newTmiInterp->TInterpItemArray[i].typ==8)
@@ -1087,7 +1090,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
             tmpLogDataPointer = SIZE_OF_FILEHEADER;
             long tmpErr1 = newLogProc->selectSegment(bigTableID&0x7fffffff);
             long tmpFlags = newLogProc->getSegmentFlags();
-            if(tmpFlags&&0x00000001)
+            if(tmpFlags&&0x00000001)//very important flag
                 invertedTime = false;//first element in log is erliest
                 if(!tmpErr1)
                     {
@@ -1368,7 +1371,9 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                     recCounter++;
                                     recPosition+=newLogProc->segmentHeader.recordSize;
                         }
-                        qDebug() << "firstdatetime" << firstDateTime;
+                        qDebug() << "firstdatetime" << firstDateTime << tmpRecordCount;
+                        for(int c=0; c<tmpRecordCount;c++)
+                            qDebug()<<"timearray" <<c <<timeArray[c];
                          if(!initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount))
                         {
                             free(buffArr);
@@ -1611,7 +1616,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 
 
             pointsQuantity = pointsAmount;
-            timeScale = new TimeScaleDraw(QDateTime::fromTime_t(times[sizeOfArray-1]));
+            timeScale = new TimeScaleDraw(QDateTime::fromTime_t(times[0]));
            // if(!OldLog)
             timeScale->maxVal=pointsAmount;
 
@@ -1655,7 +1660,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 ////                    qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
 //                }
             }
-            timeScale->fillTimeVector(pointsQuantity,allPoints);
+            timeScale->fillTimeVector(pointsQuantity,times);
             for(int i =0; i < sizeOfArray; i++)
                 qDebug() <<i<<"time " <<times[i]<<allPoints[i];
             timeScale->timeArr = allPoints;
@@ -1944,7 +1949,7 @@ void MainWindow::initCurves()
     QVector <double> X1vect;
     for(int i = 0; i < sizeOfArray;i++)
         X1vect.append(X1[i]);
-    verticalFlagScale = new VerticalFlagScaleDraw(24);
+    verticalFlagScale = new VerticalFlagScaleDraw(20);
     ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
     AxisLabelDate = firstDateTime;
     lastFlag = -1;
@@ -1992,6 +1997,9 @@ void MainWindow::initCurves()
                         newCurve.flagMarker->setLabel( newCurve.cName);
                         newCurve.flagMarker->setLineStyle(QwtPlotMarker::NoLine);
                         newCurve.flagMarker->setValue(80,1);//getOffsetValue(i));
+                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
+/*                        if(i==firstFlagIndex)
+                           ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,true);*///and enable it
                     }
                 }
                 else
@@ -2065,13 +2073,13 @@ void MainWindow::initCurves()
                         cArrayDetailedPlot[lastIndex].curve->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
                         if(newCurve.cAttachable)
                             cArrayDetailedPlot[lastIndex].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,0);//this one
+                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,firstFlagIndex);//this one firstFlagIndex is index of axis where we bound all the flag curves
                         ui->qwtPlot_2->enableAxis(0,false);//and enable it
                         QPalette myPalette;
                         myPalette.setColor(QPalette::Foreground,Qt::black);
                         myPalette.setColor(QPalette::Text,Qt::black);
-                        ui->qwtPlot_2->setAxisScaleDraw(0,verticalFlagScale);
-                        ui->qwtPlot_2->setAxisScale(0, 0, flagCounter*2-1, 1);
+                        ui->qwtPlot_2->setAxisScaleDraw(firstFlagIndex,verticalFlagScale);
+                        ui->qwtPlot_2->setAxisScale(firstFlagIndex, 0, flagCounter*2-1, 1);
                         QwtText tmpTitle = firstDateTime.date().toString("dd.MM.yyyy");
                         QFont tmpFont;
                         tmpFont.setBold(false);
@@ -3350,8 +3358,9 @@ void MainWindow::initiateRadios()
                     connect(cArrayCurveWidgets[i].axisButton,SIGNAL(clicked()),this,SLOT(indexChanged()));
                     connect(cArrayCurveWidgets[i].axisButton,SIGNAL(released()),this, SLOT(hideAxis()));
                     thermoPalette.setColor(QPalette::ButtonText, cArrayDetailedPlot[i].cColor );
-                    cArrayCurveWidgets[i].thermo->setMaxValue(thermoPlotMaxs[i]);
-                    cArrayCurveWidgets[i].thermo->setMinValue(thermoPlotMins[i]);
+                    qDebug() << i<< "maxYvalue"<<cArrayDetailedPlot[i].curve->maxYValue()<<cArrayDetailedPlot[i].curve->minYValue();
+                    cArrayCurveWidgets[i].thermo->setMaxValue(cArrayDetailedPlot[i].curve->maxYValue()/*thermoPlotMaxs[i]*/);
+                    cArrayCurveWidgets[i].thermo->setMinValue(cArrayDetailedPlot[i].curve->minYValue()/*thermoPlotMins[i]*/);
                     cArrayCurveWidgets[i].thermo->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
                     cArrayCurveWidgets[i].thermo->setValue(Y[i][0]);
                     cArrayCurveWidgets[i].thermo->setMaximumHeight(70);
