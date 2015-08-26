@@ -541,6 +541,7 @@ void MainWindow::reinit()
     myMsgSys = new msgSys;
     dateChangedArrExistFlag = false;
     timeFractExistFlag = false;
+    subTimeExistFlag = false;
     powOnTimeArrayExistFlag = false;
     ErrXCoords<<QVector <double>();
     ErrCoordVector<<QVector<errCoordStruct>();
@@ -631,6 +632,7 @@ void MainWindow::globalInits(int arrayIndexSize)// here's the place to create ve
     powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
 //    char timeFract[sizeOfArray];
     timeFract = new unsigned char[sizeOfArray];
+    subTime = new unsigned int[sizeOfArray];
     dateChangedArr = (bool*)malloc((sizeOfArray*sizeof(bool)));
 //    ErrCoords = (int*)malloc(sizeOfArray*sizeof(int));
 //    ErrCode = (long*)malloc(sizeOfArray*sizeof(long));
@@ -1264,11 +1266,11 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name,8)=="Субвремя")
                                                     {
                                                         QVariant tmpVar = backIndex;
-                                                        timeFractExistFlag = true;
-                                                        timeFract[backIndex] = newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]);
-                                                        break;
+                                                        subTimeExistFlag = true;
+                                                        subTime[backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
+                                                        //break;
                                                     }
-                                                    else
+//                                                    else
                                                         Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
                                                      break;
                                                 }
@@ -1491,6 +1493,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 
     unsigned int pointsAmount=0;
     unsigned int tmpAbs=0;
+    bool increasingTimeFlag = false;
 //    if(dateChangedArrExistFlag)
 //    {
     createErrCoordsArray();
@@ -1523,7 +1526,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //                    qDebug() << "times[i-1]" << (int)times[i-1];
                     pointsAmount++;
                 }
-                else
+                else if(timeFractExistFlag)
                 {
                     tmpAbs = abs((int)times[i]-(int)times[i-1]);
                     if(tmpAbs>=MAX_POINTS)
@@ -1548,11 +1551,44 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //                    qDebug() << tmpAbs;
                     pointsAmount+=tmpAbs;
                 }
+                else if(subTimeExistFlag)
+                {
+                    tmpAbs = abs((int)times[i]-(int)times[i-1]);
+                    qDebug() << times[i];
+                    qDebug() << tmpAbs;
+                    if(tmpAbs<=MAX_POINTS)
+                    {
+                        int tmpUnabs = (int)times[i]-(int)times[i-1];
+                        qDebug() << tmpUnabs;
+                        if(tmpUnabs<0)
+                        {
+                           // times[i] = times[i-1];
+                            tmpAbs = abs(tmpUnabs);
+//                            if(subTime[i]<subTime[i-1])
+//                                subTime[i] = subTime[i-1]+1;
+                        }
+                        else if(tmpUnabs>0)
+                        {
+                            increasingTimeFlag = true;
+                            //times[i-1] = times[i];
+                            tmpAbs = abs(tmpUnabs);
+//                            if(subTime[i-1]<subTime[i])
+//                                subTime[i-1] = subTime[i]+1;
+                        }
+                        else
+                            tmpAbs=1;
+                    }
+//                    qDebug() << "times[i]" << (int)times[i];
+//                    qDebug() << "times[i-1]" << (int)times[i-1];
+//                    qDebug() << tmpAbs;
+                    pointsAmount+=tmpAbs;
+                }
 //                qDebug() << pointsAmount;
             }
 //            //qDebug() << pointsAmount;
         }
-
+        for(int i =0; i < sizeOfArray; i++)
+            qDebug() << times[i];
         qDebug() << "sizeofarray" << sizeOfArray;
         qDebug() << "pointsAmount" << pointsAmount;
         if(pointsAmount<=0)
@@ -1572,38 +1608,56 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     }
     else
     {
+
+
             pointsQuantity = pointsAmount;
-            timeScale = new TimeScaleDraw(startPoint);
+            timeScale = new TimeScaleDraw(QDateTime::fromTime_t(times[sizeOfArray-1]));
            // if(!OldLog)
-                timeScale->maxVal=pointsAmount;
+            timeScale->maxVal=pointsAmount;
 
             mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
             mapTimeScale->setLabelAlignment(Qt::AlignRight);
-            timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
+//            timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
             allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
-            allPoints[0] = times[0];
-            allPoints[pointsAmount-1] = times[sizeOfArray -1];
-            //qDebug() << sizeOfArray;
+
+
             int timeIndex = 1;
+            if(!increasingTimeFlag)
+            {
+                allPoints[0] = times[pointsAmount-1];
+                allPoints[pointsAmount-1] = times[0];
+            }
+            else
+            {
+                allPoints[0] = times[0];
+                allPoints[pointsAmount-1] = times[sizeOfArray -1];
+            }
+
 //            for(int i = 0; i < sizeOfArray; i++)
 //                qDebug() << QDateTime::fromTime_t((int)times[i]);
             for (int i = 1;  i < pointsAmount; i++)     // we create global array of time points, also adding points that are duplicated
             {
-                if((int)times[timeIndex]==(int)times[timeIndex-1])
-                {
-//                    qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
-                    allPoints[i] = allPoints[i-1];
-                }
+                if(increasingTimeFlag)
+                    allPoints[i] = times[i];
                 else
-                    allPoints[i] = allPoints[i-1]+1;
-                if((int)times[timeIndex] == allPoints[i])
-                {
-                    timeIndex++;
-//                    qDebug() << "timeIndex" << timeIndex;
-//                    qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
-                }
+                    allPoints[i] = times[pointsAmount-i];
+//                if((int)times[timeIndex]==(int)times[timeIndex-1])
+//                {
+////                    qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
+//                    allPoints[i] = allPoints[i-1];
+//                }
+//                else
+//                    allPoints[i] = allPoints[i-1]+1;
+//                if((int)times[timeIndex] == allPoints[i])
+//                {
+//                    timeIndex++;
+////                    qDebug() << "timeIndex" << timeIndex;
+////                    qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
+//                }
             }
-
+            timeScale->fillTimeVector(pointsQuantity,allPoints);
+            for(int i =0; i < sizeOfArray; i++)
+                qDebug() <<i<<"time " <<times[i]<<allPoints[i];
             timeScale->timeArr = allPoints;
             mapTimeScale->timeArr = allPoints;
              ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );

@@ -125,8 +125,10 @@ public:
         TimeScaleDraw( const QDateTime &base ):
             baseTime( base )
         {
+
         }
         time_t *timeArr;
+
         long maxVal;
         long currentIndex;
         virtual QwtText label( double v ) const
@@ -140,16 +142,23 @@ public:
                     if(!(long)v)
                         upTime = baseTime;
                     else
-                        upTime = QDateTime::fromTime_t(timeArr[(long)v]);
+                        upTime = QDateTime::fromTime_t(timeVector.at((long)v));
                 }
                 else return tmp;
+                qDebug() << upTime.time().toString()<<v;
+
             return upTime.time().toString();
+        }
+        void fillTimeVector(int size,time_t *arr)
+        {
+            for(int i=0; i < size; i++)
+                timeVector.append(arr[i]);
         }
 
 
     private:
         QDateTime baseTime;
-
+        QVector <time_t> timeVector;
     };
 
 
@@ -277,6 +286,7 @@ private:
 #define MAX_POINTS 1000000
     bool dateChangedArrExistFlag;
     bool timeFractExistFlag;
+    bool subTimeExistFlag;
     bool powOnTimeArrayExistFlag;
     bool isOpened=false;
     bool leftButtonPressed=false;
@@ -307,6 +317,7 @@ private:
    int invisibleVarCounter;
    QVector <bool> invisibleVarsMask;
    unsigned char *timeFract;
+   unsigned int *subTime;
    time_t *powOnTimeArray;
    QString tmpStr;
    PrintForm *pf;
