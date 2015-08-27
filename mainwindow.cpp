@@ -541,6 +541,7 @@ void MainWindow::reinit()
     myMsgSys = new msgSys;
     dateChangedArrExistFlag = false;
     timeFractExistFlag = false;
+    subTimeExistFlag = false;
     powOnTimeArrayExistFlag = false;
     ErrXCoords<<QVector <double>();
     ErrCoordVector<<QVector<errCoordStruct>();
@@ -631,6 +632,7 @@ void MainWindow::globalInits(int arrayIndexSize)// here's the place to create ve
     powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
 //    char timeFract[sizeOfArray];
     timeFract = new unsigned char[sizeOfArray];
+    subTime = new unsigned int[sizeOfArray];
     dateChangedArr = (bool*)malloc((sizeOfArray*sizeof(bool)));
 //    ErrCoords = (int*)malloc(sizeOfArray*sizeof(int));
 //    ErrCode = (long*)malloc(sizeOfArray*sizeof(long));
@@ -1043,6 +1045,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                     {
                         QString tmpString,cuttenStr;
                         QVariant tmp = newTmiInterp->TInterpItemArray[i].name;
+                        if(firstFlagIndex==0)
+                            firstFlagIndex = i;
                         tmpString = tmp.toString();
                         for(int a = 0; a < tmpString.size(); a++)
                             if((QChar)(tmpString.at(a))!=32)// searching for gaps in tmpString, if symbol isn't gap appending it to cuttenStr
@@ -1071,6 +1075,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                 }
                 invisIntItems.append(invii);
             }
+
             for(int i =0; i < newTmiInterp->interpreterRecordsCount; i++)
             {
                     if((char)newTmiInterp->TInterpItemArray[i].typ==8)
@@ -1085,7 +1090,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
             tmpLogDataPointer = SIZE_OF_FILEHEADER;
             long tmpErr1 = newLogProc->selectSegment(bigTableID&0x7fffffff);
             long tmpFlags = newLogProc->getSegmentFlags();
-            if(tmpFlags&&0x00000001)
+            if(tmpFlags&&0x00000001)//very important flag
                 invertedTime = false;//first element in log is erliest
                 if(!tmpErr1)
                     {
@@ -1264,11 +1269,11 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name,8)=="Субвремя")
                                                     {
                                                         QVariant tmpVar = backIndex;
-                                                        timeFractExistFlag = true;
-                                                        timeFract[backIndex] = newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]);
-                                                        break;
+                                                        subTimeExistFlag = true;
+                                                        subTime[backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
+                                                        //break;
                                                     }
-                                                    else
+//                                                    else
                                                         Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
                                                      break;
                                                 }
@@ -1366,7 +1371,9 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                     recCounter++;
                                     recPosition+=newLogProc->segmentHeader.recordSize;
                         }
-                        qDebug() << "firstdatetime" << firstDateTime;
+                        qDebug() << "firstdatetime" << firstDateTime << tmpRecordCount;
+                        for(int c=0; c<tmpRecordCount;c++)
+                            qDebug()<<"timearray" <<c <<timeArray[c];
                          if(!initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount))
                         {
                             free(buffArr);
@@ -1491,6 +1498,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 
     unsigned int pointsAmount=0;
     unsigned int tmpAbs=0;
+    bool increasingTimeFlag = false;
 //    if(dateChangedArrExistFlag)
 //    {
     createErrCoordsArray();
@@ -1523,7 +1531,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //                    qDebug() << "times[i-1]" << (int)times[i-1];
                     pointsAmount++;
                 }
-                else
+                else if(timeFractExistFlag)
                 {
                     tmpAbs = abs((int)times[i]-(int)times[i-1]);
                     if(tmpAbs>=MAX_POINTS)
@@ -1548,11 +1556,44 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //                    qDebug() << tmpAbs;
                     pointsAmount+=tmpAbs;
                 }
+                else if(subTimeExistFlag)
+                {
+                    tmpAbs = abs((int)times[i]-(int)times[i-1]);
+                    qDebug() << times[i];
+                    qDebug() << tmpAbs;
+                    if(tmpAbs<=MAX_POINTS)
+                    {
+                        int tmpUnabs = (int)times[i]-(int)times[i-1];
+                        qDebug() << tmpUnabs;
+                        if(tmpUnabs<0)
+                        {
+                           // times[i] = times[i-1];
+                            tmpAbs = abs(tmpUnabs);
+//                            if(subTime[i]<subTime[i-1])
+//                                subTime[i] = subTime[i-1]+1;
+                        }
+                        else if(tmpUnabs>0)
+                        {
+                            increasingTimeFlag = true;
+                            //times[i-1] = times[i];
+                            tmpAbs = abs(tmpUnabs);
+//                            if(subTime[i-1]<subTime[i])
+//                                subTime[i-1] = subTime[i]+1;
+                        }
+                        else
+                            tmpAbs=1;
+                    }
+//                    qDebug() << "times[i]" << (int)times[i];
+//                    qDebug() << "times[i-1]" << (int)times[i-1];
+//                    qDebug() << tmpAbs;
+                    pointsAmount+=tmpAbs;
+                }
 //                qDebug() << pointsAmount;
             }
 //            //qDebug() << pointsAmount;
         }
-
+        for(int i =0; i < sizeOfArray; i++)
+            qDebug() << times[i];
         qDebug() << "sizeofarray" << sizeOfArray;
         qDebug() << "pointsAmount" << pointsAmount;
         if(pointsAmount<=0)
@@ -1572,38 +1613,56 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     }
     else
     {
+
+
             pointsQuantity = pointsAmount;
-            timeScale = new TimeScaleDraw(startPoint);
+            timeScale = new TimeScaleDraw(QDateTime::fromTime_t(times[0]));
            // if(!OldLog)
-                timeScale->maxVal=pointsAmount;
+            timeScale->maxVal=pointsAmount;
 
             mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
             mapTimeScale->setLabelAlignment(Qt::AlignRight);
-            timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
+//            timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
             allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
-            allPoints[0] = times[0];
-            allPoints[pointsAmount-1] = times[sizeOfArray -1];
-            //qDebug() << sizeOfArray;
+
+
             int timeIndex = 1;
+            if(!increasingTimeFlag)
+            {
+                allPoints[0] = times[pointsAmount-1];
+                allPoints[pointsAmount-1] = times[0];
+            }
+            else
+            {
+                allPoints[0] = times[0];
+                allPoints[pointsAmount-1] = times[sizeOfArray -1];
+            }
+
 //            for(int i = 0; i < sizeOfArray; i++)
 //                qDebug() << QDateTime::fromTime_t((int)times[i]);
             for (int i = 1;  i < pointsAmount; i++)     // we create global array of time points, also adding points that are duplicated
             {
-                if((int)times[timeIndex]==(int)times[timeIndex-1])
-                {
-//                    qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
-                    allPoints[i] = allPoints[i-1];
-                }
+                if(increasingTimeFlag)
+                    allPoints[i] = times[i];
                 else
-                    allPoints[i] = allPoints[i-1]+1;
-                if((int)times[timeIndex] == allPoints[i])
-                {
-                    timeIndex++;
-//                    qDebug() << "timeIndex" << timeIndex;
-//                    qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
-                }
+                    allPoints[i] = times[pointsAmount-i];
+//                if((int)times[timeIndex]==(int)times[timeIndex-1])
+//                {
+////                    qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
+//                    allPoints[i] = allPoints[i-1];
+//                }
+//                else
+//                    allPoints[i] = allPoints[i-1]+1;
+//                if((int)times[timeIndex] == allPoints[i])
+//                {
+//                    timeIndex++;
+////                    qDebug() << "timeIndex" << timeIndex;
+////                    qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
+//                }
             }
-
+            timeScale->fillTimeVector(pointsQuantity,times);
+            for(int i =0; i < sizeOfArray; i++)
+                qDebug() <<i<<"time " <<times[i]<<allPoints[i];
             timeScale->timeArr = allPoints;
             mapTimeScale->timeArr = allPoints;
              ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
@@ -1890,7 +1949,7 @@ void MainWindow::initCurves()
     QVector <double> X1vect;
     for(int i = 0; i < sizeOfArray;i++)
         X1vect.append(X1[i]);
-    verticalFlagScale = new VerticalFlagScaleDraw(24);
+    verticalFlagScale = new VerticalFlagScaleDraw(20);
     ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
     AxisLabelDate = firstDateTime;
     lastFlag = -1;
@@ -1938,6 +1997,9 @@ void MainWindow::initCurves()
                         newCurve.flagMarker->setLabel( newCurve.cName);
                         newCurve.flagMarker->setLineStyle(QwtPlotMarker::NoLine);
                         newCurve.flagMarker->setValue(80,1);//getOffsetValue(i));
+                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
+/*                        if(i==firstFlagIndex)
+                           ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,true);*///and enable it
                     }
                 }
                 else
@@ -2011,13 +2073,13 @@ void MainWindow::initCurves()
                         cArrayDetailedPlot[lastIndex].curve->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
                         if(newCurve.cAttachable)
                             cArrayDetailedPlot[lastIndex].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,0);//this one
+                        cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,firstFlagIndex);//this one firstFlagIndex is index of axis where we bound all the flag curves
                         ui->qwtPlot_2->enableAxis(0,false);//and enable it
                         QPalette myPalette;
                         myPalette.setColor(QPalette::Foreground,Qt::black);
                         myPalette.setColor(QPalette::Text,Qt::black);
-                        ui->qwtPlot_2->setAxisScaleDraw(0,verticalFlagScale);
-                        ui->qwtPlot_2->setAxisScale(0, 0, flagCounter*2-1, 1);
+                        ui->qwtPlot_2->setAxisScaleDraw(firstFlagIndex,verticalFlagScale);
+                        ui->qwtPlot_2->setAxisScale(firstFlagIndex, 0, flagCounter*2-1, 1);
                         QwtText tmpTitle = firstDateTime.date().toString("dd.MM.yyyy");
                         QFont tmpFont;
                         tmpFont.setBold(false);
@@ -3296,8 +3358,9 @@ void MainWindow::initiateRadios()
                     connect(cArrayCurveWidgets[i].axisButton,SIGNAL(clicked()),this,SLOT(indexChanged()));
                     connect(cArrayCurveWidgets[i].axisButton,SIGNAL(released()),this, SLOT(hideAxis()));
                     thermoPalette.setColor(QPalette::ButtonText, cArrayDetailedPlot[i].cColor );
-                    cArrayCurveWidgets[i].thermo->setMaxValue(thermoPlotMaxs[i]);
-                    cArrayCurveWidgets[i].thermo->setMinValue(thermoPlotMins[i]);
+                    qDebug() << i<< "maxYvalue"<<cArrayDetailedPlot[i].curve->maxYValue()<<cArrayDetailedPlot[i].curve->minYValue();
+                    cArrayCurveWidgets[i].thermo->setMaxValue(cArrayDetailedPlot[i].curve->maxYValue()/*thermoPlotMaxs[i]*/);
+                    cArrayCurveWidgets[i].thermo->setMinValue(cArrayDetailedPlot[i].curve->minYValue()/*thermoPlotMins[i]*/);
                     cArrayCurveWidgets[i].thermo->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
                     cArrayCurveWidgets[i].thermo->setValue(Y[i][0]);
                     cArrayCurveWidgets[i].thermo->setMaximumHeight(70);
