@@ -12,10 +12,8 @@ QRect tmpRect;
 int errorPicker::getClosestToPosIndex(int pos) const
 {
     int incval = 0;
-//    qDebug() << pos;
     for (int i = 0;  i < sizeOfArr; i++) //pointsQuantity - is a variable that discribes how many points should be on plot
     {
-        //qDebug << (int)((int)endOfLogTime - (int)timeArray[i]);
         if(i!=0)
         {
             if(errDesc[i].time==errDesc[i-1].time)
@@ -27,25 +25,17 @@ int errorPicker::getClosestToPosIndex(int pos) const
             {
                 for(int j = i; j > 0; j--)
                 {
-
                     if(errDesc[j].time- (int)errDesc[0].time  <= pos-incval)
                     {
-//                        qDebug()<<j;
                         return j;
                     }
                     if(errDesc[j].time==errDesc[j-1].time)
                         incval--;
-//                    qDebug() << incval;
                 }
             }
             else return i-1;
-//                        qDebug() << (int)allPoints[pos]-(int)allPoints[0] << "allpointsArr";
-
-//                        qDebug() << (int)timeArray[i] - (int)timeArray[0] << "timearr";
-            //            return i-1;
         }
     }
-    qDebug() << "-1?";
     return -1;
 }
 
@@ -486,6 +476,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     OldLog = false;
+    globalMagnifyFactor=100;
+    mapTimerDelay = 1000;
+    firstFlagIndex = 0;
+    globalMoveFlag=false;
+    globalMagVal=100;
+    globalSavedCursorMove=0;
+    globalMagnifyBaseVal = 148;
+    isOpened=false;
+    leftButtonPressed=false;
+    mapPlotUsed = false;
+    rightButtonPressed = false;
     ui->setupUi(this);//
     ui->tableWidget->hide();
     pf = new PrintForm(this);
@@ -530,8 +531,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->pushButton_2->setVisible(false);
     ui->pushButton_3->setVisible(false);
     ui->pushButton_4->setVisible(false);
-
-//    qDebug() << ui->tableWidget->verticalHeader()->count();
 }
 
 void MainWindow::reinit()
@@ -545,15 +544,11 @@ void MainWindow::reinit()
     powOnTimeArrayExistFlag = false;
     ErrXCoords<<QVector <double>();
     ErrCoordVector<<QVector<errCoordStruct>();
-//    ErrCode <<QVector <long>();
-//    ErrCoords<< QVector <QPointF>();
     invisIntItems<<QVector <invisibleInterpItems>();
-
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-//    qDebug() << ui->qwtPlot_2->geometry().x();
     if((ui->qwtPlot_2->geometry().x()>18)&(ui->qwtPlot_2->geometry().x()<312))
     {
             QRect tmpRect = ui->qwtPlot_2->geometry();
@@ -610,32 +605,21 @@ int MainWindow::checkLogToBeClosed(QString nameOfOpenedFile)
 
 void MainWindow::openNewMainWindow()
 {
-
   closeLog();
-//  newWin = new MainWindow();
-//  newWin->show();
-
-//  openLog();
-
 }
 
 void MainWindow::globalInits(int arrayIndexSize)// here's the place to create vector of points+
 {
-
     X = (double*)malloc((arrayIndexSize+1)*sizeOfArray*sizeof(double));
     Y[0]=X+sizeOfArray;
     for(int i =1; i <arrayIndexSize+1; i++)
     {
         Y[i]=Y[i-1]+sizeOfArray;
     }
-    //qDebug << arrayIndexSize << "is arrayIndexSize";
     powOnTimeArray = (time_t*)malloc(sizeOfArray*sizeof(time_t));
-//    char timeFract[sizeOfArray];
     timeFract = new unsigned char[sizeOfArray];
     subTime = new unsigned int[sizeOfArray];
     dateChangedArr = (bool*)malloc((sizeOfArray*sizeof(bool)));
-//    ErrCoords = (int*)malloc(sizeOfArray*sizeof(int));
-//    ErrCode = (long*)malloc(sizeOfArray*sizeof(long));
     for(int i = 0; i < sizeOfArray; i++)
     {
         dateChangedArr[i] = false;
@@ -655,9 +639,6 @@ void MainWindow::initiatePlotMarkers()//we have to init all usable markers in th
     verticalMapMarker->setLinePen(QPen(Qt::red,2,Qt::SolidLine));
     currentTimeMarker->setValue(0,0);
     verticalMapMarker->setValue(0,0);
-//    for(int i = 0 ; i < ssMask.size(); i++) //here is the place where we're setting flag markers
-//        if(!invisibleVarsMask[i])
-
     currentTimeMarker->attach(ui->qwtPlot_2);
     verticalMapMarker->attach(ui->qwtPlot);
 }
@@ -666,7 +647,6 @@ bool MainWindow::checkFileHeaderCRC()
 {
     newLogProc->selectLogFile(filename);
     int tmpSegCount = newLogProc->getSegmentsCount();
-    qDebug() << "segments count" << tmpSegCount;
     newLogProc->checkSegmentsExistance();
     newLogProc->readFileHeader();
     unsigned long CRCtmpFH = 0;
@@ -703,12 +683,10 @@ bool MainWindow::checkFileHeaderCRC()
 
 void MainWindow::readHeadTableData()//here we read head table - its header and its data
 {
-//    int tmpID= 0;
-//    int tmpLogDataPointer =0;
     int tmpErr = 0;
     for(int i = 0; i < newLogProc->segIDs.size(); i++)
     {
-        qDebug() << newLogProc->segIDs[i];
+
     }
     if(newLogProc->fileHeader.fileSize != newLogProc->tmpFile.size())//check file size
     {
@@ -719,7 +697,6 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
     if(!OldLog)
     {
         tmpErr = newLogProc->selectSegment(localizationTableID);
-        qDebug() << "flags" <<newLogProc->getSegmentFlags();
         char tmpBuff[newLogProc->segmentHeader.size];
         newLogProc->readSegment(tmpBuff, sizeof(tmpBuff));
         myMsgSys->parseMessages(tmpBuff);
@@ -732,7 +709,6 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
         }
     }
     tmpErr = newLogProc->selectSegment(smallTableID);
-     qDebug() << ui->tableWidget->verticalHeader()->count();
     if(tmpErr==0)
     {
         ui->tableWidget->show();
@@ -860,18 +836,17 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
     tmpErr = newLogProc->selectSegment(camOffsetID);//now entering camoffset segment
     if(tmpErr==0)
     {
-        qDebug() << "cam offsets are";
         char buffArr1[newLogProc->segmentHeader.size];
                 newLogProc->readSegment(buffArr1, newLogProc->segmentHeader.size );
                 newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                 newTmiInterp->setInterpretationTable(buffArr1,newTmiInterp->interpreterRecordsCount);
-                for(int i =0; i <newTmiInterp->interpreterRecordsCount; i++)
-                {
-                    if(newTmiInterp->TInterpItemArray[i].level!=0)
-                    {
-                        qDebug() << QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
-                    }
-                }
+//                for(int i =0; i <newTmiInterp->interpreterRecordsCount; i++)
+//                {
+//                    if(newTmiInterp->TInterpItemArray[i].level!=0)
+//                    {
+
+//                    }
+//                }
                /*
                 *from here we start to processing data from camOffsets
                 */
@@ -882,17 +857,15 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                       newMessage.setText("Файл журнала регистратора поврежден. " + tmpVal.toString());
                       newMessage.exec();
                   }
-//                  QString tmpField = " ";
                   int tmpRecI = 0;
-//                  QVariant recFloat;
                   newLogProc->readRecord(newLogProc->segmentHeader.recordSize, newLogProc->segmentHeader.size, newLogProc->logDataPointer);
                   for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
                   {
                       tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
-                      {
-                          long tmpVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
-                          qDebug() << tmpVal;
-                      }
+//                      {
+//                          long tmpVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
+//                          //qDebug() << tmpVal;
+//                      }
                   }
     }
 
@@ -904,10 +877,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 {
     int tmpID= 0;
     double flagOffset=0;
-//    int cycleID = 0;
     int tmpLogDataPointer =0;
     long tmpErr = newLogProc->selectSegment(bigTableID);//at first we have to read interpreter of bigTable
-//    int dateTimeChangedIndex=0;
     QString tmpMsgText;
     QString tmpMsgHint;
     QVector <int> zeros;
@@ -916,9 +887,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
     if(myMsgSys->findMessage(0x88)==0x88)
         if(myMsgSys->findMessage(0x88,tmpType,&tmpMsgText, &tmpMsgHint))
         {
-            qDebug() << tmpType;
-            qDebug() << tmpMsgText;
-            qDebug() << tmpMsgHint;
+
         }
     if(tmpErr==0)/* if segment is chosen then lets parse it and don't forget that firstly we get it header also segment with ID begins from 0x8 - is only data interpreter */
       {
@@ -952,18 +921,15 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
         char* buffArr = (char*)malloc(newLogProc->segmentHeader.size);
         newLogProc->readSegment(buffArr, newLogProc->segmentHeader.size );
             newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
-            qDebug() <<"records count!" << newTmiInterp->interpreterRecordsCount;
+            //qDebug() <<"records count!" << newTmiInterp->interpreterRecordsCount;
             newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
             int ii=0;
             invisibleInterpItems invii;
-            pointerToSpd = 5;
+            pointerToSpd = 0;
             for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)// creating invisibleVarsMask vector here
             {
-
-                qDebug()<<"typ names"<<QString::number(newTmiInterp->TInterpItemArray[i].typ&0xffff) <<i<<QString::number(newTmiInterp->TInterpItemArray[i].level)<<QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                 invii.invisibility = true;
                 invii.interpIndex = i;
-//                invisIntItems.append(false,i);
                 if((newTmiInterp->TInterpItemArray[i].level==1)||(newTmiInterp->TInterpItemArray[i].level==2))
                 {
 //                    invisibleVarsMask.append(false);
@@ -973,21 +939,31 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 //                        invii.invisibility = true;
 ////                        invisibleVarCounter++;
 //                    }
+
                     if((char)(newTmiInterp->TInterpItemArray[i].typ)==4)
                     {
 //                        invisibleVarsMask[ii] = false;
+
+                        if(pointerToSpd==0)
+                            pointerToSpd = i;
                         invii.invisibility = false;
 //                        invisibleVarCounter++;
                     }
                     else if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==3)//
                     {
 //                        invisibleVarsMask[ii] = false;
+
+                        if(pointerToSpd==0)
+                            pointerToSpd = i;
                         invii.invisibility = false;
 //                        invisibleVarCounter++;
                     }
                     else if((char)(newTmiInterp->TInterpItemArray[i].typ)==0)
                     {
 //                        invisibleVarsMask[ii] = false;
+
+                        if(pointerToSpd==0)
+                            pointerToSpd = i;
                         invii.invisibility = false;
 //                        invisibleVarCounter++;
                     }
@@ -1007,15 +983,16 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                     }
                     else if(((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==7))
                     {
-                        if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Скорость [км/ч]")
-                        {
+//                        if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Скорость [км/ч]")
+//                        {
+                         if(pointerToSpd==0)
                             pointerToSpd = i;
-                        }
-                        else if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Двигатель.обороты [об/мин]")
-                        {
-                            pointerToEng1Spd = i;
-                        }
-                        pointerToSpd = i;
+//                        }
+//                        else if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Двигатель.обороты [об/мин]")
+//                        {
+//                            pointerToEng1Spd = i;
+//                        }
+//                        pointerToSpd = i;
 //                        invisibleVarsMask[ii] = false;
                         invii.invisibility = false;
 //                        invisibleVarCounter++;
@@ -1202,10 +1179,10 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     {
                                                         if(zeros.at(zeroiterator)!=11)
                                                         {
-                                                            qDebug() << QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
+                                                            //qDebug() << QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                                                             QString tmpname;
                                                             tmpname = newTmiInterp->TInterpItemArray[i].name;
-                                                            qDebug() << tmpname.toLocal8Bit()<< "sizeof str" << sizeof(newTmiInterp->TInterpItemArray[i].name);
+                                                            //qDebug() << tmpname.toLocal8Bit()<< "sizeof str" << sizeof(newTmiInterp->TInterpItemArray[i].name);
                                                                 if(index==0)
                                                                 {
 
@@ -1222,10 +1199,10 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                                     if(index==1)
                                                                          firstDateTime = QDateTime::fromTime_t(recTime);
                                                                 }
-                                                            qDebug() << QDateTime::fromTime_t(recTime);
+                                                            //qDebug() << QDateTime::fromTime_t(recTime);
                                                         }
                                                         else
-                                                            qDebug() << QDateTime::fromTime_t(recTime);
+                                                            //qDebug() << QDateTime::fromTime_t(recTime);
                                                         zeroiterator++;
                                                         if(zeroiterator>zeros.size())
                                                             zeroiterator=0;
@@ -1338,7 +1315,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 {
                                                      tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                      bool successScanFlag=false;
-                                                     qDebug() << "this is error CODE";
+                                                     //qDebug() << "this is error CODE";
                                                      for(int a = backIndex; a < tmpRecordCount; a++)
                                                      {
                                                          if(!successScanFlag)
@@ -1353,10 +1330,10 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                      if(!successScanFlag)
                                                          ErrCoords[backIndex] = CoordErrVal++;
                                                      ErrCode[backIndex]= tmpErrVal;
-                                                     qDebug() << "errcode"<<ErrCode[backIndex];
+                                                     //qDebug() << "errcode"<<ErrCode[backIndex];
                                                      tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                      tmpErrLastVal = tmpErrVal;
-                                                     qDebug() << tmpErrVal<<" these are tmpErrVals of error";
+                                                     //qDebug() << tmpErrVal<<" these are tmpErrVals of error";
                                                      break;
                                                  }
                                                  default:
@@ -1371,14 +1348,14 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                     recCounter++;
                                     recPosition+=newLogProc->segmentHeader.recordSize;
                         }
-                        qDebug() << "firstdatetime" << firstDateTime << tmpRecordCount;
+                        //qDebug() << "firstdatetime" << firstDateTime << tmpRecordCount;
                         for(int c=0; c<tmpRecordCount;c++)
-                            qDebug()<<"timearray" <<c <<timeArray[c];
+                            //qDebug()<<"timearray" <<c <<timeArray[c];
                          if(!initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount))
                         {
                             free(buffArr);
                             isOpened=false;
-                            qDebug() << "wrong";
+                            //qDebug() << "wrong";
                             openNewMainWindow();
                             return false;
                         }
@@ -1415,7 +1392,7 @@ int MainWindow::createErrCoordsArray()
             else
             {
                 ErrCoords[0] = 0;
-                qDebug() << "zero is set";
+                //qDebug() << "zero is set";
             }
             maxErrCoord = ErrCoords[0]; //maxErrCoord is quantity var,actually it means how many  not zero errCodes were in array ErrCode[]
         }
@@ -1431,7 +1408,7 @@ int MainWindow::createErrCoordsArray()
                        if(ErrCode[i] == ErrCode[ii])
                        {
                            ErrCoords[ii] = ErrCoords[i];
-                           qDebug() << "equal coords"<<ErrCoords[i]<<ErrCode[i]<<ErrCoords[0]<<i;
+                           //qDebug() << "equal coords"<<ErrCoords[i]<<ErrCode[i]<<ErrCoords[0]<<i;
                            equalflag = true;
                            ii = i;
                        }
@@ -1441,14 +1418,14 @@ int MainWindow::createErrCoordsArray()
                    {
                        ErrCoords[i] = maxErrCoord+1;
                        maxErrCoord++;
-                       qDebug() << "new coords" << ErrCoords[i];
+                       //qDebug() << "new coords" << ErrCoords[i];
                    }
                }
 //           }
 
 
         }
-//        qDebug() << ErrCoords[i];
+//        //qDebug() << ErrCoords[i];
     }
     return 0;
 }
@@ -1503,18 +1480,18 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //    {
     createErrCoordsArray();
 
-    qDebug() << "QString size" << sizeof(QString);
+    //qDebug() << "QString size" << sizeof(QString);
     if(!OldLog)
     {
         for(int i = 1; i < sizeOfArray; i++)
         {
-//            qDebug() << QDateTime::fromTime_t(times[i]);
+//            //qDebug() << QDateTime::fromTime_t(times[i]);
             if(dateChangedArrExistFlag)
             {
                 if(!dateChangedArr[i])
                 {                                                       //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
                     pointsAmount += (abs)((int)times[i]-(int)times[i-1]);      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
-                    //qDebug() << dateChangedArr[i] << " date Changed";
+                    ////qDebug() << dateChangedArr[i] << " date Changed";
 
                 }
                 else pointsAmount++;                                    //of times[i]-times[i-1]
@@ -1527,8 +1504,8 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //                    pointsAmount += (int)times[i-1]-(int)times[i];
                 if((int)times[i]==(int)times[i-1])
                 {
-//                    qDebug() << "times[i]" << (int)times[i];
-//                    qDebug() << "times[i-1]" << (int)times[i-1];
+//                    //qDebug() << "times[i]" << (int)times[i];
+//                    //qDebug() << "times[i-1]" << (int)times[i-1];
                     pointsAmount++;
                 }
                 else if(timeFractExistFlag)
@@ -1551,20 +1528,20 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
                         }
                         tmpAbs=1;
                     }
-//                    qDebug() << "times[i]" << (int)times[i];
-//                    qDebug() << "times[i-1]" << (int)times[i-1];
-//                    qDebug() << tmpAbs;
+//                    //qDebug() << "times[i]" << (int)times[i];
+//                    //qDebug() << "times[i-1]" << (int)times[i-1];
+//                    //qDebug() << tmpAbs;
                     pointsAmount+=tmpAbs;
                 }
                 else if(subTimeExistFlag)
                 {
                     tmpAbs = abs((int)times[i]-(int)times[i-1]);
-                    qDebug() << times[i];
-                    qDebug() << tmpAbs;
+                    //qDebug() << times[i];
+                    //qDebug() << tmpAbs;
                     if(tmpAbs<=MAX_POINTS)
                     {
                         int tmpUnabs = (int)times[i]-(int)times[i-1];
-                        qDebug() << tmpUnabs;
+                        //qDebug() << tmpUnabs;
                         if(tmpUnabs<0)
                         {
                            // times[i] = times[i-1];
@@ -1583,19 +1560,19 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
                         else
                             tmpAbs=1;
                     }
-//                    qDebug() << "times[i]" << (int)times[i];
-//                    qDebug() << "times[i-1]" << (int)times[i-1];
-//                    qDebug() << tmpAbs;
+//                    //qDebug() << "times[i]" << (int)times[i];
+//                    //qDebug() << "times[i-1]" << (int)times[i-1];
+//                    //qDebug() << tmpAbs;
                     pointsAmount+=tmpAbs;
                 }
-//                qDebug() << pointsAmount;
+//                //qDebug() << pointsAmount;
             }
-//            //qDebug() << pointsAmount;
+//            ////qDebug() << pointsAmount;
         }
         for(int i =0; i < sizeOfArray; i++)
-            qDebug() << times[i];
-        qDebug() << "sizeofarray" << sizeOfArray;
-        qDebug() << "pointsAmount" << pointsAmount;
+            //qDebug() << times[i];
+        //qDebug() << "sizeofarray" << sizeOfArray;
+        //qDebug() << "pointsAmount" << pointsAmount;
         if(pointsAmount<=0)
         {
             newMessage.setWindowTitle("Ошибка!");
@@ -1603,7 +1580,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
             newMessage.exec();
             return false;
         }
-        qDebug() << QDateTime::fromTime_t(times[sizeOfArray-1])<< "or"<< times[sizeOfArray-1] << "begin time" << QDateTime::fromTime_t(times[0])<< "end time"<<"or"<< times[0];
+        //qDebug() << QDateTime::fromTime_t(times[sizeOfArray-1])<< "or"<< times[sizeOfArray-1] << "begin time" << QDateTime::fromTime_t(times[0])<< "end time"<<"or"<< times[0];
     if(pointsAmount > MAX_POINTS)
     {
         newMessage.setWindowTitle("Ошибка!");
@@ -1639,7 +1616,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
             }
 
 //            for(int i = 0; i < sizeOfArray; i++)
-//                qDebug() << QDateTime::fromTime_t((int)times[i]);
+//                //qDebug() << QDateTime::fromTime_t((int)times[i]);
             for (int i = 1;  i < pointsAmount; i++)     // we create global array of time points, also adding points that are duplicated
             {
                 if(increasingTimeFlag)
@@ -1648,7 +1625,7 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
                     allPoints[i] = times[pointsAmount-i];
 //                if((int)times[timeIndex]==(int)times[timeIndex-1])
 //                {
-////                    qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
+////                    //qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
 //                    allPoints[i] = allPoints[i-1];
 //                }
 //                else
@@ -1656,13 +1633,13 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
 //                if((int)times[timeIndex] == allPoints[i])
 //                {
 //                    timeIndex++;
-////                    qDebug() << "timeIndex" << timeIndex;
-////                    qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
+////                    //qDebug() << "timeIndex" << timeIndex;
+////                    //qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
 //                }
             }
             timeScale->fillTimeVector(pointsQuantity,times);
             for(int i =0; i < sizeOfArray; i++)
-                qDebug() <<i<<"time " <<times[i]<<allPoints[i];
+                //qDebug() <<i<<"time " <<times[i]<<allPoints[i];
             timeScale->timeArr = allPoints;
             mapTimeScale->timeArr = allPoints;
              ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
@@ -1682,13 +1659,13 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     else
     {
         pointsAmount =sizeOfArray;
-//        qDebug() << "pointsAmount:" << pointsAmount;
-//        qDebug() << "timeArray:" << sizeof(timeArray);
+//        //qDebug() << "pointsAmount:" << pointsAmount;
+//        //qDebug() << "timeArray:" << sizeof(timeArray);
         pointsQuantity = pointsAmount;
 
         timeScale = new TimeScaleDraw(startPoint);
         timeScale->maxVal = sizeOfArray-1;//(long)times[sizeOfArray-1];
-//        qDebug() << "maxVal:" << timeScale->maxVal;
+//        //qDebug() << "maxVal:" << timeScale->maxVal;
 
         //timeScale->maxVal=pointsAmount;
         mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
@@ -1703,8 +1680,8 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
          QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
          sd->enableComponent(QwtScaleDraw::Ticks,false);
          ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
-//         qDebug() << ui->qwtPlot_2->axisEnabled(QwtPlot::xBottom);
-//         qDebug() << QwtPlot::xBottom;
+//         //qDebug() << ui->qwtPlot_2->axisEnabled(QwtPlot::xBottom);
+//         //qDebug() << QwtPlot::xBottom;
          QVariant tmpTimeIndex;
         printLeftTimeIndex = 0;
         printRightTimeIndex = printLeftTimeIndex+120;
@@ -1740,7 +1717,7 @@ void MainWindow::initiateCurves()
                 {
                     curve1[i]->attach(ui->qwtPlot);
                     curve1[i]->setAxes(QwtPlot::xBottom,i);
-//                    qDebug() << "added curve1" << i;
+//                    //qDebug() << "added curve1" << i;
                     ui->qwtPlot->enableAxis(i,false);
                     ui->qwtPlot->setContentsMargins(-50,0,0,0);
                     ui->qwtPlot->replot();
@@ -1759,7 +1736,7 @@ void MainWindow::initiateCurves()
 //            }
                     if(!cArrayDetailedPlot[i].cTypei])
                     {
-                        qDebug() << "added curve2" << i;
+                        //qDebug() << "added curve2" << i;
                         curve2[i] = new QwtPlotCurve;
                         QPalette myPalette;
                         curve2[i]->setPen(QPen(colors[i]));
@@ -1818,14 +1795,14 @@ void MainWindow::initiateCurves()
                         tmpTitle.setFont(tmpFont);
                         ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, tmpTitle);
                         ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
-//                        qDebug() << tmpstr;
+//                        //qDebug() << tmpstr;
                         if(tmpstr == "PowOFF")
                         {
 //                            if((int)Y[i][0]%2)curve2[i]->setBaseline(Y[0][0]+6);
 //                            else curve2[i]->setBaseline(Y[0][0]+6);
                             powOffIndex =i;
                             flagPowOffCount = tmpFlagCounter;
-                            qDebug() << "PowOFF!!!!!!!!!!!!!!!!!!" << i;
+                            //qDebug() << "PowOFF!!!!!!!!!!!!!!!!!!" << i;
 
                         }
                         if(tmpstr =="ErrAdd")
@@ -1833,7 +1810,7 @@ void MainWindow::initiateCurves()
                             errAddIndex = i;
                             globalAddErrFlagBaseLine = flagCounter*2-2;
 //                            for(int j = 0; j < sizeOfArray;j++)
-//                                qDebug() << Y[i][j];
+//                                //qDebug() << Y[i][j];
 
                         }
                         ui->qwtPlot_2->replot();
@@ -1846,8 +1823,8 @@ void MainWindow::initiateCurves()
 //            tmpstr.remove(9,26);
 //            if(tmpstr=="Code")
 //            {
-//                qDebug() << newTmiInterp->TInterpItemArray[i].typ;
-//                qDebug() << "errorCode!" << i;
+//                //qDebug() << newTmiInterp->TInterpItemArray[i].typ;
+//                //qDebug() << "errorCode!" << i;
 //            }
         }
 
@@ -1881,7 +1858,7 @@ void MainWindow::initiateCurves()
     {
         if(errCodeIndex!=-1)
         {
-            qDebug()<< "entering error curve creation";
+            //qDebug()<< "entering error curve creation";
             errpicker = new errorPicker(ui->qwtPlot_2->canvas());
             createErrCodeFromErrAddArray(X1);
             createErrCoordsCurve(X1);
@@ -1893,9 +1870,9 @@ void MainWindow::initiateCurves()
     free(X1);
     for(int a = 0; a < ErrCoordVector.size(); a++ )
     {
-        qDebug() <<"errcoords" <<ErrCoordVector.at(a);
+        //qDebug() <<"errcoords" <<ErrCoordVector.at(a);
     }
-//    qDebug() << "last      << lastFlag;
+//    //qDebug() << "last      << lastFlag;
 
 
 }
@@ -1979,7 +1956,6 @@ void MainWindow::initCurves()
             newCurve.axis = index;
             newCurve.isCurveHidden = true;
             newCurve.cName = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);// = QString::fromLocal8Bit();
-            qDebug() << newCurve.cName;
             if(newCurve.cName=="Ошибка");
             newCurve.cName.replace("[","(");
             newCurve.cName.replace("]",")");
@@ -1997,9 +1973,8 @@ void MainWindow::initCurves()
                         newCurve.flagMarker->setLabel( newCurve.cName);
                         newCurve.flagMarker->setLineStyle(QwtPlotMarker::NoLine);
                         newCurve.flagMarker->setValue(80,1);//getOffsetValue(i));
+                        newCurve.flagMarker->setAxes(QwtPlot::xBottom,firstFlagIndex);
                         cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
-/*                        if(i==firstFlagIndex)
-                           ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,true);*///and enable it
                     }
                 }
                 else
@@ -2010,8 +1985,6 @@ void MainWindow::initCurves()
 
                     if(newCurve.cType==MainWindow::data)//adding not flags curves
                     {
-                        qDebug() << "added curve2" << i << newCurve.cName;
-
                         if((i==pointerToSpd)||(i==pointerToEng1Spd)) // adding curves to global map plot
                         {
                             cArrayGlobalMapPlot.append(newCurve);
@@ -2025,8 +1998,6 @@ void MainWindow::initCurves()
                             if(newCurve.cAttachable)
                                 cArrayGlobalMapPlot[cindex].curve->attach(ui->qwtPlot);
                             cArrayGlobalMapPlot[cindex].curve->setAxes(QwtPlot::xBottom,newCurve.axis);
-                            qDebug() << cArrayGlobalMapPlot.size();
-                            qDebug() << "STEP HERE!!!!" <<cArrayGlobalMapPlot.size()-1 << cArrayGlobalMapPlot[cindex].cData.at(0);
                             ui->qwtPlot->enableAxis(newCurve.axis,false);
                             ui->qwtPlot->setContentsMargins(-50,0,0,0);
                             ui->qwtPlot->replot();
@@ -2036,25 +2007,13 @@ void MainWindow::initCurves()
                         lastIndex =cArrayDetailedPlot.size()-1;
                         if(newCurve.cAttachable)
                             cArrayDetailedPlot[lastIndex].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-//                         if(i==20)
-//                         {
-//                            cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis-3);//this one
-//                            ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis-3,true);//and enable it
-//                            myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[lastIndex].cColor);
-//                            myPalette.setColor(QPalette::Text,cArrayDetailedPlot[lastIndex].cColor);
-//                            ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis-3)->setPalette(myPalette);
-//                            ui->qwtPlot_2->replot();
-//                         }
-//                         else
-//                         {
-                             cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
-                             if(newCurve.cAttachable)
-                                ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis,true);//and enable it
-                             myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[lastIndex].cColor);
-                             myPalette.setColor(QPalette::Text,cArrayDetailedPlot[lastIndex].cColor);
-                             ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis)->setPalette(myPalette);
-                             ui->qwtPlot_2->replot();
-//                         }
+                            cArrayDetailedPlot[lastIndex].curve->setAxes(QwtPlot::xBottom,cArrayDetailedPlot[lastIndex].axis);//this one
+                            if(newCurve.cAttachable)
+                               ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[lastIndex].axis,true);//and enable it
+                            myPalette.setColor(QPalette::Foreground,cArrayDetailedPlot[lastIndex].cColor);
+                            myPalette.setColor(QPalette::Text,cArrayDetailedPlot[lastIndex].cColor);
+                            ui->qwtPlot_2->axisWidget(cArrayDetailedPlot[lastIndex].axis)->setPalette(myPalette);
+                            ui->qwtPlot_2->replot();
                     }
                     else if(newCurve.cType==1)
                     {
@@ -2090,31 +2049,24 @@ void MainWindow::initCurves()
                         {
                             powOffIndex =i;
                             flagPowOffCount = tmpFlagCounter;
-                            qDebug() << "PowOFF!!!!!!!!!!!!!!!!!!" << i;
                         }
                         if(tmpstr =="ErrAdd")
                         {
                             errAddIndex = i;
                             globalAddErrFlagBaseLine = flagCounter*2-2;
-                            qDebug() <<"globalAddErrFlagBaseLine" <<globalAddErrFlagBaseLine;
                         }
                         ui->qwtPlot_2->replot();
                     }
              index++;
             }
-//    else
-//        {
-
-//        }
     for(int c = 0; c < cArrayDetailedPlot.size(); c++)
     {
-        qDebug() << c << cArrayDetailedPlot[c].cType << cArrayDetailedPlot[c].cName << cArrayDetailedPlot[c].cColor <<cArrayDetailedPlot[c].cAttachable;
+
     }
     if(!OldLog)
     {
         if(errCodeIndex!=-1)
         {
-            qDebug()<< "entering error curve creation";
             errpicker = new errorPicker(ui->qwtPlot_2->canvas());
             createErrCodeFromErrAddArray(X1);
             createErrCoordsCurve(X1);
@@ -2123,8 +2075,6 @@ void MainWindow::initCurves()
         if(powOffIndex!=-1)
             setFilledPowerOffTime(X1);
     }
-//    for(int b = 0; b < cArrayGlobalMapPlot.size(); b++)
-//        cArrayGlobalMapPlot[b].curve->attach(ui->qwtPlot);
     free(X1);
 }
 
@@ -2135,21 +2085,15 @@ void MainWindow::initFlagScale()//here we have to make some init of flagscale
 
 int MainWindow::createErrCodeFromErrAddArray(double *XX)
 {
-    qDebug() << "globalAddErrFlagBaseLine" << globalAddErrFlagBaseLine;
     double maxcoord=0;
     bool equalflag;
     int equalIndex=0;
-
     for(int i = 0; i< sizeOfArray;i++)
     {
-//        qDebug() <<"errcoords" <<ErrCoords[i];
-
         errCoordStruct coord;
         coord.coord=0;
         coord.code = 0;
         if(ErrCode[i]!=0)
-            qDebug() << "errcode errcoord"<< ErrCode[i]<<ErrCoords[i];
-//        if(Y[errAddIndex][i]!=globalAddErrFlagBaseLine)
         {
             if(i==0)
             {
@@ -2216,25 +2160,12 @@ int MainWindow::createErrCodeFromErrAddArray(double *XX)
         }
     }
     for(int i = 0; i < ErrCoordVector.size();i++)
-        qDebug() <<"the whole errcoordvector is"<< ErrCoordVector[i].coord<<ErrCoordVector[i].code ;
     return 0;
 }
 
 int MainWindow::createErrCoordsCurve(double *X)
 {
-//    for(int i = 0; i < ErrCoordVector.size(); i++)
-//    {
-////        qDebug() << ErrCoordVector[i];
-////        qDebug() << ErrXCoords[i];
-//    }
-    qDebug() << "errcodeIndex" << errCodeIndex;
-
     QPalette myPalette;
-/*    ErrCurve->setPen(QPen(colors[errCodeIndex]));
-    ErrCurve->setStyle(QwtPlotCurve::Steps);
-    ErrCurve->setCurveAttribute(QwtPlotCurve::Inverted);
-    ErrCurve->attach(ui->qwtPlot_2);*///by default we have 1st axis with this curve on the plot, also it is enabled by default
-//    errorSym = new QwtSymbol;
     errorSym.setColor(Qt::blue);
     errorSym.setStyle(QwtSymbol::Diamond);
     errorSym.setPen(QColor(Qt::blue));
@@ -2256,38 +2187,19 @@ int MainWindow::createErrCoordsCurve(double *X)
     errorCurve.isCurveHidden = true;
     errorCurve.cName = "Error Curve";// = QString::fromLocal8Bit();
     errorCurve.flagMarker = 0;
-//    QwtText text;
-//    QwtTextLabel *label = new QwtTextLabel(ui->qwtPlot_2);
-//    QwtPlotTextLabel label = new QwtPlotTextLabel();
-
-
-//         ui->qwtPlot_2->enableAxis(errCodeIndex,true);//and enable it
-         myPalette.setColor(QPalette::Foreground,colors[errCodeIndex]);
-         myPalette.setColor(QPalette::Text,colors[errCodeIndex]);
-         ui->qwtPlot_2->axisWidget(errCodeIndex)->setPalette(myPalette);
-//         ui->qwtPlot_2->replot();
+    myPalette.setColor(QPalette::Foreground,colors[errCodeIndex]);
+    myPalette.setColor(QPalette::Text,colors[errCodeIndex]);
+    ui->qwtPlot_2->axisWidget(errCodeIndex)->setPalette(myPalette);
     errorCurve.curve->setSymbol(&errorSym);
     errorCurve.curve->setAxes(QwtPlot::xBottom,errCodeIndex);
-    //errorCurve.curve->attach(ui->qwtPlot_2);
     cArrayDetailedPlot.append(errorCurve);
     if(cArrayDetailedPlot[cArrayDetailedPlot.size()-1].cAttachable)
         cArrayDetailedPlot[cArrayDetailedPlot.size()-1].curve->attach(ui->qwtPlot_2);
     ui->qwtPlot_2->replot();
-
-//    ErrCurve->setSamples(ErrXCoords,ErrCoordVector);
-////    ErrCurve->attach(ui->qwtPlot_2);
-//    ErrCurve->setSymbol(&errorSym);
-//    ErrCurve->setAxes(QwtPlot::xBottom,errCodeIndex);
-
-//    ui->qwtPlot_2->enableAxis(errCodeIndex,true);
-//    ui->qwtPlot_2->replot();
-//    ErrCurve->setVisible(true);
-//    ui->qwtPlot_2->replot();
 }
 
 int MainWindow::initPicker()
 {
-
     int iterator=0,coords=0,code=0;
     for(int i = 0; i < sizeOfArray; i++)
     {
@@ -2303,17 +2215,12 @@ int MainWindow::initPicker()
             {
                 if(ErrCode[i]!=ErrCode[i-1])
                 {
-
                     coords = ErrCoordVector[iterator].coord;
                     code = ErrCoordVector[iterator].code;
-
                     iterator++;
-
                 }
-
             }
         }
-//        qDebug() << "iterator" <<iterator<<coords<<code;
         errpicker->errDesc.append({timeArray[i],code/*ErrCode[i]*/,Y[errAddIndex][i],coords});
     }
     errpicker->sizeOfArr = sizeOfArray;
@@ -2330,14 +2237,8 @@ int MainWindow::initPicker()
 int MainWindow::setFilledPowerOffTime(double *X)
 {
       QwtPlotCurve *curve = new QwtPlotCurve;
-      qDebug() << "some info about plot";
-      qDebug() << Y[powOffIndex][0];
-      qDebug() << Y[powOffIndex][1];
-      qDebug() <<powOffIndex;
-      qDebug() << flagPowOffCount;
       for(int i  = 0; i < sizeof(Y[powOffIndex]); i++)
           Y[powOffIndex][i]-=1;
-
       curve->setStyle(QwtPlotCurve::Steps);
       curve->setPen(QPen(QColor(Qt::white),0.1));
       curve->setBaseline(0);
@@ -2347,14 +2248,11 @@ int MainWindow::setFilledPowerOffTime(double *X)
       curve->setBrush(brush);
       curve->attach(ui->qwtPlot);
       curve->setAxes(QwtPlot::xBottom,powOffIndex);
-//      curve->setCurveAttribute(QwtPlotCurve::Fitted);
       ui->qwtPlot->enableAxis(powOffIndex,false);
       ui->qwtPlot->setContentsMargins(-50,0,0,0);
-//      ui->qwtPlot_2->setAxisScaleDraw(1,verticalFlagScale);
       ui->qwtPlot->setAxisScale(1, 0, flagPowOffCount*2-2, 0.1);
-
       ui->qwtPlot->replot();
-
+      return 0;
 }
 
 void MainWindow::initiateVideoScreens()
@@ -2390,27 +2288,14 @@ void MainWindow::initiateVideoScreens()
 
 bool MainWindow::eventFilter(QObject *target, QEvent *event)
 {
-   // if(target==Ui::MainWindow)
-    //if()
-//    //qDebug << target;
-   // if(target->parent())
-//    ////qDebug << target;
-//    ////qDebug << event;
-//    if(target==ui->qwtPlot || target == ui->qwtPlot_2)// || target->parent()->objectName()=="qwtPlot_2" ||target->parent()->objectName()=="qwtPlot")
-//    {
-
         if(event->type() == QEvent::MouseButtonPress & target!=0x0)
         {
             QMouseEvent *mouseEvent = (QMouseEvent *) event;
-           // QWidget *widget = qApp->widgetAt(QCursor::pos());
-           // QString widget_name = widget->objectName();
             QString parent_name = target->objectName();
-           // if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
             if(parent_name=="qwtPlot_2")
             {
                 if(mouseEvent->buttons()==Qt::LeftButton)
                 {
-                 //   moveMapMarker((int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,QCursor::pos().x() - plotPosOffset));
                     globalCursorPos = QCursor::pos().x();
                     globalCursorPoint = QCursor::pos();
                     leftButtonPressed = true;
@@ -2425,13 +2310,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
             }
             if(parent_name=="qwtPlot")
             {
-//                double widthGain = sizeOfArray/ui->qwtPlot->axisWidget(QwtPlot::xBottom)->width();
                 if(mouseEvent->button()==Qt::LeftButton)moveMapMarker(ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()));//moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom,0));//100 - is offset
-//                //qDebug<< ui->qwtPlot->axisWidget(QwtPlot::xBottom)->width();
-//                //qDebug<< ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left());
-//                //qDebug<< sizeOfArray;
-//                //qDebug<< ui->qwtPlot->mapFromGlobal(QCursor::pos()).x();
-//                //qDebug<< ui->qwtPlot->transform(QwtPlot::xBottom,0);
                 globalCursorPos = QCursor::pos().x();
                 mapPlotUsed = true;
             }
@@ -2439,13 +2318,6 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
         }
         if(event->type()==QEvent::MouseButtonRelease)
         {
-            //QMouseEvent *mouseEvent = (QMouseEvent *) event;
-//            QWidget *widget = qApp->widgetAt(QCursor::pos());
-//            QString widget_name = widget->objectName();
- //           QString parent_name = target->parent()->objectName();//widget->parent()->objectName();
-          //  if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot_2")&(ui->qwtPlot_2->isEnabled()))
-//            if(parent_name=="qwtPlot_2")
-//            {
             globalSavedCursorMove=0;
                 if(leftButtonPressed)
                 {
@@ -2461,27 +2333,18 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                             int cursorPositionOnPlot = ui->qwtPlot_2->mapFromGlobal(QCursor::pos()).x();
                             int cursorOffset= calculateCursorPlotOffset();
                             int moveVal = (int)ui->qwtPlot_2->invTransform(QwtPlot::xBottom,(cursorPositionOnPlot + cursorOffset ));
-//                            ////qDebug << moveVal;
                             moveMapMarker(moveVal);
                             leftButtonPressed=false;
                         }
                 }
                 else rightButtonPressed = false;
-//            }
-           // if((widget_name == "QwtPlotCanvas")&(parent_name=="qwtPlot")&(ui->qwtPlot->isEnabled()))
-//            if(parent_name=="qwtPlot")
-//            {
                 if(mapPlotUsed)
                 {
                      if(globalCursorPos==QCursor::pos().x())
                      {
-                        // int downCursorPos = (int)ui->qwtPlot->transform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x())+ui->qwtPlot->transform(QwtPlot::xBottom, 0);
-                         //////qDebug << downCursorPos;
-                       //  moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x()-ui->qwtPlot->contentsMargins().left()) + ui->qwtPlot->transform(QwtPlot::xBottom, 0));//100 - is offset
                          mapPlotUsed = false;
                      }
                 }
-//            }
             return true;
         }
        if(event->type()==QEvent::MouseMove)
@@ -2492,14 +2355,9 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                if(leftButtonPressed)
                {
                    globalMoveFlag = true;
-                   //int globalPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, globalCursorPoint.x());
                    double globalPos =  globalCursorPos;
-                   ////qDebug << globalPos;
-                   //int currentPos = ui->qwtPlot_2->invTransform(QwtPlot::xBottom, QCursor::pos().x());
                    double currentPos = QCursor::pos().x();
                    int visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
-                  // if(ui->qwtPlot_2->visibleRegion().rectCount()>2)visWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width();
-                   //else visWidth =  ui->qwtPlot_2->axisWidget(QwtPlot::xBottom)->width();
                    double cursorPositionMoved =globalPos - currentPos;//ui->qwtPlot_2->mapFromGlobal(globalPos).x() - ui->qwtPlot_2->mapFromGlobal(currentPos).x();
                    globalCursorMove +=cursorPositionMoved;
                    int cursorGlobalError = (globalCursorFirstPressPos-currentPos) - globalCursorMove;//some errors of scroll navigation appears if we just make int from double, truncated value is became lost
@@ -2515,9 +2373,7 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                else
                if(mapPlotUsed)
                {
-                  // if(mouseEvent>buttons()==Qt::LeftButton)
                        moveMapMarker((int)ui->qwtPlot->invTransform(QwtPlot::xBottom,ui->qwtPlot->mapFromGlobal(QCursor::pos()).x() - ui->qwtPlot->contentsMargins().left()) );//100 - is offset
-                  // mapPlotUsed = false;
                }
            }
            else if(mouseEvent->buttons()==Qt::RightButton)
@@ -2530,42 +2386,24 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                    if(tmpInc<1)tmpInc = 1;
                    globalMagnifyFactor+=tmpInc;
                }
-           //    //qDebug << globalMagVal*2/ui->qwtPlot_2->canvas()->width();
                if(globalMagnifierPreviosPos<QCursor::pos().x())
                {
                    double tmpInc = 10*globalMagVal/ui->qwtPlot_2->canvas()->width();
                    if(tmpInc<1)tmpInc = 1;
                    globalMagnifyFactor-=tmpInc;
                }
-
                globalMagnifierPreviosPos = QCursor::pos().x();
                upPlotMagnifier(globalMagnifyFactor);
-               //rightButtonPressed=false;
                }
            }
-           //else if(target->) qDebug
-
        return true;
        }
-//           //qDebug<< ui->qwtPlot_2->visibleRegion().rects()[1].width();
-//           //qDebug<< ui->qwtPlot_2->visibleRegion().rectCount();
-//       if(ui->qwtPlot_2->visibleRegion().rectCount()-rectQty!=0)
-//       {
-//           if(rectQty==2)plotRectBasicWidth =ui->qwtPlot_2->visibleRegion().rects()[2].width() - ui->qwtPlot_2->visibleRegion().rects()[1].width();
-//           else plotRectBasicWidth =  ui->qwtPlot_2->visibleRegion().rects()[1].width();
-
-//       }
        if(plotRectBasicWidth==0)
        {
            plotRectBasicWidth = ui->widget->pos().x()+ui->widget->width();
        }
-           //if(ui->qwtPlot_2->visibleRegion().rectCount()<3) Ktulhu is here!!!
             if((ui->qwtPlot_2->visibleRegion().rectCount()<3)&&(ui->qwtPlot_2->visibleRegion().rectCount()>1))
            {
-//               //qDebug << ui->qwtPlot_2->visibleRegion().rects()[0].width();
-//               //qDebug << ui->qwtPlot_2->visibleRegion().rects()[1].width();
-//               //qDebug << ui->qwtPlot_2->visibleRegion().rects()[0].x();
-//               //qDebug << ui->qwtPlot_2->visibleRegion().rects()[1].x();
                if(ui->qwtPlot_2->visibleRegion().rects()[1].x()>=ui->qwtPlot_2->visibleRegion().rects()[0].x())
                {
                 ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
@@ -2573,38 +2411,21 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                }
                else
                {
-//                //qDebug << "here we are";
                 ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth) - ui->qwtPlot_2->visibleRegion().rects()[0].width(), ui->widget->pos().y());
                 plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width()- ui->qwtPlot_2->visibleRegion().rects()[0].width();
-//                //qDebug << ui->widget->pos().x();
-
                }
-               // rectQty = ui->qwtPlot_2->visibleRegion().rectCount();
            }
            else if(ui->qwtPlot_2->visibleRegion().rectCount()==3)//and here Ktulhu too
            {
-
                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[2].width()-ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width() - ui->qwtPlot_2->visibleRegion().rects()[1].width();
-               //rectQty = ui->qwtPlot_2->visibleRegion().rectCount();
            }
-//           //qDebug << ui->widget->pos().x()+ui->widget->width();
-//           //qDebug << plotRectBasicWidth;
-//           //qDebug << ui->qwtPlot_2->visibleRegion().rectCount();
-//           //qDebug << ui->widget->pos();
-       //}
-  // return false;
     return QMainWindow::eventFilter(target, event);
 }
 
 
 void MainWindow::moveMapMarker(long int globalPosition)
 {
-   // //qDebug<< position;
-
-//    for(int i=0; i<30;i++)
-//        qDebug() << i << ui->qwtPlot_2->axisWidget(i)->isVisible();
-
     if(globalPosition>=pointsQuantity)
     {
         globalPosition=pointsQuantity-1;
@@ -2615,36 +2436,23 @@ void MainWindow::moveMapMarker(long int globalPosition)
         position = globalPosition;
     else
         position = getClosestToPositionIndex(globalPosition);// may be we don't need this +1
-//    qDebug() << "sizeOfArray"<< sizeOfArray;
-//    qDebug() << position;
     timeScale->currentIndex = globalPosition;
-//    qDebug() << QDateTime::fromTime_t(timeScale->timeArr[globalPosition]).toString();
     ui->actionPrint->setEnabled(true);
-//    qDebug() << QDateTime::fromTime_t(timeArray[position]);
     verticalMapMarker->setValue(globalPosition,0);
     currentTimeMarker->setValue(globalPosition,0);
     QDateTime tmpDate=QDateTime::fromTime_t(timeArray[position]);
     QwtText tmpTitle;
-//    //qDebug() << globalPosition;
-//    //qDebug() << position;
     if(tmpDate.date()!=AxisLabelDate.date())
     {
         tmpTitle = tmpDate.date().toString("dd.MM.yyyy");
         QFont tmpFont;
-//        tmpFont.setBold(false);
         tmpTitle.setFont(tmpFont);
         ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom,tmpTitle);
-//        qDebug() << tmpDate.date().toString("dd.MM.yyyy");
         AxisLabelDate = tmpDate;
     }
-
     double magnifiedVal = upPlotMagnifier(globalMagnifyFactor);
-
     int tmpCounter=0;\
     int flagmarkercounter=0;
-//    for(int i =0; i <varCounter; i++ )
-//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-//        if(!invisibleVarsMask[i])
     for(int i =0; i < cArrayDetailedPlot.size();i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
@@ -2662,53 +2470,26 @@ void MainWindow::moveMapMarker(long int globalPosition)
         }
         else if(cArrayDetailedPlot[i].cType==2)
         {
-//            int pos = errpicker->getClosestToPosIndex(position);//ErrCoordVector[position];
-//            QPointF posf;
-//            posf.setX((qreal)ErrXCoords.at(pos));//ErrXCoords,ErrCoordVector
-//            posf.setY((qreal)ErrCoordVector.at(pos));
-//            posf.setX(position);
-//            posf.setY(ErrCode[position]);
             QString txt = errpicker->errorDecoder(ErrCode[position]);
-//            qDebug()<< position << ErrCode[position];
-//            QwtText tmpt = errpicker->trackerTextF(posf);
-//            tmpt.text().chop(14);
-//            QString outt = tmpt.text();
-//            outt.chop(14);
             cArrayCurveWidgets[i].valueLabel->setText(txt);
         }
 
     }
-//    ui->checkBox
     pf->SetMapMarkerPosition(timeArray[position]);
-
-//        for(int i = 0; i<varCounter; i++)
-//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-//        if(!invisibleVarsMask[i])
     for(int i = 0; i < cArrayDetailedPlot.size(); i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
         QVariant tmp;
         if(cArrayDetailedPlot[i].cType==0)
         {
-            //thermo[i]->
-//            QwtScaleDraw scldrw;
-//            scldrw.label(thermo[i]->value());
-//            thermo[i]->setScaleDraw(&scldrw);
-//            thermo[i]->setShortcutEnabled(1,true);
-             tmp = cArrayCurveWidgets[i].thermo->value();
-
+            tmp = cArrayCurveWidgets[i].thermo->value();
             if(newTmiInterp->TInterpItemArray[i+2].mask_)
             {
                 char tmpArr[10];
-                //QString tmpString = tmp.toString();
                 sprintf(tmpArr,"%.1f",cArrayCurveWidgets[i].thermo->value());
                 cArrayCurveWidgets[i].thermo->setToolTip(tmpArr);
                 cArrayCurveWidgets[i].valueLabel->setText(tmpArr);
             }
-
-            //tmpString.sprintf("%f");
-
-           //thermo[i]->value();
             else
             {
                 cArrayCurveWidgets[i].thermo->setToolTip(tmp.toString());
@@ -2726,56 +2507,6 @@ void MainWindow::moveMapMarker(long int globalPosition)
 
 void MainWindow::initiateThermos()
 {
-//    QPalette thermoPalette;
-//    int index=0, index_=0;
-//    for(int i =0; i < cArrayDetailedPlot.size();i++)
-//    {
-//        qDebug() <<"type"<< i << cArrayDetailedPlot[i].cType;
-//        if(cArrayDetailedPlot[i].cType==0)
-//        {
-//                QHBoxLayout *tmpLayout = new QHBoxLayout;
-//                thermoLayout.append(tmpLayout);
-//                index = thermoLayout.indexOf(thermoLayout.last());
-//                QHBoxLayout *tmpLayout_ = new QHBoxLayout;
-//                labelLayout.append(tmpLayout_);
-//                index_ = labelLayout.indexOf(labelLayout.last());
-//                ui->scrollArea->setLayout(ui->verticalLayout_7);
-//                qDebug() << "parlabel" << i << cArrayCurveWidgets[i].parLabel;
-//                thermo[i] = new QwtThermo(this);
-//                axisButton.append(new QPushButton(this));
-//                buttonIndex = i;
-//                connect(axisButton.at(i),SIGNAL(clicked()),this,SLOT(indexChanged()));
-//                connect(axisButton.at(i),SIGNAL(released()),this, SLOT(hideAxis()));
-//                thermoPalette.setColor(QPalette::ButtonText, colors[i] );
-//                thermo[i]->setMaxValue(thermoPlotMaxs[i]);
-//                thermo[i]->setMinValue(thermoPlotMins[i]);
-//                thermo[i]->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
-//                thermo[i]->setValue(Y[i][0]);
-//                thermo[i]->setMaximumHeight(70);
-//                QVariant tmp;
-//                tmp = thermo[i]->value();
-//                thermo[i]->setToolTip(tmp.toString());
-//                thermo[i]->setAlarmEnabled(false);
-//                thermo[i]->setPalette(thermoPalette);
-//                RotatedLabel *label1 = new RotatedLabel(cArrayCurveWidgets[i].parLabel);
-//                valueLabel[i] = new QLabel(tmp.toString());
-//                label1->setAngle(0);
-//                axisButton.at(axisButton.size()-1)->setFixedSize(20,20);
-//                if(cArrayDetailedPlot[i].isCurveHidden)
-//                    axisButton.at(axisButton.size()-1)->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
-//                else
-//                    axisButton.at(axisButton.size()-1)->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
-//                labelLayout[index_]->addWidget(label1);
-//                labelLayout[index_]->addStretch();
-//                labelLayout[index_]->addWidget(valueLabel[i]);
-//                ui->verticalLayout_7->addLayout(labelLayout[index_]);
-//                thermoLayout[index]->addWidget(thermo[i]);
-//                thermoLayout[index]->addWidget(axisButton.at(axisButton.size()-1));
-//                thermoLayout[index]->setMargin(0);
-//                thermoLayout[index]->setSpacing(0);
-//                ui->verticalLayout_7->addLayout(thermoLayout[index]);
-//        }
-//    }
 
 }
 
@@ -2786,48 +2517,25 @@ void MainWindow::indexChanged()
 void MainWindow::hideAxis()
 {
     int index=0;
-    int indexOfCArr;
     QObject * tmp = sender();
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
-//        if(cArrayCurveWidgets[i].valueLabel->text()!="")
-//        {
             if(tmp==cArrayCurveWidgets[i].axisButton)
                 index=i;
-//        }
     }
     cArrayDetailedPlot[index].isCurveHidden = !cArrayDetailedPlot[index].isCurveHidden;
     double tmpMagVal = upPlotMagnifier(globalMagnifyFactor);
-    qDebug() << "index" << index;
-    qDebug() << ui->qwtPlot_2->axisCnt;
-//    for(int i = 0; i < cArrayDetailedPlot.size(); i++)
-//    {
-//        if(cArrayDetailedPlot[i].axis==index)
-            indexOfCArr = index;
-//    }
     if((cArrayDetailedPlot[index].isCurveHidden)&(cArrayDetailedPlot[index].cAttachable))
     {
         cArrayDetailedPlot[index].curve->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
-//        cArrayGlobalMapPlot[index].curve->detach();
-        int tmpIndex = 11;
         if((cArrayDetailedPlot[index].cType==0)|(cArrayDetailedPlot[index].cType==2))
         {
-//            if(index!=20)
-//            {
-//                tmpIndex = index;
             if(cArrayDetailedPlot[index].cType==0)
             {
                 cArrayDetailedPlot[index].curve->setAxes(1,index);//this one
                 ui->qwtPlot_2->enableAxis(index,false);//and enable it
             }
-//            else
-//            {
-//                tmpIndex = index;
-//                cArrayDetailedPlot[index].curve->setAxes(1,index-3);//this one
-//                ui->qwtPlot_2->enableAxis(index-3,false);//and enable it
-//            }
-          // flagMarker[index]->setValue(0.8*tmpMagVal,flagMarkerOffsetBase+tmpCounter*flagMarkerIncStep);
         }
         else
             cArrayDetailedPlot[index].flagMarker->detach();
@@ -2839,34 +2547,27 @@ void MainWindow::hideAxis()
     {
         if(cArrayDetailedPlot[index].cAttachable)
             cArrayDetailedPlot[index].curve->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-//        cArrayGlobalMapPlot[index].curve->detach();
-        int tmpIndex = 11;
-        if((cArrayDetailedPlot[index].cType==0)|(cArrayDetailedPlot[index].cType==2))
+//        int tmpIndex = 11;
         if(cArrayDetailedPlot[index].cAttachable)
         {
-//            if(index!=20)
-//            {
-//                tmpIndex = index;
-            if(cArrayDetailedPlot[index].cType==0)
+            if((cArrayDetailedPlot[index].cType==0)|(cArrayDetailedPlot[index].cType==2))
             {
-                cArrayDetailedPlot[index].curve->setAxes(1,index);//this one
-//                cArrayDetailedPlot[index].flagMarker->show();
-                ui->qwtPlot_2->enableAxis(index,true);//and enable it
+                if(cArrayDetailedPlot[index].cType==0)
+                {
+                    cArrayDetailedPlot[index].curve->setAxes(1,index);//this one
+                    ui->qwtPlot_2->enableAxis(index,true);//and enable it
+                }
+                else
+                {
+
+                }
             }
-//            else
-//            {
-//                tmpIndex = index;
-//                cArrayDetailedPlot[index].curve->setAxes(1,index-3);//this one
-////                cArrayDetailedPlot[index].flagMarker->show();
-//                ui->qwtPlot_2->enableAxis(index-3,true);//and enable it
-//            }
-        }
-        else
-        {
-            if(cArrayDetailedPlot[index].cAttachable)
-                cArrayDetailedPlot[index].flagMarker->attach(ui->qwtPlot_2);
-            cArrayDetailedPlot[index].flagMarker->setValue(tmpMagVal*0.8+verticalMapMarker->value().x(),getOffsetValue(index));
-            ////qDebug<< getOffsetValue(index);
+            else
+            {
+                if(cArrayDetailedPlot[index].cAttachable)
+                    cArrayDetailedPlot[index].flagMarker->attach(ui->qwtPlot_2);
+                cArrayDetailedPlot[index].flagMarker->setValue(tmpMagVal*0.8+verticalMapMarker->value().x(),getOffsetValue(index));
+            }
         }
         ui->qwtPlot_2->replot();
         ui->qwtPlot->replot();
@@ -2876,38 +2577,17 @@ void MainWindow::hideAxis()
 
 void MainWindow::preparePlotData()
 {
-    //srand(double(NULL));
-//    for(int j = 0; j < varCounter; j++)
-//    for(int i = 0; i < sizeOfArray; i++ )
-//       {
-//        if(j==0)
-//        {
-//            X[i]  =i;
-//        }
-//        Y[j][i] = 5;
-//       }
+
 }
 
 MainWindow::~MainWindow()
 {
 
-//    delete ui;
 }
-
-//void MainWindow::mousePressEvent(QMouseEvent *event)
-//{
-//    mark[i]=new QwtPlotMarker;
-//    mark[i]->setSymbol(your_symbol);
-//    mark[i]->setValue(pt.x(),pt.y());
-//    mark[i]->attach(your_plot);
-//    i++;
-//}
 
 void MainWindow::on_pushButton_clicked()
 {
-
     mapTimer->start(mapTimerDelay);
-    //moveMapMarker(verticalMapMarker->value().x()+1);
 }
 
 void MainWindow::incrementMarkerPosition()
@@ -2917,7 +2597,6 @@ void MainWindow::incrementMarkerPosition()
 
 void MainWindow::on_pushButton_2_clicked()
 {
-
     moveMapMarker(sizeOfArray);
 }
 
@@ -2950,7 +2629,6 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
 {
     int index;
     int hiddenCounter=0,notHiddenCounter=0;
-    qDebug() << "hiding axes";
     for(int i = 0; i < cArrayCurveWidgets.size(); i++)
     {
         if(cArrayCurveWidgets[i].widgetType==0)
@@ -2959,21 +2637,13 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
         }
     }
-    qDebug() << "hiding axes again";
     for(int i = 0; i < cArrayCurveWidgets.size(); i++)
     {
         if(cArrayCurveWidgets[i].widgetType>=1)
         {
             ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
-//            ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
         }
-//        else if(cArrayCurveWidgets[i].widgetType==1)
-//        {
-//            ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
-////            ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
-//        }
     }
-  qDebug() << "hiding axes again";
   for(int i =0; i < cArrayCurveWidgets.size();i++)
       if(cArrayCurveWidgets[i].widgetType!=-1)
       {
@@ -3001,13 +2671,9 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             }
         }
     }
-
-
-//    qDebug() << "layout position"<<ui->verticalLayout_7->indexOf(qobject_cast<QWidget*>cArrayCurveWidgets[0].thermoLayout);
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
-//        index = cArrayDetailedPlot[i].axis;
         if(cArrayDetailedPlot[i].isCurveHidden)
         {
             cArrayDetailedPlot[i].curve->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
@@ -3015,16 +2681,8 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             if(cArrayDetailedPlot[i].cType==0)
             {
                 tmpIndex = i;
-//                if(i!=20)
-//               {
-                    cArrayDetailedPlot[i].curve->setAxes(1,cArrayDetailedPlot[i].axis);//this one
-                    ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,false);//and enable it
-//                }
-//                else
-//                {
-//                    cArrayDetailedPlot[i].curve->setAxes(1,tmpIndex-3);//this one
-//                    ui->qwtPlot_2->enableAxis(tmpIndex-3,false);//and enable it
-//                }
+                cArrayDetailedPlot[i].curve->setAxes(1,cArrayDetailedPlot[i].axis);//this one
+                ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,false);//and enable it
             }
             ui->qwtPlot_2->replot();
             cArrayCurveWidgets[i].axisButton->setIcon(style()->standardIcon(QStyle::SP_ArrowLeft));
@@ -3036,153 +2694,88 @@ void MainWindow::hideWasteAxes(int notHiddenIndex)//hide unused axis (nuber of n
             int tmpIndex = 11;
             if((cArrayDetailedPlot[i].cType==0)&(cArrayDetailedPlot[i].cAttachable))
             {
-//                tmpIndex = i;
-//                if(i!=20)
-//                {
                     cArrayDetailedPlot[i].curve->setAxes(1,cArrayDetailedPlot[i].axis);//this one
                     ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,true);//and enable it
-//                }
-//                else
-//                {
-//                    cArrayDetailedPlot[i].curve->setAxes(1,tmpIndex-3);//this one
-//                    ui->qwtPlot_2->enableAxis(tmpIndex-3,true);//and enable it
-//                }
-
             }
             ui->qwtPlot_2->replot();
             cArrayCurveWidgets[i].axisButton->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
         }
     }
-//    else
-//            ui->qwtPlot_2->enableAxis(cArrayDetailedPlot[i].axis,false);
-
 }
 
 
 void MainWindow::setGlobalArrays()
 {
-//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-//        if(!invisibleVarsMask[i])
     for (int i =0; i<invisIntItems.size(); i++)
         if(!invisIntItems[i].invisibility)
         {
             thermoPlotMins[i] = 0;
         }
-//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-//        if(!invisibleVarsMask[i])
     for (int i =0; i<invisIntItems.size(); i++)
         if(!invisIntItems[i].invisibility)
         {
             if(thermoPlotMaxs[i]<1)
                 thermoPlotMaxs[i]=1;
         }
-
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
         openLog();
-        qDebug() << "datas:";
 }
 
 int MainWindow::closeLog()
 {
-//    if(currentTimeMarker->)
-    qDebug() << "closing now";
     if(isOpened==true)
     {
         currentTimeMarker->detach();
         verticalMapMarker->detach();
         if(errCodeIndex!=-1)
             errorCurve.curve->detach();
-
-
         ui->qwtPlot_2->detachItems(QwtPlotItem::Rtti_PlotItem, true);
         ui->qwtPlot->detachItems(QwtPlotItem::Rtti_PlotItem, true);
         for(int i =0; i< ui->qwtPlot_2->axisCnt; i++)
         {
             ui->qwtPlot_2->enableAxis(i,false);
-    //        curve2[i]->detach();
         }
-
-
         for(int i =0; i< ui->qwtPlot->axisCnt; i++)
             ui->qwtPlot->enableAxis(i,false);
         ui->pushButton->setEnabled(false);
         ui->pushButton_2->setEnabled(false);
         ui->pushButton_3->setEnabled(false);
         ui->pushButton_4->setEnabled(false);
-        qDebug() << "its one";
         for(int i = 0; i < cArrayCurveWidgets.size(); i++)
+            if(cArrayDetailedPlot[i].cAttachable)
         {
             QLayoutItem* item;
             while ( ( item =cArrayCurveWidgets[i].thermoLayout->takeAt( 0 ) ) != NULL )
                   {
-                       qDebug() << item->widget();
                        delete item->widget();
                        delete item;
                    }
         }
-    qDebug() << "its two";
         for(int i = 0; i < cArrayCurveWidgets.size(); i++)
+            if(cArrayDetailedPlot[i].cAttachable)
         {
             QLayoutItem* item;
             if(cArrayCurveWidgets[i].widgetType==0)
             while ( ( item =cArrayCurveWidgets[i].labelLayout->takeAt( 0 ) ) != NULL )
                   {
-                       qDebug() << item->widget();
                        delete item->widget();
                        delete item;
                    }
         }
-            cArrayCurveWidgets.clear();
-            qDebug() << "its three";
-    //    for(int i =0; i < thermoLayout.size(); i++)
-    //    {
-    //            QLayoutItem* item;
-    //            while ( ( item = thermoLayout[i]->takeAt( 0 ) ) != NULL )
-    //            {
-    //                qDebug() << item->widget();
-    //                delete item->widget();
-    //                delete item;
-    //            }
-    //    }
-
-    //    for(int i =0; i < cArrayDetailedPlot.size(); i++)
-    //    {
-    //            QLayoutItem* item;
-    //            while ( ( item = labelLayout[i]->takeAt( 0 ) ) != NULL )
-    //            {
-    //                qDebug() << item->widget();
-    //                delete item->widget();
-    //                delete item;
-    //            }
-    //    }
-
-
+        cArrayCurveWidgets.clear();
         ui->horizontalLayout_3->setEnabled(false);
         ui->checkBox->setEnabled(false);
-    //    delete curve2;
-    //    delete curve1;
         ui->qwtPlot->setEnabled(false);
         ui->qwtPlot_2->setEnabled(false);
-    //    ui->qwtPlot_2->replot();
-    //    ui->qwtPlot->replot();
-
         newLogProc->tmpFile.close();
         delete newLogProc;
         delete newTmiInterp;
-    //    delete colors;
-    //    if(pf!=NULL)
-    //        delete pf;
         ErrXCoords.clear();
         ErrCoordVector.clear();
-
-//        invisibleVarsMask.clear();
         invisIntItems.clear();
-    //    labelLayout.clear();
-    //    thermoLayout.clear();
-
         delete timeArray;
         delete dateChangedArr;
         markerLbl.setText("");
@@ -3194,60 +2787,30 @@ int MainWindow::closeLog()
 
 
         delete X;
+        delete Y;
         delete ErrCoords;
         delete ErrCode;\
         if(errCodeIndex!=-1)
         {
-            qDebug() << "and remove errpicker";
             delete errpicker;
         }
         errCodeIndex =-1;
-
-    //    delete ErrCurve;
-
-
-    //    delete errpicker;
-    //    errpicker->cleanBeforeClose();
-    //    errpicker->setTrackerMode(QwtPlotPicker::AlwaysOff);
-    //    delete ErrCurve;
-
         cArrayDetailedPlot.clear();
         cArrayGlobalMapPlot.clear();
     }
-    qDebug() << "errcurve found";
-
-
-//    qDebug() << ErrCurve->isVisible();
-//    delete ui->qwtPlot_2->canvas();
-
-//    ErrCurve->detach();
-//    delete ui->qwtPlot_2->canvas();
-//    ui->qwtPlot_2->repaint();
-//    ui->qwtPlot_2->replot();
-//    ui->qwtPlot->replot();
-//    this->repaint();
-//    errpicker->canvas()->blockSignals(true);
-
-    qDebug() << "closed";
     return 0;
-
 }
 
 
 int MainWindow::openLog()
 {
-//    newLogProc= new logProcessor;// (logProcessor*)malloc(sizeof(logProcessor));
-//    newTmiInterp = new TMIinterpretator;//(TMIinterpretator*)malloc(sizeof(TMIinterpretator));
     filename = QFileDialog::getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл лога регистратора(*.alg)");
-//    ui->qwtPlot_2->canvas() = canv;
-
     if(filename!=lastOpenedFileName)
     {
         if(filename!="")
         {
             if(!NoFileWasOpened)
             {
-                qDebug() <<"check if file is opened" <<NoFileWasOpened;
                 closeLog();
             }
             ui->actionHideLeftPanel->setEnabled(true);
@@ -3275,12 +2838,8 @@ int MainWindow::openLog()
                     setGlobalArrays();
                     initCurves();
                     initiatePlotMarkers();
-//                    initiateThermos();
                     initiateRadios();
-//                    initiateCurves();
-                    qDebug() << "curves are initiated";
                     hideWasteAxes(axisCount);
-                    qDebug() << "waste axes are hidden";
                     isOpened=true;
                     tmpIcon = new QIcon(":new/p/openLog");
                     ui->actionOpen->setIcon(*tmpIcon);
@@ -3292,13 +2851,10 @@ int MainWindow::openLog()
                     newLogProc->tmpFile.close();
                     this->resize(1025,725); //to fix size of scroll area and qwt plots we need to do this
                 }
-                for(int i =0; i < cArrayDetailedPlot.size();i++)
-                    if(cArrayDetailedPlot[i].cAttachable)
-                {
-                    qDebug() << "invisible var counter" << i << invisIntItems[i].invisibility;//invisibleVarsMask.at(i);
-                    qDebug() << cArrayCurveWidgets[i].parLabel;
-                }
-//                qDebug() << "next step";
+//                for(int i =0; i < cArrayDetailedPlot.size();i++)
+//                    if(cArrayDetailedPlot[i].cAttachable)
+//                {
+//                }
              }
         }
         return 0;
@@ -3316,24 +2872,11 @@ void MainWindow::initiateRadios()
     for(int i = 0; i <cArrayDetailedPlot.size();i++ )
         if(!cArrayDetailedPlot[i].cAttachable)
             attachableCount--;
-//    for(int i = 0; i < attachableCount; i++)
-//        if(cArrayDetailedPlot[i].cAttachable)
     for(int i = 0; i <cArrayDetailedPlot.size();i++ )
         if(cArrayDetailedPlot[i].cAttachable)
     {
         cWidgets.parLabel= cArrayDetailedPlot[i].cName;// = QString::fromLocal8Bit();
         cWidgets.axisButton = new QPushButton(this);
-
-        qDebug() << "parLabel itself"<< cWidgets.parLabel;
-
-//        QPushButton *axisButton;
-//        QCheckBox   *checkBox;
-//        QwtThermo   *thermo;
-//        QHBoxLayout *thermoLayout;
-//        QLabel      *valueLabel;
-//        QString     parLabel;
-//        bool flagOrData;
-           qDebug() <<"type"<< i << cArrayDetailedPlot[i].cType;
             if(cArrayDetailedPlot[i].cType==0)
             {
                     cWidgets.thermo = new QwtThermo(this);
@@ -3342,23 +2885,14 @@ void MainWindow::initiateRadios()
                     cWidgets.valueLabel = new QLabel(this);
                     QHBoxLayout *tmpLayout = new QHBoxLayout;
                     QHBoxLayout *tmpLayout_ = new QHBoxLayout;
-
                     cWidgets.thermoLayout = tmpLayout;
-//                    index = cWidgets.thermoLayout.indexOf(cWidgets.thermoLayout.last());
                     cWidgets.labelLayout = tmpLayout_;
-//                    index_ = cWidgets.labelLayout.indexOf(cWidgets.labelLayout.last());
                     ui->scrollArea->setLayout(ui->verticalLayout_7);
-
                     cArrayCurveWidgets.append(cWidgets);
-                    qDebug() << "parlabel" << i <<cArrayCurveWidgets[i].parLabel;
-//                    thermo[i] = new QwtThermo(this);
-//                    axisButton.append(new QPushButton(this));
                     buttonIndex = i;
-
                     connect(cArrayCurveWidgets[i].axisButton,SIGNAL(clicked()),this,SLOT(indexChanged()));
                     connect(cArrayCurveWidgets[i].axisButton,SIGNAL(released()),this, SLOT(hideAxis()));
                     thermoPalette.setColor(QPalette::ButtonText, cArrayDetailedPlot[i].cColor );
-                    qDebug() << i<< "maxYvalue"<<cArrayDetailedPlot[i].curve->maxYValue()<<cArrayDetailedPlot[i].curve->minYValue();
                     cArrayCurveWidgets[i].thermo->setMaxValue(cArrayDetailedPlot[i].curve->maxYValue()/*thermoPlotMaxs[i]*/);
                     cArrayCurveWidgets[i].thermo->setMinValue(cArrayDetailedPlot[i].curve->minYValue()/*thermoPlotMins[i]*/);
                     cArrayCurveWidgets[i].thermo->setOrientation(Qt::Horizontal,QwtThermo::NoScale);
@@ -3380,13 +2914,10 @@ void MainWindow::initiateRadios()
                     cArrayCurveWidgets[i].labelLayout->addWidget(label1);
                     cArrayCurveWidgets[i].labelLayout->addStretch();
                     cArrayCurveWidgets[i].labelLayout->addWidget(cArrayCurveWidgets[i].valueLabel);
-//                    ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].labelLayout);
                     cArrayCurveWidgets[i].thermoLayout->addWidget(cArrayCurveWidgets[i].thermo);
                     cArrayCurveWidgets[i].thermoLayout->addWidget(cArrayCurveWidgets[i].axisButton);
                     cArrayCurveWidgets[i].thermoLayout->setMargin(0);
                     cArrayCurveWidgets[i].thermoLayout->setSpacing(0);
-//                    ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
-
             }
         else if(cArrayDetailedPlot[i].cType==1)
         {
@@ -3394,20 +2925,14 @@ void MainWindow::initiateRadios()
                 cWidgets.checkBox = new QCheckBox (this);
                 cWidgets.widgetType = 1;//means flag
                 cWidgets.valueLabel = 0;//no value just flag
-
                 QHBoxLayout *tmplayout = new QHBoxLayout;
-
                 cWidgets.thermoLayout = tmplayout;
-//                index  = cWidgets.thermoLayout.indexOf(cWidgets.thermoLayout.last());
                 ui->scrollArea->setLayout(ui->verticalLayout_7);
                 cWidgets.labelLayout =0;
                 cArrayCurveWidgets.append(cWidgets);
-
                 RotatedLabel *label1 = new RotatedLabel(cArrayCurveWidgets[i].parLabel);
-//                checkBox[i] = new QCheckBox (this);
                 cArrayCurveWidgets[i].checkBox->setEnabled(false);
                 cArrayCurveWidgets[i].checkBox->setStyleSheet("QCheckBox::disabled{color:black;}""QCheckBox::indicator:checked:disabled{background: black;}""QCheckBox::indicator:unchecked:disabled{border: 1px solid black;}");
-//                axisButton.append(new QPushButton(this));
                 buttonIndex = i;
                 connect(cArrayCurveWidgets[i].axisButton,SIGNAL(clicked()),this,SLOT(indexChanged()));
                 connect(cArrayCurveWidgets[i].axisButton,SIGNAL(released()),this, SLOT(hideAxis()));
@@ -3422,7 +2947,6 @@ void MainWindow::initiateRadios()
                 cArrayCurveWidgets[i].thermoLayout->addWidget(cArrayCurveWidgets[i].axisButton);
                 cArrayCurveWidgets[i].thermoLayout->setMargin(0);
                 cArrayCurveWidgets[i].thermoLayout->setSpacing(0);
-//                ui->verticalLayout_7->addLayout(cArrayCurveWidgets[i].thermoLayout);
         }
         else if(cArrayDetailedPlot[i].cType==2)
             {
@@ -3430,25 +2954,15 @@ void MainWindow::initiateRadios()
                 cWidgets.checkBox = 0;
                 cWidgets.widgetType = 2;//means error
                 cWidgets.valueLabel = new QLabel(this);//no flag just value
-
                 QHBoxLayout *tmplayout = new QHBoxLayout;
-
                 cWidgets.thermoLayout = tmplayout;
-//                index  = cWidgets.thermoLayout.indexOf(cWidgets.thermoLayout.last());
                 ui->scrollArea->setLayout(ui->verticalLayout_7);
                 cWidgets.labelLayout =0;
                 cArrayCurveWidgets.append(cWidgets);
-
                 RotatedLabel *label1 = new RotatedLabel(cArrayCurveWidgets[i].parLabel);
-//                checkBox[i] = new QCheckBox (this);
-//                cArrayCurveWidgets[i].checkBox->setEnabled(false);
-//                cArrayCurveWidgets[i].checkBox->setStyleSheet("QCheckBox::disabled{color:black;}""QCheckBox::indicator:checked:disabled{background: black;}""QCheckBox::indicator:unchecked:disabled{border: 1px solid black;}");
-//                axisButton.append(new QPushButton(this));
                 buttonIndex = i;
                 connect(cArrayCurveWidgets[i].axisButton,SIGNAL(clicked()),this,SLOT(indexChanged()));
                 connect(cArrayCurveWidgets[i].axisButton,SIGNAL(released()),this, SLOT(hideAxis()));
-//                cArrayCurveWidgets[i].checkBox->setCheckable(true);
-//                cArrayCurveWidgets[i].checkBox->setChecked((int)cArrayDetailedPlot[i].cData.at(0)%2);
                 label1->setAngle(0);
                 cArrayCurveWidgets[i].axisButton->setFixedSize(20,20);
                 cArrayCurveWidgets[i].axisButton->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
@@ -3497,32 +3011,21 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
     double tmpOffset;
     int greatestFlagIndex=0;
     int flagOffsetMax=0;
-//    //qDebug() << flagIndex;
-
-//    for(int i = 0 ; i < invisibleVarsMask.size(); i++)
-//                if(!invisibleVarsMask[i])
     for(int i =0; i < cArrayDetailedPlot.size(); i++)
         if(cArrayDetailedPlot[i].cAttachable)
                 {
-//
-//                    if((char)newTmiInterp->TInterpItemArray[i].typ==8)
                     if(cArrayDetailedPlot[i].cType==1)
                     {
-
                         flagOffsetMax+=2;
-//                        greatestFlagIndex = i;
                     }
                 }
-//    //qDebug() << flagOffsetMax;
-    thermoPlotMaxs[0] = flagOffsetMax;
-    tmpOffset = (thermoPlotMaxs[0]/flagCounter)/4;
+    tmpOffset = (flagOffsetMax/flagCounter)/4;
     double tmpGain;
-     double tmpMax;
-     double tmpMin=0;
-//     //qDebug() << thermoPlotMaxs[0];
-     if(thermoPlotMaxs[0]<10)
+    double tmpMax;
+    double tmpMin=0;
+     if(flagOffsetMax<10)
      {
-         if(thermoPlotMaxs[0]<=1)
+         if(flagOffsetMax<=1)
          {
              tmpMax = 0.6;
              tmpMin = -0.6;
@@ -3531,30 +3034,29 @@ double MainWindow::getOffsetValue(int flagIndex)//this all is used to make corre
      }
      else
      {
-          if((int)thermoPlotMaxs[0]%10!=0)
+          if((int)flagOffsetMax%10!=0)
             {
-            if(thermoPlotMaxs[0]>1)
-                tmpMax = (int)((thermoPlotMaxs[0]*10 +10)/10);
+            if(flagOffsetMax>1)
+                tmpMax = (int)((flagOffsetMax*10 +10)/10);
             }
-        else tmpMax = thermoPlotMaxs[0];
+        else tmpMax = flagOffsetMax;
      }
-//     //qDebug() << tmpMin;
-//     //qDebug() << tmpMax;
-//     //qDebug() << flagCounter;
-    tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2+1);
+     if(tmpMax==10)
+         tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2);
+     else
+        tmpGain = (double)(tmpMax-tmpMin)/(flagCounter*2+1);
     flagMarkerIncStep = tmpGain*2;
     tmpOffset = tmpGain/2 + tmpMin;
     flagMarkerOffsetBase = tmpOffset;
     for(int i = 0; i < flagIndex; i++)
     {
-
-//        if((char)newTmiInterp->TInterpItemArray[i].typ==8)
         if(cArrayDetailedPlot[i].cType==1)
         {
             tmpOffset+=flagMarkerIncStep;
         }
     }
     qDebug() << tmpOffset;
+    qDebug() << flagOffsetMax;
     return tmpOffset;
 }
 
@@ -3562,13 +3064,9 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
 {
     QString tmpParamValue;
     QVariant tmpval;
-    //if(recNo<printLeftTimeIndex)recNo=printLeftTimeIndex;
-   // if((recNo>=printLeftTimeIndex)&&(recNo<=printRightTimeIndex))
-   //     {
     if ((paramName == "Машина")/*||(paramName=="SAS_Counter                    ")*/)
         {
             paramValue = ui->tableWidget->item(0,0)->text();
-            //////qDebug << paramValue.toString();
         }
         if (paramName == "TodayDate")
             paramValue = QDate::currentDate().toString();
@@ -3608,19 +3106,15 @@ void MainWindow::setValue(int &recNo, QString &paramName, QVariant &paramValue, 
             if(cArrayDetailedPlot[i].cType==1)
             {
                 tmpval = (int)(cArrayDetailedPlot[i].cData.at(recNo+printLeftTimeIndex))%2;
-//                if(paramName == cArrayCurveWidgets[i].parLabel)
-                    paramValue = tmpval.toString();
+                paramValue = tmpval.toString();
             }
             else
             {
                 tmpval = cArrayDetailedPlot[i].cData.at(recNo+printLeftTimeIndex);
                 tmpval = tmpval.toFloat();
-//                if(paramName == cArrayCurveWidgets[i].parLabel)
-                    paramValue =  tmpval.toString();
+                paramValue =  tmpval.toString();
             }
          }
-   // }
-
 }
 void MainWindow::on_actionPrint_triggered()
 {
@@ -3628,11 +3122,9 @@ void MainWindow::on_actionPrint_triggered()
    pf->SetMapMarkerPosition(timeArray[(int)verticalMapMarker->value().x()]);
    if(QDialog::Accepted == result)
    {
-
        convertTimeToPosition(pf->returnFromTime(),pf->retutnToTime());
        report = new QtRPT(this);
        QFileDialog dialog(this);
-       //QString fileName = dialog.getOpenFileName(this,"Открыть файл лога регистратора", "c:","Выберите файл (*.*)");;
        QString fileName = "ascumarm_05_09_13.xml";
        report->recordCount << printRightTimeIndex - printLeftTimeIndex;
        if (report->loadReport(fileName) == false) {
@@ -3644,13 +3136,10 @@ void MainWindow::on_actionPrint_triggered()
        }
        report->printExec();
    }
-   //connect(verticalMapMarker,SIGNAL(moveMapMarker),this,)
-   // connect(, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
 }
 
 void MainWindow::convertTimeToPosition(QDateTime firstTime, QDateTime secondTime)
 {
-//    bool error1, error2;
     for(int i = 0; i < sizeOfArray; i++)
     {
         if(firstTime.toTime_t()<=timeArray[i])
@@ -3681,12 +3170,6 @@ double MainWindow::upPlotMagnifier(int factor)
     if(magVal<0)magVal = 0;
     ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom,-magVal+currentTimeMarker->value().x(),magVal+currentTimeMarker->value().x(),1);
     int tmpCounter=0;
-//    for(int i =0; i < varCounter; i++)
-//    for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
-//    {
-////        int index = cArrayDetailedPlot[i].axis;
-//        if(cArrayDetailedPlot[i].cType==1)
-//        {
     for(int i =0; i < cArrayDetailedPlot.size();i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
@@ -3696,7 +3179,6 @@ double MainWindow::upPlotMagnifier(int factor)
             tmpCounter++;
         }
     }
-//    }
     ui->qwtPlot_2->replot();
     globalMagVal = magVal;
     QVariant tmpPercents = (int)((globalMagnifyBaseVal/magVal) *100);
@@ -3712,19 +3194,11 @@ int MainWindow::calculateCursorPlotOffset()
     {
         if(ui->qwtPlot_2->visibleRegion().rects()[0].x()>0)
         {
-            //offset = ui->qwtPlot_2->visibleRegion().rects()[0].width();
-//            int tmpOffset = ui->qwtPlot_2->width() - ui->qwtPlot_2->transform(QwtPlot::xBottom, currentTimeMarker->value().x()+upPlotMagnifier(globalMagnifyFactor));
             offset = 0;
-//            ////qDebug << ui->qwtPlot_2->visibleRegion().rects()[0].width();
-            //offset = tmpOffset + offset - ui->qwtPlot_2->width() ;
         }
         else
             offset = -ui->qwtPlot_2->visibleRegion().rects()[0].width();
     }
-//    ////qDebug << offset;
- //   ////qDebug << ui->qwtPlot_2->width();
-//    ////qDebug << ui->qwtPlot_2->visibleRegion();
-//    ////qDebug << ui->qwtPlot_2->visibleRegion().rects()[0].width();
     return offset;
 }
 
@@ -3732,19 +3206,10 @@ bool MainWindow::isCursorPositionOnDownPlot()
 {
     int windowXpos= ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
     int cursorXPos =QCursor::pos().x();
-//    int windowYpos = ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).y();
-  //  ////qDebug << windowYpos;
-//    int cursorYpos = QCursor::pos().y();
-//    ////qDebug << windowYpos;
-//    ////qDebug << windowXpos;
-//    ////qDebug <<cursorYpos;
-//    ////qDebug << cursorXPos;
-   // ////qDebug << ui->qwtPlot->visibleRegion();//
-    //ui->qwtPlot->mapToGlobal(ui->qwtPlot->pos()).x();
     if((cursorXPos<(windowXpos+ui->qwtPlot->width()))&(cursorXPos>(windowXpos)))//&
-            //((cursorYpos<(windowYpos+ui->qwtPlot->height()))&(cursorYpos>(windowYpos))))
-        return true;
-    else return false;
+          return true;
+    else
+        return false;
 }
 
 bool MainWindow::isCursorPositionOnUpPlot()
@@ -3752,14 +3217,7 @@ bool MainWindow::isCursorPositionOnUpPlot()
     int windowXpos= ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();
     int cursorXPos =QCursor::pos().x();
     int windowYpos = ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).y();
-
     int cursorYpos = QCursor::pos().y();
-//    ////qDebug << windowYpos;
-//    ////qDebug << windowXpos;
-//    ////qDebug <<cursorYpos;
-//    ////qDebug << cursorXPos;
-
-    //ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->pos()).x();
     if(((cursorXPos<(windowXpos+MainWindow::width()))&(cursorXPos>(windowXpos+ui->scrollArea->width())))&
             ((cursorYpos<(windowYpos+ui->qwtPlot_2->height()))&(cursorYpos>(windowYpos))))
         return true;
@@ -3768,7 +3226,7 @@ bool MainWindow::isCursorPositionOnUpPlot()
 
 void MainWindow::cursorMoved(QPoint pos)
 {
-    ////qDebug << pos;
+
 }
 
 void MainWindow::on_qwtPlot_2_destroyed()
@@ -3778,6 +3236,7 @@ void MainWindow::on_qwtPlot_2_destroyed()
 void MainWindow::showAllCurves()
 {
     int index=0;
+    double tmpMagVal = upPlotMagnifier(globalMagnifyFactor);
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
@@ -3807,9 +3266,10 @@ void MainWindow::showAllCurves()
                         else if((cArrayDetailedPlot[i].cType==1))
                          {
                             if(cArrayDetailedPlot[i].cAttachable)
-                                cArrayDetailedPlot[i].flagMarker->attach(ui->qwtPlot_2);
-        //                     //qDebug << flagMarker[index]->yValue();
-        //                     //qDebug << thermoPlotMaxs[0];
+                            {
+                                cArrayDetailedPlot[i].flagMarker->setValue(tmpMagVal*0.8+verticalMapMarker->value().x(),getOffsetValue(i));
+                                cArrayDetailedPlot[i].flagMarker->attach(ui->qwtPlot_2);                                
+                            }
                          }
                     ui->qwtPlot_2->replot();
                     cArrayCurveWidgets[i].axisButton->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
@@ -3823,8 +3283,6 @@ void MainWindow::showAllCurves()
                     cArrayDetailedPlot[i].curve->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
                     if((cArrayDetailedPlot[i].cType==0)||(cArrayDetailedPlot[index].cType==2))
                     {
-    //                    curve2[index]->setAxes(1,index);//this one
-    //                    ui->qwtPlot_2->enableAxis(index,false);//and enable it
                         if(index!=20)
                         {
 
@@ -3854,30 +3312,8 @@ void MainWindow::moveMagnifyWidget()
 
 }
 
-//void MainWindow::collapseAllCurves()
-//{
-//    int index;
-
-//    for( index =0; index< varCounter;index++)
-//    {
-//        if(!isAxisHidden[index])
-//        {
-//            curve2[index]->detach();//by default we have 1st axis with this curve on the plot, also it is enabled by default
-//            if(!cArrayDetailedPlot[i].cTypeindex])
-//            {
-//                curve2[index]->setAxes(1,index);//this one
-//                ui->qwtPlot_2->enableAxis(index,false);//and enable it
-//            }
-
-//            ui->qwtPlot_2->replot();
-//            axisButton[index]->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
-//            isAxisHidden[index] =true;
-//        }
-//    }
-//}
 void MainWindow::increaseMagnifyFactor()
 {
-
     if(globalMagnifyFactor>200)globalMagnifyFactor = 200;
      if(globalMagnifyFactor<0)globalMagnifyFactor = 0;
      globalMagnifyFactor++;
@@ -3886,60 +3322,34 @@ void MainWindow::increaseMagnifyFactor()
 
 void MainWindow::decreaseMagnifyFactor()
 {
-
      if(globalMagnifyFactor>200)globalMagnifyFactor = 200;
      if(globalMagnifyFactor<0)globalMagnifyFactor = 0;
       globalMagnifyFactor--;
-   //   //qDebug<<globalMagnifyFactor;
     upPlotMagnifier(globalMagnifyFactor);
-
 }
 
 void MainWindow::getPointsQuantity(time_t firstTime, time_t lastTime)
 {
     pointsQuantity = firstTime - lastTime;
-    //qDebug << pointsQuantity;
 }
 
-//QString MainWindow::errorDecoder(int errorCode)
-//{
-
-//}
 
 int MainWindow::getClosestToPositionIndex(int pos)
 {
-//    qDebug() << QDateTime::fromTime_t(timeArray[95]);
-//    qDebug() << QDateTime::fromTime_t(timeArray[96]);
-//    qDebug() << QDateTime::fromTime_t(timeArray[97]);
-//    qDebug() << QDateTime::fromTime_t(timeArray[98]);
-//    //qDebug << (int)endOfLogTime;
-//     //qDebug << (int) timeArray[0];
-//      //qDebug << (int)timeArray[sizeOfArray-2];
-
-
-        int incval = 0;
+    int incval = 0;
     for (int i = 1;  i < sizeOfArray; i++) //pointsQuantity - is a variable that discribes how many points should be on plot
     {
-        //qDebug << (int)((int)endOfLogTime - (int)timeArray[i]);
         if(timeArray[i]==timeArray[i-1])
             incval++; //incval is quantity of multipoints at same time
         if((int)timeArray[i] - (int)timeArray[0] > pos-incval)
         {
             if(i>1)
             {
-//            for(int j = i; j > 0; j--)
                 int j = i;
                 while(j>=0)
                 {
-
                     if((int)timeArray[j]- (int)timeArray[0]  <= pos-incval)
                     {
-//                        qDebug() << "pointsamount" << pointsQuantity;
-//                        qDebug() << QDateTime::fromTime_t(timeArray[i]);
-////                        qDebug() <<"pos" << pos;
-//                        qDebug() << "incval"<<incval;
-//                        qDebug()<<"j"<<j;
-//                        qDebug() << "i"<<i;
                         return j;
                     }
                     if(timeArray[j]==timeArray[j-1])
@@ -3949,17 +3359,9 @@ int MainWindow::getClosestToPositionIndex(int pos)
             }
             else
             {
-//                qDebug() << "i" << i;
                 return i-1;
             }
-//            //qDebug() << (int)allPoints[pos]-(int)allPoints[0] << "allpointsArr";
-//            //qDebug() << incval;
-//            //qDebug() << (int)timeArray[i] - (int)timeArray[0] << "timearr";
-//            return i-1;
         }
-        //        if((int)timeScale->timeArr[i] - (int)timeScale->timeArr[0] > pos)
-
-
     }
     return 0;
 }
@@ -4008,15 +3410,14 @@ void MainWindow::on_actionHideLeftPanel_triggered()
             tmpIcon = new QIcon(":new/p/hp");
             ui->actionHideLeftPanel->setIcon(*tmpIcon);
         }
-//    }
 }
 
 void MainWindow::on_actionHideLeftPanel_triggered(bool checked)
 {
-//qDebug() << ui->qwtPlot_2->geometry();
+
 }
 
 void MainWindow::on_actionHideLeftPanel_toggled(bool arg1)
 {
-//qDebug() << ui->qwtPlot_2->geometry();
+
 }

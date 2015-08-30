@@ -101,7 +101,7 @@ class MainWindow;
             hex.setNum(currentErr,16);
             if((errDesc[currentpos].errors!=0)&(/*(errDesc[currentpos].errCoord==ypos-1)||(errDesc[currentpos].errCoord==ypos+1)||*/(errDesc[currentpos].errCoord==ypos)))
                 text.setText(/*"( установлена ошибка: "+*/errorDecoder(currentErr)/*hex*//*+")"*/);
-            qDebug() << currentpos<<errDesc[currentpos].errCoord<<errDesc[currentpos].errors<<ypos;
+//            qDebug() << currentpos<<errDesc[currentpos].errCoord<<errDesc[currentpos].errors<<ypos;
             return text;
         }
         void cleanBeforeClose();
@@ -145,7 +145,7 @@ public:
                         upTime = QDateTime::fromTime_t(timeVector.at((long)v));
                 }
                 else return tmp;
-                qDebug() << upTime.time().toString()<<v;
+//                qDebug() << upTime.time().toString()<<v;
 
             return upTime.time().toString();
         }
@@ -206,7 +206,7 @@ class MyPlotCurve: public QwtPlotCurve
 public:
     MyPlotCurve(double offset) : setOffset(offset){}
 private:
-    void shiftDown( QRect &rect, int offset ) const
+    void shiftDown( QRect &rect/*, int offset */) const
     {
         MyPlotCurve::boundingRect().translate( 0, 2);
     }
@@ -279,8 +279,8 @@ private:
     int globalCursorMove;
     int globalCursorFirstPressPos;
     int plotRectBasicWidth;
-    bool mapPlotUsed = false;
-    bool rightButtonPressed = false;
+    bool mapPlotUsed;
+    bool rightButtonPressed;
     QString lastOpenedFileName;
     QVector <QString> errorCodes ;
 #define MAX_POINTS 1000000
@@ -288,32 +288,28 @@ private:
     bool timeFractExistFlag;
     bool subTimeExistFlag;
     bool powOnTimeArrayExistFlag;
-    bool isOpened=false;
-    bool leftButtonPressed=false;
-    bool leftButtonReleased=false;
-    bool reOpenWindow = false;
+    bool isOpened;
+    bool leftButtonPressed;
     bool OldLog;
-    double globalMagVal=100;
-    double globalSavedCursorMove=0;
-    int globalMagnifyBaseVal = 148;
+    double globalMagVal;
+    double globalSavedCursorMove;
+    int globalMagnifyBaseVal;
     TimeScaleDraw *timeScale;
     MapTimeScaleDraw *mapTimeScale;
     VerticalFlagScaleDraw *verticalFlagScale;
     QTimer *mapTimer;
     int lastFlag;
-    int mapTimerDelay = 1000;
-    int globalMagnifyFactor=100;
-    bool rectsInc=false;
-    int rectQty = 2;
+    int mapTimerDelay;
+    int globalMagnifyFactor;
     int globalMagnifierPreviosPos;
     int globalCursorPos;
     int beforeMovePosition;
-    int globalMoveFlag=false;
-    int firstFlagIndex=0;
+    int globalMoveFlag;
+    int firstFlagIndex;
     QPoint globalCursorPoint;
     QIcon *tmpIcon;
     QDateTime AxisLabelDate;
-   int axisCount = 2;
+   int axisCount;
    int varCounter;
    int invisibleVarCounter;
    QVector <bool> invisibleVarsMask;
