@@ -49,7 +49,7 @@ FORMS    += mainwindow.ui \
 
 OTHER_FILES += \
     qwt.pri
-LIBS+= -LC:\Qt\Qwt-6.0.2\lib -lqwtd #lqwtd - for debug lqwt - for release
+LIBS+= -LC:\Qt\Qwt-6.0.2\lib -lqwt #lqwtd - for debug lqwt - for release
 INCLUDEPATH+= C:\Qt\qt-creator-2.7.0\bin
 #LIBS += libpqdll.lib
 INCLUDEPATH+= C:\Qt\Qwt-6.0.2\include
