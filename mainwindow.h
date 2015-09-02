@@ -321,7 +321,7 @@ private:
     QwtPlotMarker *verticalMapMarker;
     QwtPlotMarker *currentTimeMarker;
     errorPicker *errpicker;
-    unsigned int sizeOfArray=1000;
+    int sizeOfArray;
     QString filename;
     QString openedFileName;
     char tmpHeadArr[208];
@@ -378,7 +378,7 @@ private:
     double flagMarkerOffsetBase = 1.25;
     double flagMarkerIncStep = 0;
     int flagCounter = 0;
-    bool invertedTime = false;
+    bool invertedTime = true;
     bool HideLeftArea;
     bool NoFileWasOpened;
    /*here are the stats of the machine*/
@@ -399,7 +399,7 @@ private:
     bool readDataFromLog();
     int initPicker();
     void globalInits(int arrayIndexSize);
-    bool initiateTimeAxis(QDateTime startPoint, time_t *times, int length);
+    bool initiateTimeAxis(time_t *times);
     void initGloabalArrays(int values);
     void setGlobalArrays();
     void hideWasteAxes(int notHiddenIndex);

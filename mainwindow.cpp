@@ -875,9 +875,9 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
 
 bool MainWindow::readDataFromLog()//and now we're reading all the data from our log
 {
-    int tmpID= 0;
+
     double flagOffset=0;
-    int tmpLogDataPointer =0;
+//    int tmpLogDataPointer =0;
     long tmpErr = newLogProc->selectSegment(bigTableID);//at first we have to read interpreter of bigTable
     QString tmpMsgText;
     QString tmpMsgHint;
@@ -921,91 +921,67 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
         char* buffArr = (char*)malloc(newLogProc->segmentHeader.size);
         newLogProc->readSegment(buffArr, newLogProc->segmentHeader.size );
             newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
-            //qDebug() <<"records count!" << newTmiInterp->interpreterRecordsCount;
             newTmiInterp->setInterpretationTable(buffArr,newTmiInterp->interpreterRecordsCount);
-            int ii=0;
             invisibleInterpItems invii;
             pointerToSpd = 0;
+            pointerToEng1Spd=0;
             for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)// creating invisibleVarsMask vector here
             {
                 invii.invisibility = true;
                 invii.interpIndex = i;
                 if((newTmiInterp->TInterpItemArray[i].level==1)||(newTmiInterp->TInterpItemArray[i].level==2))
                 {
-//                    invisibleVarsMask.append(false);
-//                    if(newTmiInterp->TInterpItemArray[i].typ&0xffff>40)//|(newTmiInterp->TInterpItemArray[i].typ==4)|(newTmiInterp->TInterpItemArray[i].typ==27))
-//                    {
-////                        invisibleVarsMask[ii]=true;
-//                        invii.invisibility = true;
-////                        invisibleVarCounter++;
-//                    }
-
                     if((char)(newTmiInterp->TInterpItemArray[i].typ)==4)
                     {
-//                        invisibleVarsMask[ii] = false;
-
                         if(pointerToSpd==0)
                             pointerToSpd = i;
                         invii.invisibility = false;
-//                        invisibleVarCounter++;
                     }
                     else if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==3)//
                     {
-//                        invisibleVarsMask[ii] = false;
-
                         if(pointerToSpd==0)
                             pointerToSpd = i;
                         invii.invisibility = false;
-//                        invisibleVarCounter++;
                     }
                     else if((char)(newTmiInterp->TInterpItemArray[i].typ)==0)
                     {
-//                        invisibleVarsMask[ii] = false;
-
                         if(pointerToSpd==0)
                             pointerToSpd = i;
                         invii.invisibility = false;
-//                        invisibleVarCounter++;
                     }
                     else if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==10)
                     {
                         int zeroCounter=0;//this code needs to understand which of times has corresponding name length
-//                        invisibleVarsMask[ii] = true;
                         for(int a = 0; a < sizeof(newTmiInterp->TInterpItemArray[i].name); a++)
                         {
                             if(newTmiInterp->TInterpItemArray[i].name[a]==0)
                                 zeroCounter++;
                         }
                         zeros.append(zeroCounter);
-//                        invisibleVarsMask[ii] = true;
                         invii.invisibility = true;
-//                        invisibleVarCounter++;
                     }
                     else if(((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==7))
                     {
 //                        if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Скорость [км/ч]")
 //                        {
+                        if((pointerToEng1Spd==0)&(pointerToSpd!=0))
+                           pointerToEng1Spd = i;
                          if(pointerToSpd==0)
                             pointerToSpd = i;
+
 //                        }
 //                        else if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Двигатель.обороты [об/мин]")
 //                        {
 //                            pointerToEng1Spd = i;
 //                        }
-//                        pointerToSpd = i;
-//                        invisibleVarsMask[ii] = false;
                         invii.invisibility = false;
-//                        invisibleVarCounter++;
                     }
                     else if((char)(newTmiInterp->TInterpItemArray[i].typ&0xffff)==34)
                     {
-                        double tmpDbl;
+                        if((pointerToEng1Spd==0)&(pointerToSpd!=0))
+                           pointerToEng1Spd = i;
                         if(pointerToSpd==0)
                             pointerToSpd = i;//
-                        else
-                        {
-                            pointerToEng1Spd = i;
-                        }
                          if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name) == "Скорость [км/ч]")
                          {
                              pointerToSpd = i;
@@ -1014,9 +990,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                          {
                              pointerToEng1Spd = i;
                          }
-//                         invisibleVarsMask[ii] = false;
                          invii.invisibility = false;
-//                         invisibleVarCounter++;
                     }
                     else if(/*((char)(newTmiInterp->TInterpItemArray[i].typ)==34)|*/((char)(newTmiInterp->TInterpItemArray[i].typ)==8))
                     {
@@ -1039,9 +1013,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                 pointerToEng1Spd = i;
                             if(cuttenStr=="LAR_Engine2Speed")
                                 pointerToEng2Spd = i;
-//                            invisibleVarsMask[ii]=false;
                             invii.invisibility = false;
-//                            invisibleVarCounter++;
                     }
                     else
                         invii.invisibility = true;
@@ -1063,8 +1035,6 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
             *from here we start to processing data from small table
             */
             newLogProc->setValueLDPtr(SIZE_OF_FILEHEADER);
-            tmpID = 0;
-            tmpLogDataPointer = SIZE_OF_FILEHEADER;
             long tmpErr1 = newLogProc->selectSegment(bigTableID&0x7fffffff);
             long tmpFlags = newLogProc->getSegmentFlags();
             if(tmpFlags&&0x00000001)//very important flag
@@ -1082,12 +1052,9 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                         int recCounter=0;
                         int recPosition=newLogProc->logDataPointer;
                         int recPositionCompareVal = recPosition;
-                        QString tmpField = " ";
                         int tmpRecI = 0;
-                        QVariant recFloat;
                         int tmpErrVal = 0;
                         int tmpErrLastVal = 0;
-                        int errCounter=0;
                         errCodeIndex = -1;
                         int CoordErrVal = 0;
                         int backIndex=tmpRecordCount-1;
@@ -1100,9 +1067,7 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                             flagOffset=0;
                             newLogProc->readRecord(tmpRecordCount,newLogProc->segmentHeader.recordSize, recPositionCompareVal);
                                  tmpRecI =0;
-                                 int tmpInvisibleVarDecrease=0;
                                  zeroiterator = 0;
-                                // int iii=0;
                                     for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
                                     {
                                         tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
@@ -1114,8 +1079,6 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 {
                                                     if(newTmiInterp->TInterpItemArray[i].name == "TimeFract")
                                                     {
-
-                                                        QVariant tmpVar = backIndex;
                                                         timeFractExistFlag = true;
                                                         timeFract[backIndex] = newTmiInterp->fieldChar(&newLogProc->record[tmpRecI]);
                                                         break;
@@ -1179,10 +1142,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     {
                                                         if(zeros.at(zeroiterator)!=11)
                                                         {
-                                                            //qDebug() << QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
                                                             QString tmpname;
                                                             tmpname = newTmiInterp->TInterpItemArray[i].name;
-                                                            //qDebug() << tmpname.toLocal8Bit()<< "sizeof str" << sizeof(newTmiInterp->TInterpItemArray[i].name);
                                                                 if(index==0)
                                                                 {
 
@@ -1199,11 +1160,9 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                                     if(index==1)
                                                                          firstDateTime = QDateTime::fromTime_t(recTime);
                                                                 }
-                                                            //qDebug() << QDateTime::fromTime_t(recTime);
                                                         }
                                                         else
-                                                            //qDebug() << QDateTime::fromTime_t(recTime);
-                                                        zeroiterator++;
+                                                            zeroiterator++;
                                                         if(zeroiterator>zeros.size())
                                                             zeroiterator=0;
                                                         timeArray[backIndex] =recTime;//(int)((uint)recTime-(uint)firstPointDateTime);
@@ -1245,10 +1204,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                     tmpname = newTmiInterp->TInterpItemArray[i].name;
                                                     if(QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name,8)=="Субвремя")
                                                     {
-                                                        QVariant tmpVar = backIndex;
                                                         subTimeExistFlag = true;
                                                         subTime[backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
-                                                        //break;
                                                     }
 //                                                    else
                                                         Y[i/*-tmpInvisibleVarDecrease*/][backIndex] = newTmiInterp->fieldInt16(&newLogProc->record[tmpRecI]);
@@ -1306,8 +1263,6 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                                         flagOffset+=2;
                                                                     }
                                                                 }
-
-
                                                          }
                                                     break;
                                                 }
@@ -1315,7 +1270,6 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                 {
                                                      tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                      bool successScanFlag=false;
-                                                     //qDebug() << "this is error CODE";
                                                      for(int a = backIndex; a < tmpRecordCount; a++)
                                                      {
                                                          if(!successScanFlag)
@@ -1330,10 +1284,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                      if(!successScanFlag)
                                                          ErrCoords[backIndex] = CoordErrVal++;
                                                      ErrCode[backIndex]= tmpErrVal;
-                                                     //qDebug() << "errcode"<<ErrCode[backIndex];
                                                      tmpErrVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
                                                      tmpErrLastVal = tmpErrVal;
-                                                     //qDebug() << tmpErrVal<<" these are tmpErrVals of error";
                                                      break;
                                                  }
                                                  default:
@@ -1341,21 +1293,18 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                                                      break;
                                                  }
                                             }
-                                           // iii++;
                                         }
 
                                     }
                                     recCounter++;
                                     recPosition+=newLogProc->segmentHeader.recordSize;
                         }
-                        //qDebug() << "firstdatetime" << firstDateTime << tmpRecordCount;
+                        qDebug() << "firstdatetime" << firstDateTime << tmpRecordCount;
                         for(int c=0; c<tmpRecordCount;c++)
-                            //qDebug()<<"timearray" <<c <<timeArray[c];
-                         if(!initiateTimeAxis(firstDateTime,timeArray,tmpRecordCount))
+                         if(!initiateTimeAxis(/*firstDateTime,*/timeArray/*,tmpRecordCount*/))
                         {
                             free(buffArr);
                             isOpened=false;
-                            //qDebug() << "wrong";
                             openNewMainWindow();
                             return false;
                         }
@@ -1368,7 +1317,6 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
                     openNewMainWindow();
                     return false;
                 }
-
       }
     else
     {
@@ -1381,10 +1329,8 @@ bool MainWindow::readDataFromLog()//and now we're reading all the data from our 
 
 int MainWindow::createErrCoordsArray()
 {
-    int savedIndex = 0;
     for(int i =0 ; i < sizeOfArray; i++)
     {
-
         if(i ==0)
         {
             if(ErrCode[i]!=0)
@@ -1392,7 +1338,6 @@ int MainWindow::createErrCoordsArray()
             else
             {
                 ErrCoords[0] = 0;
-                //qDebug() << "zero is set";
             }
             maxErrCoord = ErrCoords[0]; //maxErrCoord is quantity var,actually it means how many  not zero errCodes were in array ErrCode[]
         }
@@ -1408,7 +1353,6 @@ int MainWindow::createErrCoordsArray()
                        if(ErrCode[i] == ErrCode[ii])
                        {
                            ErrCoords[ii] = ErrCoords[i];
-                           //qDebug() << "equal coords"<<ErrCoords[i]<<ErrCode[i]<<ErrCoords[0]<<i;
                            equalflag = true;
                            ii = i;
                        }
@@ -1418,14 +1362,9 @@ int MainWindow::createErrCoordsArray()
                    {
                        ErrCoords[i] = maxErrCoord+1;
                        maxErrCoord++;
-                       //qDebug() << "new coords" << ErrCoords[i];
                    }
                }
-//           }
-
-
         }
-//        //qDebug() << ErrCoords[i];
     }
     return 0;
 }
@@ -1433,7 +1372,6 @@ int MainWindow::createErrCoordsArray()
 bool MainWindow::checkSegmentCRC(long segmentID)
 {
     newLogProc->selectSegment(segmentID);//selecting head table interpretator segment
-    //qDebug << newLogProc->segmentHeader.size;
     newLogProc->tmpFile.seek(newLogProc->logDataPointer-SIZE_OF_SEGMENTHEADER);
     newLogProc->tmpFile.read(tmpHeadArr,SIZE_OF_SEGMENTHEADER);
     tmpHeadArr[4]=0;
@@ -1470,42 +1408,28 @@ bool MainWindow::checkSegmentCRC(long segmentID)
      }
 }
 
-bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length)
+bool MainWindow::initiateTimeAxis(/*QDateTime startPoint,*/ time_t *times/*,int length*/)
 {
-
     unsigned int pointsAmount=0;
     unsigned int tmpAbs=0;
     bool increasingTimeFlag = false;
-//    if(dateChangedArrExistFlag)
-//    {
     createErrCoordsArray();
-
-    //qDebug() << "QString size" << sizeof(QString);
     if(!OldLog)
     {
         for(int i = 1; i < sizeOfArray; i++)
         {
-//            //qDebug() << QDateTime::fromTime_t(times[i]);
             if(dateChangedArrExistFlag)
             {
                 if(!dateChangedArr[i])
                 {                                                       //if there was an appearence of dateChanged flag, that is being searched in dateChangeArr
                     pointsAmount += (abs)((int)times[i]-(int)times[i-1]);      //we have to increase pointsAmount value only by one, otherwise increase it by subtracted value
-                    ////qDebug() << dateChangedArr[i] << " date Changed";
-
                 }
                 else pointsAmount++;                                    //of times[i]-times[i-1]
             }
             else
             {
-//                if((int)times[i]>(int)times[i-1])
-//                    pointsAmount += (int)times[i]-(int)times[i-1];
-//                if((int)times[i]<(int)times[i-1])
-//                    pointsAmount += (int)times[i-1]-(int)times[i];
                 if((int)times[i]==(int)times[i-1])
                 {
-//                    //qDebug() << "times[i]" << (int)times[i];
-//                    //qDebug() << "times[i-1]" << (int)times[i-1];
                     pointsAmount++;
                 }
                 else if(timeFractExistFlag)
@@ -1528,51 +1452,30 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
                         }
                         tmpAbs=1;
                     }
-//                    //qDebug() << "times[i]" << (int)times[i];
-//                    //qDebug() << "times[i-1]" << (int)times[i-1];
-//                    //qDebug() << tmpAbs;
                     pointsAmount+=tmpAbs;
                 }
                 else if(subTimeExistFlag)
                 {
                     tmpAbs = abs((int)times[i]-(int)times[i-1]);
-                    //qDebug() << times[i];
-                    //qDebug() << tmpAbs;
                     if(tmpAbs<=MAX_POINTS)
                     {
                         int tmpUnabs = (int)times[i]-(int)times[i-1];
-                        //qDebug() << tmpUnabs;
                         if(tmpUnabs<0)
                         {
-                           // times[i] = times[i-1];
                             tmpAbs = abs(tmpUnabs);
-//                            if(subTime[i]<subTime[i-1])
-//                                subTime[i] = subTime[i-1]+1;
                         }
                         else if(tmpUnabs>0)
                         {
                             increasingTimeFlag = true;
-                            //times[i-1] = times[i];
                             tmpAbs = abs(tmpUnabs);
-//                            if(subTime[i-1]<subTime[i])
-//                                subTime[i-1] = subTime[i]+1;
                         }
                         else
                             tmpAbs=1;
                     }
-//                    //qDebug() << "times[i]" << (int)times[i];
-//                    //qDebug() << "times[i-1]" << (int)times[i-1];
-//                    //qDebug() << tmpAbs;
                     pointsAmount+=tmpAbs;
                 }
-//                //qDebug() << pointsAmount;
             }
-//            ////qDebug() << pointsAmount;
         }
-        for(int i =0; i < sizeOfArray; i++)
-            //qDebug() << times[i];
-        //qDebug() << "sizeofarray" << sizeOfArray;
-        //qDebug() << "pointsAmount" << pointsAmount;
         if(pointsAmount<=0)
         {
             newMessage.setWindowTitle("Ошибка!");
@@ -1580,7 +1483,6 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
             newMessage.exec();
             return false;
         }
-        //qDebug() << QDateTime::fromTime_t(times[sizeOfArray-1])<< "or"<< times[sizeOfArray-1] << "begin time" << QDateTime::fromTime_t(times[0])<< "end time"<<"or"<< times[0];
     if(pointsAmount > MAX_POINTS)
     {
         newMessage.setWindowTitle("Ошибка!");
@@ -1590,20 +1492,12 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
     }
     else
     {
-
-
             pointsQuantity = pointsAmount;
             timeScale = new TimeScaleDraw(QDateTime::fromTime_t(times[0]));
-           // if(!OldLog)
             timeScale->maxVal=pointsAmount;
-
             mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
             mapTimeScale->setLabelAlignment(Qt::AlignRight);
-//            timeScale->timeArr= (time_t*)malloc(pointsAmount*sizeof(time_t));
             allPoints = (time_t*)malloc(pointsAmount*sizeof(time_t));
-
-
-            int timeIndex = 1;
             if(!increasingTimeFlag)
             {
                 allPoints[0] = times[pointsAmount-1];
@@ -1614,32 +1508,14 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
                 allPoints[0] = times[0];
                 allPoints[pointsAmount-1] = times[sizeOfArray -1];
             }
-
-//            for(int i = 0; i < sizeOfArray; i++)
-//                //qDebug() << QDateTime::fromTime_t((int)times[i]);
             for (int i = 1;  i < pointsAmount; i++)     // we create global array of time points, also adding points that are duplicated
             {
                 if(increasingTimeFlag)
                     allPoints[i] = times[i];
                 else
                     allPoints[i] = times[pointsAmount-i];
-//                if((int)times[timeIndex]==(int)times[timeIndex-1])
-//                {
-////                    //qDebug() << i <<"is duplicated" << (int)allPoints[i-1] << QDateTime::fromTime_t((int)allPoints[i-1]);
-//                    allPoints[i] = allPoints[i-1];
-//                }
-//                else
-//                    allPoints[i] = allPoints[i-1]+1;
-//                if((int)times[timeIndex] == allPoints[i])
-//                {
-//                    timeIndex++;
-////                    //qDebug() << "timeIndex" << timeIndex;
-////                    //qDebug() << QDateTime::fromTime_t((int)times[timeIndex]);
-//                }
             }
             timeScale->fillTimeVector(pointsQuantity,times);
-            for(int i =0; i < sizeOfArray; i++)
-                //qDebug() <<i<<"time " <<times[i]<<allPoints[i];
             timeScale->timeArr = allPoints;
             mapTimeScale->timeArr = allPoints;
              ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
@@ -1648,41 +1524,27 @@ bool MainWindow::initiateTimeAxis(QDateTime startPoint, time_t *times,int length
              QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
              sd->enableComponent(QwtScaleDraw::Ticks,false);
              ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
-             QVariant tmpTimeIndex;
             printLeftTimeIndex = 0;
             printRightTimeIndex = printLeftTimeIndex+120;
-//            free(allPoints);
-//            delete(timeScale);
             return true;
         }
     }
     else
     {
         pointsAmount =sizeOfArray;
-//        //qDebug() << "pointsAmount:" << pointsAmount;
-//        //qDebug() << "timeArray:" << sizeof(timeArray);
         pointsQuantity = pointsAmount;
-
-        timeScale = new TimeScaleDraw(startPoint);
+        timeScale = new TimeScaleDraw(QDateTime::fromTime_t(times[0]));
         timeScale->maxVal = sizeOfArray-1;//(long)times[sizeOfArray-1];
-//        //qDebug() << "maxVal:" << timeScale->maxVal;
-
-        //timeScale->maxVal=pointsAmount;
         mapTimeScale = new MapTimeScaleDraw("dd.MM.yyyy hh:mm:ss");
         mapTimeScale->setLabelAlignment(Qt::AlignRight);
-       // pointsAmount = sizeOfArray;
         timeScale->timeArr = times;
         mapTimeScale->timeArr = times;
-
          ui->qwtPlot_2->setAxisScaleDraw( QwtPlot::xBottom, timeScale );
          ui->qwtPlot->setAxisScaleDraw(QwtPlot::xBottom,mapTimeScale);
          ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
          QwtScaleDraw *sd = ui->qwtPlot_2->axisScaleDraw(QwtPlot::xBottom);
          sd->enableComponent(QwtScaleDraw::Ticks,false);
          ui->qwtPlot_2->setAxisScale(QwtPlot::xBottom, 0, pointsAmount, 0);
-//         //qDebug() << ui->qwtPlot_2->axisEnabled(QwtPlot::xBottom);
-//         //qDebug() << QwtPlot::xBottom;
-         QVariant tmpTimeIndex;
         printLeftTimeIndex = 0;
         printRightTimeIndex = printLeftTimeIndex+120;
         return true;
@@ -2784,8 +2646,7 @@ int MainWindow::closeLog()
         flagMarkerIncStep = 0;
         flagCounter = 0;
         OldLog = false;
-
-
+        invertedTime = true;
         delete X;
         delete Y;
         delete ErrCoords;
