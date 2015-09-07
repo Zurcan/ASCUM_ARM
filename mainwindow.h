@@ -462,6 +462,8 @@ private slots:
 
     void on_actionHideLeftPanel_toggled(bool arg1);
 
+    void on_pushButton_5_clicked();
+
 private:
     int buttonIndex;
     Ui::MainWindow *ui;

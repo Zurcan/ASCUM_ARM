@@ -840,13 +840,6 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                 newLogProc->readSegment(buffArr1, newLogProc->segmentHeader.size );
                 newTmiInterp->interpreterRecordsCount=newLogProc->segmentHeader.size/newLogProc->segmentHeader.recordSize;
                 newTmiInterp->setInterpretationTable(buffArr1,newTmiInterp->interpreterRecordsCount);
-//                for(int i =0; i <newTmiInterp->interpreterRecordsCount; i++)
-//                {
-//                    if(newTmiInterp->TInterpItemArray[i].level!=0)
-//                    {
-
-//                    }
-//                }
                /*
                 *from here we start to processing data from camOffsets
                 */
@@ -862,10 +855,6 @@ void MainWindow::readHeadTableData()//here we read head table - its header and i
                   for (int i = 0; i < newTmiInterp->interpreterRecordsCount; i++)
                   {
                       tmpRecI=newTmiInterp->TInterpItemArray[i].offset;
-//                      {
-//                          long tmpVal = newTmiInterp->fieldInt(&newLogProc->record[tmpRecI]);
-//                          //qDebug() << tmpVal;
-//                      }
                   }
     }
 
@@ -1550,195 +1539,7 @@ bool MainWindow::initiateTimeAxis(/*QDateTime startPoint,*/ time_t *times/*,int 
         return true;
     }
 }
-/*
-void MainWindow::initiateCurves()
-{
-    double *X1 = (double*)malloc(sizeOfArray*sizeof(double));
-    generateLinearTimeArr(X1);
-    verticalFlagScale = new VerticalFlagScaleDraw(24);
-    ui->qwtPlot->enableAxis(QwtPlot::xBottom,true);
-    AxisLabelDate = firstDateTime;
-    lastFlag = -1;
-    powOffIndex = -1;
-    errAddIndex = -1;
-    flagPowOffCount = 0;
-    int tmpFlagCounter = 0;
-    for (int i =0; i<invisibleVarsMask.size(); i++)
-        if(!invisibleVarsMask[i])
-           {
-            curve1[i] = new QwtPlotCurve;
-            curve1[i]->setPen(QPen(colors[i]));
-            curve1[i]->setStyle(QwtPlotCurve::Steps);
-            curve1[i]->setCurveAttribute(QwtPlotCurve::Inverted);
-            curve1[i]->setSamples(X1,Y[i],sizeOfArray);
-//            curve1[i]->setRawSamples(X1,Y[i],sizeOfArray);
 
-//            if(!OldLog)
-//            {
-                if((i==pointerToSpd)||(i==pointerToEng1Spd))
-                {
-                    curve1[i]->attach(ui->qwtPlot);
-                    curve1[i]->setAxes(QwtPlot::xBottom,i);
-//                    //qDebug() << "added curve1" << i;
-                    ui->qwtPlot->enableAxis(i,false);
-                    ui->qwtPlot->setContentsMargins(-50,0,0,0);
-                    ui->qwtPlot->replot();
-                }
-//            }
-//            else
-//            {
-//                if((i==0)||(i==1))
-//                        {
-//                            curve1[i]->attach(ui->qwtPlot);
-//                            curve1[i]->setAxes(QwtPlot::xBottom,i);
-//                            ui->qwtPlot->enableAxis(i,false);
-//                            ui->qwtPlot->setContentsMargins(-50,0,0,0);
-//                            ui->qwtPlot->replot();
-//                        }
-//            }
-                    if(!cArrayDetailedPlot[i].cTypei])
-                    {
-                        //qDebug() << "added curve2" << i;
-                        curve2[i] = new QwtPlotCurve;
-                        QPalette myPalette;
-                        curve2[i]->setPen(QPen(colors[i]));
-                        curve2[i]->setStyle(QwtPlotCurve::Steps);
-                        curve2[i]->setCurveAttribute(QwtPlotCurve::Inverted);
-                        curve2[i]->setSamples(X1,Y[i],sizeOfArray);
-                        curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                         if(i==20)
-                         {
-                            curve2[i]->setPen(QPen(colors[i]));
-                            curve2[i]->setAxes(QwtPlot::xBottom,i-3);//this one
-                            ui->qwtPlot_2->enableAxis(i-3,true);//and enable it
-                            myPalette.setColor(QPalette::Foreground,colors[i]);
-                            myPalette.setColor(QPalette::Text,colors[i]);
-                            ui->qwtPlot_2->axisWidget(i-3)->setPalette(myPalette);
-                            ui->qwtPlot_2->replot();
-                         }
-                         else
-                         {
-                             curve2[i]->setAxes(QwtPlot::xBottom,i);//this one
-                             ui->qwtPlot_2->enableAxis(i,true);//and enable it
-                             myPalette.setColor(QPalette::Foreground,colors[i]);
-                             myPalette.setColor(QPalette::Text,colors[i]);
-                             ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
-                             ui->qwtPlot_2->replot();
-                         }
-
-
-                    }
-                    else
-                    {
-                        lastFlag = i;
-                        tmpFlagCounter++;
-                        curve2[i] = new QwtPlotCurve;
-                        curve2[i]->setPen(QPen(colors[i]));
-                        curve2[i]->setStyle(QwtPlotCurve::Steps);
-                        curve2[i]->setCurveAttribute(QwtPlotCurve::Inverted);
-                        curve2[i]->setSamples(X1,Y[i],sizeOfArray);
-                        if((int)Y[i][0]%2)curve2[i]->setBaseline(Y[i][0]-1);
-                        else curve2[i]->setBaseline(Y[i][0]);
-                        QString tmpstr;
-                        tmpstr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
-                        tmpstr.remove(6,26);
-                        curve2[i]->setBrush(QBrush(colors[i],Qt::Dense6Pattern));
-                        curve2[i]->attach(ui->qwtPlot_2);//by default we have 1st axis with this curve on the plot, also it is enabled by default
-                        curve2[i]->setAxes(QwtPlot::xBottom,0);//this one
-                        ui->qwtPlot_2->enableAxis(0,false);//and enable it
-                        QPalette myPalette;
-                        myPalette.setColor(QPalette::Foreground,Qt::black);
-                        myPalette.setColor(QPalette::Text,Qt::black);
-                        ui->qwtPlot_2->setAxisScaleDraw(0,verticalFlagScale);
-                        ui->qwtPlot_2->setAxisScale(0, 0, flagCounter*2-1, 1);
-                        QwtText tmpTitle = firstDateTime.date().toString("dd.MM.yyyy");
-                        QFont tmpFont;
-                        tmpFont.setBold(false);
-                        tmpTitle.setFont(tmpFont);
-                        ui->qwtPlot_2->setAxisTitle(QwtPlot::xBottom, tmpTitle);
-                        ui->qwtPlot_2->axisWidget(i)->setPalette(myPalette);
-//                        //qDebug() << tmpstr;
-                        if(tmpstr == "PowOFF")
-                        {
-//                            if((int)Y[i][0]%2)curve2[i]->setBaseline(Y[0][0]+6);
-//                            else curve2[i]->setBaseline(Y[0][0]+6);
-                            powOffIndex =i;
-                            flagPowOffCount = tmpFlagCounter;
-                            //qDebug() << "PowOFF!!!!!!!!!!!!!!!!!!" << i;
-
-                        }
-                        if(tmpstr =="ErrAdd")
-                        {
-                            errAddIndex = i;
-                            globalAddErrFlagBaseLine = flagCounter*2-2;
-//                            for(int j = 0; j < sizeOfArray;j++)
-//                                //qDebug() << Y[i][j];
-
-                        }
-                        ui->qwtPlot_2->replot();
-                    }
-            }
-    else
-        {
-//            QString tmpstr;
-//            tmpstr = QString::fromLocal8Bit(newTmiInterp->TInterpItemArray[i].name);
-//            tmpstr.remove(9,26);
-//            if(tmpstr=="Code")
-//            {
-//                //qDebug() << newTmiInterp->TInterpItemArray[i].typ;
-//                //qDebug() << "errorCode!" << i;
-//            }
-        }
-
-//     errorCurve = new QwtPlotCurve;
-//     QVector <QPointF> tmpSamples;
-//     tmpSamples.begin();
-//     tmpSamples.append(QPointF(10,10));
-//     tmpSamples.insert(tmpSamples.begin(),QPointF(20,10));
-//     errorCurve->setSamples(tmpSamples);
-//     errorSym.setColor(Qt::black);
-//     errorSym.setStyle(QwtSymbol::Diamond);
-//     errorSym.setPen(QColor(Qt::black));
-//     errorSym.setSize(4);
-//     QwtText tmpTxt;
-//     errorMarker = new QwtPlotMarker;
-//     tmpTxt.setText("0x001234");
-//     errorMarker->setLabel(tmpTxt);
-//     errorMarker->setValue(QPointF(15,12));
-//     errorMarker->setLineStyle(QwtPlotMarker::NoLine);
-//     errorMarker->setLinePen(QPen(Qt::red,1,Qt::SolidLine));
-//     errorMarker->attach(ui->qwtPlot_2);
-//     errorMarker->show();
-//     errorCurve->setSymbol(&errorSym);
-//     errorCurve->attach(ui->qwtPlot_2);
-//     for(int i = 0; i < ErrXCoords.count(); i++)
-//     {
-//         //qDebug << ErrXCoords[i];
-//     }
-//    ui->qwtPlot_2->enableAxis(25,true);
-    if(!OldLog)
-    {
-        if(errCodeIndex!=-1)
-        {
-            //qDebug()<< "entering error curve creation";
-            errpicker = new errorPicker(ui->qwtPlot_2->canvas());
-            createErrCodeFromErrAddArray(X1);
-            createErrCoordsCurve(X1);
-            initPicker();
-        }
-        if(powOffIndex!=-1)
-            setFilledPowerOffTime(X1);
-    }
-    free(X1);
-    for(int a = 0; a < ErrCoordVector.size(); a++ )
-    {
-        //qDebug() <<"errcoords" <<ErrCoordVector.at(a);
-    }
-//    //qDebug() << "last      << lastFlag;
-
-
-}
-*/
 int MainWindow::generateLinearTimeArr( double *linearizedTA)
 {
     /***********************************************************************************************
@@ -1782,7 +1583,6 @@ int MainWindow::generateLinearTimeArr( double *linearizedTA)
 
 void MainWindow::initCurves()
 {
-
     double *X1 = (double*)malloc(sizeOfArray*sizeof(double));
     generateLinearTimeArr(X1);
     QVector <double> X1vect;
@@ -2005,7 +1805,6 @@ int MainWindow::createErrCodeFromErrAddArray(double *XX)
                     }
                     if(equalflag)
                     {
-//                        coord.coord = 0;
                         coord.code = ErrCode[i];
                         ErrCoordVector.append(coord);
                         ErrXCoords.append(XX[i]);
@@ -3279,6 +3078,11 @@ void MainWindow::on_actionHideLeftPanel_triggered(bool checked)
 }
 
 void MainWindow::on_actionHideLeftPanel_toggled(bool arg1)
+{
+
+}
+
+void MainWindow::on_pushButton_5_clicked()
 {
 
 }
