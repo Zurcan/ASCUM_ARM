@@ -488,6 +488,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mapPlotUsed = false;
     rightButtonPressed = false;
     ui->setupUi(this);//
+    plotRectBasicWidth=0;
     ui->tableWidget->hide();
     pf = new PrintForm(this);
     ui->qwtPlot->enableAxis(QwtPlot::yLeft,false);
@@ -496,11 +497,14 @@ MainWindow::MainWindow(QWidget *parent) :
             ui->pushButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
                 ui->pushButton_4->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
                 ui->widget->setParent(ui->qwtPlot_2);
+                ui->widget->raise();
+                ui->qwtPlot_2->lower();
                 ui->widget->setMouseTracking(true);
                 QGraphicsOpacityEffect *opacityEffect = new QGraphicsOpacityEffect;
                 opacityEffect->setOpacity(0.5);
                 ui->widget->setGraphicsEffect(opacityEffect);
                 ui->widget->setVisible(true);
+                qDebug() << "init widget pos"<< ui->widget->pos();
      canvas = ui->qwtPlot_2->canvas();
      mapTimer = new QTimer(this);
      connect(mapTimer, SIGNAL(timeout()),this,SLOT(incrementMarkerPosition()));
@@ -549,6 +553,8 @@ void MainWindow::reinit()
 
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
+    qDebug() << "passing resizeEvent"  ;
+    plotRectBasicWidth = 1;
     if((ui->qwtPlot_2->geometry().x()>18)&(ui->qwtPlot_2->geometry().x()<312))
     {
             QRect tmpRect = ui->qwtPlot_2->geometry();
@@ -2059,28 +2065,40 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
            }
        return true;
        }
-       if(plotRectBasicWidth==0)
+       if(plotRectBasicWidth!=0)
        {
-           plotRectBasicWidth = ui->widget->pos().x()+ui->widget->width();
+           qDebug() << "plotRectBasicWidth passed 0";
+           plotRectBasicWidth = /*ui->qwtPlot_2->rect().topRight().x()*/ui->widget->pos().x()+ui->widget->width();//ui->widget->pos().x()+ui->widget->width();
+//           ui->widget->show();
+//           ui->widget->setVisible(true);
+//           ui->widget->raise();
+//           ui->widget->raise();
+//           ui->widget->raise();
+
        }
-            if((ui->qwtPlot_2->visibleRegion().rectCount()<3)&&(ui->qwtPlot_2->visibleRegion().rectCount()>1))
+
+       if((ui->qwtPlot_2->visibleRegion().rectCount()<3)&&(ui->qwtPlot_2->visibleRegion().rectCount()>1))
            {
                if(ui->qwtPlot_2->visibleRegion().rects()[1].x()>=ui->qwtPlot_2->visibleRegion().rects()[0].x())
                {
-                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
-                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
+                    ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
+                    qDebug() << "1 caseval"<<ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth)<< ui->widget->width()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->rect().topRight())<<ui->qwtPlot_2->mapToGlobal(ui->widget->pos());
+                    plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width();
                }
                else
                {
-                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth) - ui->qwtPlot_2->visibleRegion().rects()[0].width(), ui->widget->pos().y());
-                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width()- ui->qwtPlot_2->visibleRegion().rects()[0].width();
+                    ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth) - ui->qwtPlot_2->visibleRegion().rects()[0].width(), ui->widget->pos().y());
+                    qDebug() << "2 caseval"<<ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth) - ui->qwtPlot_2->visibleRegion().rects()[0].width()<< ui->widget->width()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->rect().topRight())<<ui->qwtPlot_2->mapToGlobal(ui->widget->pos());
+                    plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[1].width()- ui->qwtPlot_2->visibleRegion().rects()[0].width();
                }
            }
            else if(ui->qwtPlot_2->visibleRegion().rectCount()==3)//and here Ktulhu too
            {
                ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[2].width()-ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth), ui->widget->pos().y());
+               qDebug() <<"3 caseval"<<ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[2].width()-ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth)<< ui->widget->width()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->rect().topRight())<<ui->qwtPlot_2->mapToGlobal(ui->widget->pos());
                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width() - ui->qwtPlot_2->visibleRegion().rects()[1].width();
            }
+
     return QMainWindow::eventFilter(target, event);
 }
 
@@ -2896,7 +2914,7 @@ void MainWindow::on_qwtPlot_2_destroyed()
 void MainWindow::showAllCurves()
 {
     int index=0;
-    double tmpMagVal = upPlotMagnifier(globalMagnifyFactor);
+    double tmpMagVal;// = upPlotMagnifier(globalMagnifyFactor);
     for(int i = 0 ; i < cArrayDetailedPlot.size(); i++)
         if(cArrayDetailedPlot[i].cAttachable)
     {
