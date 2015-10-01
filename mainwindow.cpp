@@ -2098,6 +2098,18 @@ bool MainWindow::eventFilter(QObject *target, QEvent *event)
                qDebug() <<"3 caseval"<<ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[2].width()-ui->qwtPlot_2->visibleRegion().rects()[1].width()-plotRectBasicWidth)<< ui->widget->width()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->rect().topRight())<<ui->qwtPlot_2->mapToGlobal(ui->widget->pos());
                plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[2].width() - ui->qwtPlot_2->visibleRegion().rects()[1].width();
            }
+           else
+           {
+
+                if(ui->qwtPlot_2->visibleRegion().rectCount()==1)
+                {
+                    ui->widget->move(ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[0].width()-plotRectBasicWidth), ui->widget->pos().y());
+                    qDebug() << "4 caseval"<<ui->widget->pos().x()+(ui->qwtPlot_2->visibleRegion().rects()[0].width()-plotRectBasicWidth)<< ui->widget->width()<< ui->qwtPlot_2->mapToGlobal(ui->qwtPlot_2->rect().topRight())<<ui->qwtPlot_2->mapToGlobal(ui->widget->pos());
+                    plotRectBasicWidth = ui->qwtPlot_2->visibleRegion().rects()[0].width();
+                }
+                else
+                    qDebug() << "no rects!";
+           }
 
     return QMainWindow::eventFilter(target, event);
 }
